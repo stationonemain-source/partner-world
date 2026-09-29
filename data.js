@@ -35,27 +35,28 @@ window.PW={
 "easy": false,
 "ask": "What kind of work do you do, and where?",
 "why": [
-"Designed from nothing to their brand — no template underneath it.",
-"Scroll animation and custom art direction, the kind of site that makes a small firm look established.",
-"They see a free demo of their own site within 2–3 business days before paying anything."
+"Built from scratch around their brand, with no template underneath.",
+"Booking and lead forms go straight to their Station inbox.",
+"They see a free demo of their own site in 2 to 3 business days, before paying anything."
 ],
 "about": [
 "A website designed around the business, not a template. It has booking and lead forms wired to their Station inbox, and Station revises it until it's right. The domain and site stay the client's.",
 "It's <b>priced to the project</b>, with no published price, so never quote a number. The owner answers about 5 minutes of questions at station.solutions/custom/. Station builds a free demo by hand and emails it within 2 to 3 business days. Nothing is charged until they've seen it and said yes.",
-"After it's built, the client either takes the site over and runs it themselves, or Station hosts it and looks after it for them. <b>Hosting &amp; care</b> is one monthly subscription with <b>no list price</b>: Station quotes it for each client, and the quote covers what their domain costs plus the amount of care that fits that business. Never quote, estimate or discount it. Tell Station what the client needs with <b>Message Station</b> and Station sends them the quote. It's recurring, so you earn your 40% on whatever the client actually pays for it."
+"After it's built, the client either takes the site over and runs it themselves, or Station hosts it and looks after it for them. <b>Hosting &amp; care</b> is one monthly subscription with <b>no list price</b>: Station quotes it for each client, and the quote covers what their domain costs plus the amount of care that fits that business. Never quote, estimate or discount it. Email Station at main@station.solutions with what the client needs, and Station sends them the quote. It's recurring, so you earn your 40% on whatever the client actually pays for it."
 ],
 "call": {
-"opener": "You clearly care how the business comes across — was the current site a compromise, or is it what you actually wanted?",
-"discovery": "If budget were not the issue, what would you want someone to feel in the first three seconds on your site?",
-"pitch": "Then the template route is not for you. Custom is built from scratch to your brand and is priced by evaluation: I do not quote a number until we have talked, and nothing is charged before that. After it's built, Station quotes hosting and care for your business, or you can run the site yourself.",
-"objection": "\"What does it cost?\" — It depends on the scope, so it is priced to the project, and they see a free demo of their own site before anything is charged. Custom is a designer starting from your brand with a blank page. If you want to look like the most established firm in your market, that is the difference.",
-"close": "I can put two directions in front of you before you commit a penny. Want me to?"
+"opener": "Is your website bringing in the kind of customers you want, or is it something you’ve been meaning to fix?",
+"discovery": "If you could change one thing about how your business looks online, what would it be?",
+"pitch": "Station builds custom websites from scratch around your brand, not from a template. You answer about five minutes of questions, and Station builds a free demo of your own site, usually within 2 to 3 business days. It’s priced to the project, and nothing’s charged unless you like it and say yes.",
+"objection": "“What does it cost?” — It depends on the project, so there’s no set price and you can’t quote one. That’s why Station builds the free demo first: they see their own site before anything’s charged.",
+"close": "Want me to send you the link to the questions? It takes about five minutes, and the demo is free. What’s the best email?"
 },
-"email": {
-"subject": "a proper site for {business}",
-"body": "Hi {first_name},\n\nQuick thought about {business} online.\n\nYou are clearly the more established option in your market, but the website is not saying that yet. Templates can only take you so far — at some point the site has to be designed around your brand rather than fitted into someone else's layout.\n\nThat is our custom build: designed from scratch and priced by evaluation after a short call, with hosting and care quoted alongside it.\n\nHappy to mock up a direction so you can see it rather than imagine it. Want me to?"
+"link": "https://station.solutions/custom/?ref={code}",
+"replyFix": {
+"How much is it?": "Good question. A custom website is priced to the project, so there’s no set price and I can’t quote one. Station builds a free demo of your own site first, usually within 2 to 3 business days, and nothing’s charged unless you like it and say yes.",
+"Can you do it cheaper?": "I can’t set or change prices; Station quotes each website for the project. The free demo is the best way to see what you’d get before any number comes up."
 },
-"link": "https://station.solutions/custom/?ref={code}"
+"trial": false
 },
 {
 "id": "greet",
@@ -67,30 +68,28 @@ window.PW={
 "setup": 0,
 "earn": 31.6,
 "earnLabel": "$31.60 every month they stay",
-"who": "Businesses with a website that gets visitors but few enquiries.",
+"who": "Businesses with a website that gets visitors but few inquiries.",
 "easy": false,
 "ask": "What kind of work do you do, and where?",
 "why": [
-"Answers at 11pm on a Sunday, which is when half of website visitors actually browse.",
-"Qualifies before it hands over, so they stop fielding tyre-kickers personally.",
-"Every conversation becomes a contact with a name and a number, even the ones that do not book."
+"Answers late at night and on weekends, when a lot of people browse.",
+"Asks the right questions first, so the owner spends time on real customers.",
+"Every chat becomes a contact with a name and a number, even if they don’t book."
 ],
 "about": [
 "A chat assistant on their site. It answers from their business facts, qualifies visitors and captures name, number and the job into their inbox. They can take over live, and it never quotes prices unless allowed.",
 "It costs <b>$79 a month</b> for 250 chats. Busy is $149 (750 chats) and High Volume is $249 (1,750). A chat is one visitor's conversation in 24 hours. It's live in minutes: nothing is needed if Station built their site, otherwise one line of code or site access."
 ],
 "call": {
-"opener": "When someone lands on your site late at night with a question, what happens?",
-"discovery": "How many of those do you think just close the tab and try the next firm?",
-"pitch": "Greet answers them there and then, qualifies them, and drops the name and number into your list. $79 a month.",
-"objection": "\"People hate chatbots.\" — They hate useless ones. This one knows your prices, your areas and your hours, and it hands a real buyer straight to you. The alternative is nobody answering at all.",
-"close": "Let me switch it on and you can watch the first week of conversations. If it catches nothing, turn it off."
+"opener": "When someone visits your website late at night with a question, what happens?",
+"discovery": "How many of those people do you think just leave and try someone else?",
+"pitch": "Greet is a chat assistant on your website. It answers visitors from your own business facts, day or night, and passes you their name, number and what they need. It’s $79 a month.",
+"objection": "“People hate chatbots.” — They hate ones that can’t help. Greet answers from your own prices, service areas and hours, and hands real customers straight to you. Right now, a late-night visitor gets no answer at all.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "who answers your website at 11pm?",
-"body": "Hi {first_name},\n\nHonest question about {business}: when someone is on your site late in the evening with a question, what happens to them?\n\nMost of the time they close the tab and try whoever answers first. That is a lead you paid to get and never knew about.\n\nGreet sits on your site and answers them — your prices, your areas, your hours — qualifies them, and saves the name and number even if they do not book. $79/month.\n\nWant me to switch it on for a week so you can see what it catches?"
-},
-"link": "https://station.solutions/greet/?ref={code}"
+"link": "https://station.solutions/greet/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "slate",
@@ -106,26 +105,24 @@ window.PW={
 "easy": false,
 "ask": "How do customers book you today?",
 "why": [
-"Kills the back-and-forth — they pick a slot from real availability instead of six texts agreeing a time.",
-"Reminders cut no-shows, and a no-show is a slot they can never sell again.",
-"Their calendar fills while they are working, not while they are answering the phone."
+"No more back-and-forth: customers pick a time from real availability.",
+"Reminders cut no-shows, and a missed appointment is time they can’t get back.",
+"The calendar fills up while they’re working, not while they’re on the phone."
 ],
 "about": [
 "Customers book themselves into real availability. Then they get text and email reminders, can reply to confirm, and get a rebook nudge if they miss.",
 "It costs <b>$59 a month</b> for 1,000 reminders, or Busy at $97 (2,500), and it's free inside Frontdesk. It's live today after a 5-minute hours form. Text reminders wait about 2 business days on carrier registration for new businesses."
 ],
 "call": {
-"opener": "How does someone book you at the moment — do they ring, or is there a bit of back-and-forth?",
-"discovery": "And how often does someone just not turn up?",
-"pitch": "Slate lets them pick from your real availability, then reminds them so they show. $59 a month.",
-"objection": "\"I like to speak to them first.\" — Then we only open slots for a short intro call and you qualify there. You are not giving up control, you are giving up the six texts it takes to agree a time.",
-"close": "Give me your services and hours and I will have it live today. Book yourself in and see how it feels."
+"opener": "How do customers book with you right now? Do they call, or is there a lot of back-and-forth?",
+"discovery": "How often does someone just not show up?",
+"pitch": "Slate lets customers pick a time from your real schedule, then sends reminders so they show up. It’s $59 a month.",
+"objection": "“I like to talk to people first.” — You still can. It can book a short intro call first. You keep control; you just skip the texts back and forth to agree on a time.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "the six texts it takes to book you",
-"body": "Hi {first_name},\n\nSmall thing that quietly costs {business} money.\n\nEvery booking that takes a few texts to arrange is time you are not billing for — and every no-show is a slot you can never sell again.\n\nSlate lets customers pick from your real availability, then texts and emails them a reminder so they actually turn up. $59/month.\n\nSend me your services and hours and I will have it running today. Want to?"
-},
-"link": "https://station.solutions/slate/?ref={code}"
+"link": "https://station.solutions/slate/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "lineback",
@@ -141,26 +138,24 @@ window.PW={
 "easy": true,
 "ask": "When the phone rings and you can’t answer, what happens to that caller?",
 "why": [
-"A missed call is usually a lost job — the caller rings the next name on the list within two minutes.",
-"The text lands while they still want the thing, and it moves them into a conversation the client can answer later.",
-"Includes the number, so nothing has to change about how they work."
+"A missed call is often a lost job, because the caller tries the next name on the list.",
+"The text reaches them while they still need the work, and they can reply any time.",
+"It comes with a business number, so nothing changes about how they work."
 ],
 "about": [
 "Every missed call gets an instant text in the business's name, asking what the caller needs. Replies land in their inbox, and a business number is included.",
 "It costs <b>$197 a month</b> for 1,500 texts, or Busy at $297 (5,000). It's live in about 2 business days and needs the legal business name, EIN and address."
 ],
 "call": {
-"opener": "Roughly how many calls do you miss in a normal week — on a job, driving, that sort of thing?",
-"discovery": "When you miss one, do you tend to get it back, or do they go elsewhere?",
-"pitch": "They go elsewhere, usually within about two minutes. Lineback texts them the second you miss the call, so the conversation stays with you and you answer when you are free. $197 a month.",
-"objection": "\"I ring them back at the end of the day.\" — By then they have already booked someone. The text is what buys you the hours until you are free.",
-"close": "Work out what one job is worth to you. If it catches one a month it has paid for itself several times. Shall we switch it on?"
+"opener": "About how many calls do you miss in a normal week, when you’re on a job or driving?",
+"discovery": "When you miss one, do those callers usually wait for you, or try someone else?",
+"pitch": "A lot of callers try the next business on the list within a couple of minutes. Lineback texts them right after you miss the call, so the conversation stays with you and you can reply when you’re free. It’s $197 a month.",
+"objection": "“I call them back at the end of the day.” — By then a lot of them have booked someone else. The text keeps them talking to you until you’re free.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "the calls you miss on a job",
-"body": "Hi {first_name},\n\nWhen {business} misses a call — on a job, driving, hands full — what usually happens to that person?\n\nThey ring the next name on the list, normally within a couple of minutes. You never even know it happened.\n\nLineback sends them a text the moment you miss the call, so the conversation stays with you and you reply when you are free. $197/month, number included.\n\nWhat is one job worth to you? If it saves one a month the maths is not close. Worth a look?"
-},
-"link": "https://station.solutions/lineback/?ref={code}"
+"link": "https://station.solutions/lineback/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "frontdesk",
@@ -177,25 +172,23 @@ window.PW={
 "ask": "When the phone rings and you can’t answer, what happens to that caller?",
 "why": [
 "Answers every call, day or night, without hiring anyone.",
-"Books straight into the calendar rather than taking a message nobody actions.",
-"Cheaper than a part-time receptionist and it never has a day off."
+"Books jobs straight into the calendar instead of taking a message.",
+"Costs less than a part-time receptionist and never takes a day off."
 ],
 "about": [
 "It answers 24/7, books into the calendar, takes messages, transcribes every call and always offers a transfer to a human. It never quotes custom prices or promises timelines. Slate and a number are included.",
 "It costs <b>$397 a month</b> for 750 minutes. Busy is $597 (1,200 minutes) and High Volume is $897 (2,500). It's live the same day after business facts and one test call with Station, because voice has no carrier wait."
 ],
 "call": {
-"opener": "Who answers the phone when you are with a customer?",
-"discovery": "What would a full-time person on the phones cost you? And what happens to the calls that come in at 8pm?",
-"pitch": "Frontdesk answers all of them, around the clock, and books straight into your calendar. $397 a month — a fraction of a part-time wage.",
-"objection": "\"Customers will know it is not a person.\" — Some will. They mind far less than ringing out to nobody. And it is trained on your prices, your services and what it is not allowed to promise.",
-"close": "Give me your greeting and your hours and I will have it answering today. Ring it yourself before we tell a single customer."
+"opener": "Who answers the phone when you’re busy with a customer?",
+"discovery": "What happens to calls that come in after hours, say at 8 at night?",
+"pitch": "Frontdesk is an AI receptionist. It answers every call, day or night, books jobs into your calendar, and always offers to transfer the caller to a person. It’s $397 a month, a lot less than a part-time receptionist.",
+"objection": "“Customers will know it’s not a person.” — Some will. Most mind that a lot less than nobody answering. It’s set up with your prices, your services and what it’s not allowed to promise.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "who answers when you are with a customer?",
-"body": "Hi {first_name},\n\nWhen {business} is mid-job and the phone goes, where does that call end up?\n\nVoicemail, mostly — and most people do not leave one. They just try the next firm.\n\nFrontdesk answers every call 24/7, handles the usual questions, and books straight into your calendar. $397/month, which is well under a part-time wage.\n\nI can have it answering today, and you can ring it yourself before any customer does. Want to try it?"
-},
-"link": "https://station.solutions/frontdesk/?ref={code}"
+"link": "https://station.solutions/frontdesk/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "pursuit",
@@ -207,12 +200,12 @@ window.PW={
 "setup": 0,
 "earn": 98.8,
 "earnLabel": "$98.80 every month they stay",
-"who": "Owners who get enquiries and only follow up once, if at all.",
+"who": "Owners who get inquiries and only follow up once, if at all.",
 "easy": false,
-"ask": "When someone enquires and goes quiet, how many times do you follow up?",
+"ask": "When someone asks about a job and goes quiet, how many times do you follow up?",
 "why": [
-"Most businesses follow up once and quietly give up; the booking usually comes on the third or fourth touch.",
-"It runs whether or not the client remembers, which is the entire point.",
+"Most businesses follow up once and give up, and a lot of bookings come after the second or third message.",
+"It runs every time, whether or not the owner remembers.",
 "It stops the moment someone replies, so nobody gets pestered."
 ],
 "about": [
@@ -220,17 +213,15 @@ window.PW={
 "It costs <b>$247 a month</b> for 2,500 texts and 15,000 emails, or Busy at $347 (6,000 texts and 40,000 emails). Email starts instantly, and texting starts after carrier registration."
 ],
 "call": {
-"opener": "When someone enquires and does not reply to your first message, what happens next?",
-"discovery": "Be honest — how many times do you chase before you let it go?",
-"pitch": "Almost everyone stops at one. The booking usually lands on the third or fourth. Pursuit does the chasing by text and email until they answer or book, then stops. $247 a month.",
-"objection": "\"I do not want to annoy people.\" — Nor do we. It stops dead the moment they reply, and the last message gives them an easy way out. Five polite touches over two weeks is not pestering, it is following up.",
-"close": "You are already paying to get those leads. Let it work the ones you have been letting go."
+"opener": "When someone asks about a job and then doesn’t answer your first reply, what happens next?",
+"discovery": "How many times do you usually follow up before you let it go?",
+"pitch": "Most people follow up once. Pursuit keeps following up for you by text and email, over about ten days, and stops the moment they reply or book. It’s $247 a month.",
+"objection": "“I don’t want to annoy people.” — Neither does Station. It stops as soon as they reply, and every message makes it easy to say no thanks. A few polite messages over ten days is just following up.",
+"close": "Want me to send you the page so you can see the messages it sends? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "the leads you chased once",
-"body": "Hi {first_name},\n\nA question about how {business} handles enquiries.\n\nWhen someone gets in touch and then goes quiet, how many times do you chase? For almost everyone the honest answer is once — and the booking usually comes on the third or fourth attempt.\n\nPursuit follows up by text and email until they reply or book, then stops immediately. $247/month.\n\nYou are already paying to get those leads. Worth working the ones you have?"
-},
-"link": "https://station.solutions/pursuit/?ref={code}"
+"link": "https://station.solutions/pursuit/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "repute",
@@ -244,28 +235,26 @@ window.PW={
 "earnLabel": "$78.80 every month they stay",
 "who": "Owners with fewer Google reviews than the competitor they lose work to.",
 "easy": true,
-"ask": "How many Google reviews do you have compared with the firm you lose work to?",
+"ask": "How many Google reviews do you have compared with the competitor you lose work to?",
 "why": [
-"Reviews are the first thing a stranger checks, and the business with more of them wins the call.",
-"The ask goes out every time, instead of only when the client remembers to be brave.",
-"Replies get handled so the profile looks alive, including the awkward ones."
+"Reviews are one of the first things a new customer checks.",
+"The request goes out after every job, not just when the owner remembers.",
+"Reviews get replies, so the profile looks active and cared for."
 ],
 "about": [
 "It asks every customer for a review after the job, catches every review on their Google profile, and drafts replies in their voice. Low-star replies can always be held for approval, and auto-reply can be turned off.",
 "It costs <b>$197 a month</b>, and multi-location is quoted on request. It's live the same day with Google Business Profile access and a \"job done\" signal."
 ],
 "call": {
-"opener": "How many Google reviews have you got, and how do they compare to the firm you lose work to?",
-"discovery": "How do you ask for them at the moment?",
-"pitch": "Repute asks every customer automatically at the right moment and handles the replies. $197 a month.",
-"objection": "\"I do not like asking.\" — That is exactly why it should not be you asking. Happy customers say yes when someone else does it for them.",
-"close": "Where would you be in six months at a few reviews a week instead of one every few months? Let us start this week."
+"opener": "How many Google reviews do you have, compared with the competitor you lose the most work to?",
+"discovery": "How do you ask customers for reviews right now?",
+"pitch": "Repute asks every customer for a review at the right moment after the job, and helps you reply to the reviews that come in. It’s $197 a month.",
+"objection": "“I don’t like asking.” — That’s exactly why it helps that it isn’t you asking. Happy customers are glad to say yes when they’re asked at the right time.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "your reviews vs theirs",
-"body": "Hi {first_name},\n\nI had a look at {business} on Google next to a couple of the firms you are up against.\n\nThe work is not the problem. The review count is — and that is the first thing a stranger checks before they ring anyone.\n\nRepute asks every customer at the right moment, and handles the replies so the profile looks looked-after. $197/month.\n\nMost people are glad to leave one, they just need asking. Want me to start this week?"
-},
-"link": "https://station.solutions/repute/?ref={code}"
+"link": "https://station.solutions/repute/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "echo",
@@ -279,28 +268,26 @@ window.PW={
 "earnLabel": "$98.80 every month they stay",
 "who": "Businesses with a thin or wrong Google listing.",
 "easy": false,
-"ask": "How many Google reviews do you have compared with the firm you lose work to?",
+"ask": "How many Google reviews do you have compared with the competitor you lose work to?",
 "why": [
-"The map pack is where local buying decisions actually happen, above the website results.",
-"Most listings are half-finished — wrong categories, no photos, no posts — and that is why they rank below competitors.",
-"Managed monthly, because Google rewards a listing that keeps moving."
+"The Google map results are where a lot of local customers choose who to call.",
+"Many listings are half finished: wrong categories, no photos, no posts.",
+"It’s managed every month, because an active listing looks better to customers."
 ],
 "about": [
 "It claims and corrects their Google profile, posts weekly, keeps name, address and phone consistent, and watches for unwanted edits. It also writes LinkedIn posts and articles and sends a monthly map-rank report. The client approves every post.",
 "It costs <b>$247 a month plus a one-time $297 setup</b>, and multi-location is quoted on request. It's live in 2 to 3 days. An unverified Google profile can take 5 to 14 days on Google's clock. Fixes land in week one, and movement usually shows in the 60 to 90 day reports. Never promise a ranking."
 ],
 "call": {
-"opener": "Search your own trade plus your town on your phone — where do you come up in the map results?",
-"discovery": "Do you know who is above you, and can you think of a reason they should be?",
-"pitch": "Usually it is not that they are better, it is that their listing is complete and yours is half-filled. Echo fixes that and keeps it active. $297 to set up, $247 a month.",
-"objection": "\"I already have a Google listing.\" — Most people do. Having one and having one that ranks are very different things. Let me show you what is missing from yours.",
-"close": "Let me audit the listing for free and show you exactly what is costing you the position. If it turns out yours is perfect, I will say so."
+"opener": "If you search Google for what you do in your town, where does your business show up on the map?",
+"discovery": "Do you know who shows up above you?",
+"pitch": "Often the businesses above you just have a more complete Google listing. Echo fills yours in properly, posts to it every week, keeps it accurate and sends you a monthly report. It’s $297 to set up, then $247 a month.",
+"objection": "“I already have a Google listing.” — Most businesses do. Echo makes sure it’s complete and stays active, which a lot of listings aren’t. Nobody can honestly promise a ranking, and Station doesn’t.",
+"close": "Want me to send you the page so you can see everything that’s included? What’s the best email?"
 },
-"email": {
-"subject": "where {business} shows up on the map",
-"body": "Hi {first_name},\n\nTry this on your phone: search your trade and your town, and see where {business} lands in the map results.\n\nIf you are below firms you know you are better than, it is usually not the work — it is that their listing is complete and yours is not. Categories, photos, hours, activity. Google reads all of it.\n\nEcho sorts that out and keeps the listing active. $297 to set up, $247/month.\n\nHappy to audit yours for nothing and tell you what is missing. Want me to?"
-},
-"link": "https://station.solutions/echo/?ref={code}"
+"link": "https://station.solutions/echo/?ref={code}",
+"replyFix": {},
+"trial": false
 },
 {
 "id": "dispatch",
@@ -316,27 +303,24 @@ window.PW={
 "easy": false,
 "ask": "Do you have past customers you never email?",
 "why": [
-"Their past customers are the cheapest work they will ever get — they already trust them.",
-"One email to the list beats a month of chasing strangers.",
-"Self-serve, so they send when they want without waiting on anyone.",
-"On Managed ($397/mo) we plan, write and send four campaigns a month for them; they approve before anything sends and never have to type a word."
+"Past customers already trust them, so they’re the easiest people to win work from.",
+"Self-serve, so they send whenever they want.",
+"On Managed ($397/mo), Station writes and sends four campaigns a month, and they approve each one first."
 ],
 "about": [
 "Email campaigns to their own customer list, with editable templates, saved snippets, and open, click and booking stats. Unsubscribe handling is built in.",
 "It costs <b>$94 a month</b> self-serve, with email unmetered below 100,000 sends a month. Managed is <b>$397 a month</b>: Station writes four campaigns a month, and the owner approves before anything sends. It's live instantly once the list is in."
 ],
 "call": {
-"opener": "How many past customers have you got email addresses for?",
+"opener": "About how many past customers do you have email addresses for?",
 "discovery": "When did you last send them anything?",
-"pitch": "That list is the cheapest work you will ever get. Dispatch lets you email them properly whenever you want. $94 a month.",
-"objection": "\"I do not want to spam my customers.\" — One useful email a month is not spam. Spam is what happens when you buy a list. These are people who already paid you.",
-"close": "Let us get the list in and send one email this month. If it brings you a single job it has paid for the year."
+"pitch": "Those are people who already trust you. Dispatch lets you send them good-looking emails whenever you want, for $94 a month. Or for $397 a month, Station writes and sends four emails a month for you, and you approve each one first.",
+"objection": "“I don’t want to spam my customers.” — One useful email a month isn’t spam. These are people who already paid you, and every email has an easy unsubscribe.",
+"close": "Want me to send you the page so you can see both options? The self-serve plan starts with a 7-day free trial, and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "the list you are sitting on",
-"body": "Hi {first_name},\n\nHow many past customers does {business} have email addresses for?\n\nWhatever the number, that is the cheapest work available to you — they already know you and already paid you once. Most businesses never email them.\n\nDispatch lets you send to that list properly, whenever you like, without landing in spam. $94/month.\n\nOne useful email a month is usually all it takes. Worth setting up?"
-},
-"link": "https://station.solutions/dispatch/?ref={code}"
+"link": "https://station.solutions/dispatch/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "revive",
@@ -352,26 +336,24 @@ window.PW={
 "easy": false,
 "ask": "Do you have past customers you never email?",
 "why": [
-"Fastest money in the whole catalogue — these people already bought once.",
-"$497 a quarter with no lock-in, cancel any time, so it is an easy first yes.",
-"Usually pays for itself before the sequence has finished sending."
+"These people already bought once, so they know the business.",
+"$497 a quarter with no lock-in; cancel any time.",
+"Email first, and texts only go to people who agreed to get them."
 ],
 "about": [
 "Station scrubs their old customer list and runs a six-touch win-back campaign over about three weeks. It's email-first, and texting is used only where consent is documented.",
 "It costs <b>$497 a quarter</b> for up to 5,000 contacts, and they can cancel any time. It runs 1 to 2 days after the list arrives."
 ],
 "call": {
-"opener": "How many customers have you not heard from in over a year?",
-"discovery": "Any reason they left, or did it just drift?",
-"pitch": "Then they are the easiest work available. Revive scrubs the list and runs a six-touch win-back campaign to them with a reason to return. $497 a quarter, up to 5,000 contacts, cancel any time.",
-"objection": "\"They have probably gone elsewhere.\" — Some have. Most just drifted and have not thought about you. That is a reminder problem, not a loyalty problem.",
-"close": "Send me the list and I will tell you how many are worth going back to before you commit."
+"opener": "How many customers haven’t you heard from in over a year?",
+"discovery": "Did they leave for a reason, or did they just drift away?",
+"pitch": "A lot of them just haven’t thought about you in a while. Revive sends them a six-message campaign over about three weeks, with a reason to come back. It’s $497 a quarter for up to 5,000 contacts, and you can cancel any time.",
+"objection": "“They’ve probably gone somewhere else.” — Some have. A lot just forgot. A friendly reminder is how you find out which is which.",
+"close": "Want me to send you the page so you can see how it works? Station takes the customer list from you directly, so you never need to send it to me. What’s the best email?"
 },
-"email": {
-"subject": "the customers who drifted",
-"body": "Hi {first_name},\n\nHow many of {business}'s customers have you not heard from in a year or more?\n\nMost of them did not leave unhappy — they just drifted and have not thought about you since. That is a reminder problem, and it is the easiest money in the business.\n\nRevive scrubs that list and runs a six-touch win-back campaign with a real reason to return. $497 a quarter, up to 5,000 contacts, cancel any time.\n\nSend me the list and I will tell you how many are worth chasing before you spend anything. Deal?"
-},
-"link": "https://station.solutions/revive/?ref={code}"
+"link": "https://station.solutions/revive/?ref={code}",
+"replyFix": {},
+"trial": false
 },
 {
 "id": "radar",
@@ -387,27 +369,25 @@ window.PW={
 "easy": false,
 "ask": "What kind of work do you do, and where?",
 "why": [
-"The audit does the talking: they open with something specific and true about the prospect's own listing or website, not a cold pitch.",
-"Five new audited prospects every week (twenty on Pro), so the pipeline keeps filling whether or not they remember to prospect.",
-"Outreach goes out from their Station account, so every reply lands in the same inbox as everything else.",
-"Best for trades chasing commercial accounts and B2B services. If that is not the client, do not sell it."
+"Each message opens with something specific and true about the prospect’s own website or listing.",
+"Five new prospects every week (twenty on Pro), so there’s always someone new to talk to.",
+"Replies land in the same Station inbox as everything else.",
+"Only for businesses that sell to other businesses. If that’s not who you’re talking to, don’t sell it."
 ],
 "about": [
 "For trades and business-to-business services only. It finds the businesses the client wants as customers, audits each one's marketing, and handles outreach from the client's Station account. Email includes an opt-out, and texting only goes to people who've consented.",
 "It costs <b>$297 a month</b> for 5 new prospects a week. Pro is <b>$497 a month</b> for 20 a week across six trade targets instead of three. It's live the same day after a 15-minute setup."
 ],
 "call": {
-"opener": "Who are the customers you would love to have but have no way of getting in front of?",
-"discovery": "How do you find new business or commercial accounts at the moment, and when did you last go looking?",
-"pitch": "Radar searches any area for the kind of business you want as a customer, audits each one's marketing, and reaches out under your name. Five new audited prospects a week. $297 a month.",
-"objection": "\"I am no salesman.\" — You do not need to be. The audit does the talking: you are pointing out something specific about their listing or website, not pitching. Helpful beats slick.",
-"close": "Tell me the trade and the area and I will show you a sample audit report before you decide."
+"opener": "Are there businesses you’d love to have as customers, like offices, property managers or builders?",
+"discovery": "How do you find new business customers now?",
+"pitch": "Radar finds the kind of businesses you want as customers in your area, checks each one’s website and listing, and reaches out to them for you from your Station account. It finds five new prospects a week, for $297 a month.",
+"objection": "“I’m not a salesperson.” — You don’t need to be. Each message points out something specific and true about that business’s own website or listing, so it comes across as helpful, not pushy.",
+"close": "Want me to send you the page so you can see a sample report? What’s the best email?"
 },
-"email": {
-"subject": "the customers you have not met yet",
-"body": "Hi {first_name},\n\nHow does {business} find new commercial or business customers at the moment?\n\nFor most trades the honest answer is word of mouth and hope. The firms that win the bigger accounts are the ones that turn up prepared.\n\nRadar searches an area for exactly the kind of business you want, audits each one — their listing, reviews and website — and reaches out under your name, five new prospects a week. The audit does the talking, so you are pointing out something specific rather than pitching. $297/month.\n\nWant me to send you a sample audit report so you can see what it looks like?"
-},
-"link": "https://station.solutions/radar/?ref={code}"
+"link": "https://station.solutions/radar/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "dial",
@@ -419,31 +399,28 @@ window.PW={
 "setup": 0,
 "earn": 18.8,
 "earnLabel": "$18.80 every month they stay",
-"who": "Owners using their personal mobile as the company line.",
+"who": "Owners using their personal cell phone as the company line.",
 "easy": false,
 "ask": "When the phone rings and you can’t answer, what happens to that caller?",
 "why": [
-"Their personal mobile stops being the business line — work stays at work.",
-"Customers can text the business, which many now prefer to ringing.",
-"Cheapest way into the system, and everything else plugs into it later.",
-"If they ever sell or hand over the business, the number goes with it rather than being their personal mobile."
+"Their personal cell stops being the business line.",
+"Customers can text the business, which a lot of people prefer to calling.",
+"If they ever sell the business, the number goes with it."
 ],
 "about": [
-"A local business number with two-way texting from their phone or desk, so their personal mobile stops being the company line.",
+"A local business number with two-way texting from their phone or desk, so their personal cell phone stops being the company line.",
 "It costs <b>$47 a month</b> for 1,000 texts. It's live in about 2 business days and needs the legal name, EIN and address. They don't need it if they're buying Lineback or Frontdesk, which include a number."
 ],
 "call": {
-"opener": "Is the number on your van and your website your personal mobile?",
-"discovery": "Does that mean you are answering work calls on a Sunday?",
-"pitch": "Dial gives the business its own number with texting, and forwards wherever you want. $47 a month.",
-"objection": "\"Everyone already has my mobile.\" — They do, and it works today. But the day you take on help, or want a weekend, the business number is what makes that possible. And it is yours to keep if you ever sell.",
-"close": "It is $47. Let us get the business off your personal phone this week."
+"opener": "Is the number on your truck and your website your personal cell phone?",
+"discovery": "Does that mean you’re answering work calls on a Sunday?",
+"pitch": "Dial gives your business its own local number, with texting, that works from your phone. It’s $47 a month.",
+"objection": "“Everyone already has my cell number.” — And that keeps working. But the day you hire help or want a weekend off, a business number makes that possible, and it goes with the business if you ever sell.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "is your van number your personal mobile?",
-"body": "Hi {first_name},\n\nSimple one. Is the number on {business}'s van and website your own mobile?\n\nIt works — until you want a weekend off, or take someone on, or decide to sell up. Then it is a problem, because the business line is your personal phone.\n\nDial gives the business its own number with texting, forwarded wherever you like. $47/month.\n\nSmall thing, but it is the one that makes everything else possible later. Want it sorted this week?"
-},
-"link": "https://station.solutions/dial/?ref={code}"
+"link": "https://station.solutions/dial/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "tap",
@@ -459,26 +436,24 @@ window.PW={
 "easy": false,
 "ask": "What kind of work do you do, and where?",
 "why": [
-"Getting paid on the spot beats invoicing and waiting three weeks.",
-"Card, tap and online links all in one place, with the money tracked.",
-"Cheap enough that one invoice paid faster covers the year."
+"Getting paid on the spot instead of waiting weeks on an invoice.",
+"Card, tap-to-pay and payment links in one place, with every payment tracked.",
+"Station takes none of their revenue; the money goes straight to their bank."
 ],
 "about": [
 "Tap-to-pay on the owner's phone, text-to-pay links, unlimited estimates and invoices, and automatic receipts. The client connects their own free Stripe or Square account, so money goes straight to their bank.",
 "It costs <b>$47 a month plus their processor's standard card rates</b>, which the site puts at about 2.6 to 2.9%. Station takes zero percent of their revenue. It's live in 1 to 2 days."
 ],
 "call": {
-"opener": "How do you get paid at the moment — invoice, cash, card?",
-"discovery": "How long does an invoice usually take to actually land?",
-"pitch": "Tap lets you take it on the spot, in person or by a link. $47 a month.",
-"objection": "\"My bank charges less.\" — Maybe on the rate. But this is card, tap and online links in one place with the money tracked against the customer. The saving is the chasing you stop doing.",
-"close": "What are you owed right now? Get paid on the day instead and this pays for itself immediately."
+"opener": "How do customers pay you right now: invoice, cash, check or card?",
+"discovery": "How long does it usually take for an invoice to get paid?",
+"pitch": "Tap lets you take payment on the spot, by tapping a card on your phone or by texting a payment link. The money goes straight to your own bank through Stripe or Square. It’s $47 a month plus the normal card fees.",
+"objection": "“My bank charges less.” — Maybe on the card fee. Tap puts card, tap-to-pay and payment links in one place, with every payment matched to the customer, so there’s less chasing.",
+"close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
-"email": {
-"subject": "how long do your invoices take to land?",
-"body": "Hi {first_name},\n\nWhen {business} finishes a job, how do you get paid — and how long does it actually take?\n\nIf the answer involves invoicing and then chasing, that is weeks of your money sitting with someone else.\n\nTap lets you take payment on the spot, by card or a link, with everything tracked. $47/month.\n\nWhat are you owed right now? Getting even one of those paid on the day covers the cost. Worth a look?"
-},
-"link": "https://station.solutions/tap/?ref={code}"
+"link": "https://station.solutions/tap/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "marquee",
@@ -494,34 +469,31 @@ window.PW={
 "easy": false,
 "ask": "What kind of work do you do, and where?",
 "why": [
-"Their profiles stop looking abandoned, which is what a stranger checks after the reviews.",
-"Posting keeps happening in a busy week, which is exactly when it normally stops.",
-"Self-serve, so they can still post their own jobs whenever they want.",
-"On Managed ($597/mo) we make twelve posts a month, build and run the ads and send monthly numbers. Ad spend is theirs, on their own card with a cap they set; managed ads above $2,000/mo of spend add 10% of spend."
+"Their social pages stop looking abandoned.",
+"Posts keep going out in a busy week, which is exactly when they usually stop.",
+"On Managed ($597/mo plus ad spend), Station makes twelve posts a month and runs the ads."
 ],
 "about": [
 "A brand board in week one, posting to nine platforms (Facebook, Instagram, Google profile, LinkedIn, TikTok, Pinterest, YouTube, Threads and Bluesky, but not X), and a self-serve ad manager for Meta and Google.",
 "It costs <b>$197 a month</b> self-serve. Managed is <b>$597 a month plus ad spend</b>: 12 posts a month, ads built and run, and monthly numbers. Ad spend goes on the client's own card with a cap they set, and managed ads above $2,000 a month of spend add 10% of spend. It's live in 5 to 7 days."
 ],
 "call": {
-"opener": "When did you last post anything on your business social accounts?",
-"discovery": "If someone checks you out there before ringing, what do they find?",
-"pitch": "Marquee keeps it posting properly. $197 a month, and you can still put your own jobs up whenever you like.",
-"objection": "\"Social media does not bring me work.\" — Directly, often not. But it is the second thing people check after your reviews, and a profile that stopped two years ago makes them wonder if you are still going.",
-"close": "Send me ten photos of recent jobs and I will show you the first week before anything is posted."
+"opener": "When did you last post anything on your business’s social media?",
+"discovery": "If someone looks you up there before they call, what do they find?",
+"pitch": "Marquee keeps your social media posting regularly, on Facebook, Instagram, your Google profile and more. It’s $197 a month, and you can still post your own jobs whenever you like. For $597 a month plus ad spend, Station makes the posts and runs your ads for you.",
+"objection": "“Social media doesn’t bring me work.” — Often not directly. But people check it after your reviews, and a page that stopped posting two years ago makes them wonder if you’re still open.",
+"close": "Want me to send you the page so you can see what’s included? What’s the best email?"
 },
-"email": {
-"subject": "your socials stopped two years ago",
-"body": "Hi {first_name},\n\nI had a look at {business} on social before getting in touch.\n\nThe last post is a while back. On its own that does not lose you work — but it is the second thing someone checks after your reviews, and a profile that went quiet makes people wonder whether you are still trading.\n\nMarquee keeps it posting properly, and you can still add your own jobs whenever you want. $197/month.\n\nSend me ten photos of recent work and I will show you the first week before anything goes live. Want to?"
-},
-"link": "https://station.solutions/marquee/?ref={code}"
+"link": "https://station.solutions/marquee/?ref={code}",
+"replyFix": {},
+"trial": true
 },
 {
 "id": "bundle-core",
 "brand": "station",
 "bundle": true,
 "name": "Core bundle",
-"what": "The starter bundle: Greet, Slate, Lineback, Pursuit, Repute and Dispatch. Worth $873/mo bought one by one, so it saves $123",
+"what": "The starter bundle: Greet, Slate, Lineback, Pursuit, Repute and Dispatch. Worth $873/mo bought one by one, so it saves $123 a month",
 "price": "$750 a month, no setup fee",
 "mrr": 750,
 "setup": 0,
@@ -530,11 +502,15 @@ window.PW={
 "who": "Owners who want several products at once. Billed at checkout; no free trial on bundles.",
 "easy": false,
 "ask": "What part of your week costs you the most work?",
-"why": [],
+"why": [
+"Fixes missed calls, follow-up, reviews, booking and email together.",
+"Costs $123 a month less than buying the same six products one by one.",
+"No setup fee, and one 15-minute kickoff call with Station sets it all up."
+],
 "about": [
 "Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
-"Core and Pro use each product's Standard plan. If a client outgrows one product, they upgrade just that product for the difference. Station's Cancellation and Refund Policy also mentions annual prepay plans at 10 times the monthly rate. Ask Station before offering one."
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
+"Core and Pro use each product’s standard (entry-level) plan. If a client outgrows one product, they upgrade just that product for the difference."
 ],
 "call": {
 "opener": "What part of your week costs you the most work: missed calls, following up, reviews, or booking?",
@@ -542,8 +518,9 @@ window.PW={
 "pitch": "The Core bundle covers them together for $750 a month, less than buying them one by one, and there’s no setup fee. It starts with a 15-minute kickoff call with Station.",
 "close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
 },
-"email": null,
-"link": "https://station.solutions/?ref={code}#bundles"
+"link": "https://station.solutions/?ref={code}#bundles",
+"replyFix": {},
+"trial": false
 },
 {
 "id": "bundle-pro",
@@ -559,11 +536,15 @@ window.PW={
 "who": "Owners who want several products at once. Billed at checkout; no free trial on bundles.",
 "easy": false,
 "ask": "What part of your week costs you the most work?",
-"why": [],
+"why": [
+"Everything in Core, plus the receptionist, the Google listing and social media.",
+"Costs $260 a month less than buying them one by one, and the $297 Echo setup fee is waived.",
+"No setup fee, and one 15-minute kickoff call with Station sets it all up."
+],
 "about": [
 "Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
-"Core and Pro use each product's Standard plan. If a client outgrows one product, they upgrade just that product for the difference. Station's Cancellation and Refund Policy also mentions annual prepay plans at 10 times the monthly rate. Ask Station before offering one."
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
+"Core and Pro use each product’s standard (entry-level) plan. If a client outgrows one product, they upgrade just that product for the difference."
 ],
 "call": {
 "opener": "What part of your week costs you the most work: missed calls, following up, reviews, or booking?",
@@ -571,15 +552,16 @@ window.PW={
 "pitch": "The Pro bundle covers them together for $1,395 a month, less than buying them one by one, and there’s no setup fee. It starts with a 15-minute kickoff call with Station.",
 "close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
 },
-"email": null,
-"link": "https://station.solutions/?ref={code}#bundles"
+"link": "https://station.solutions/?ref={code}#bundles",
+"replyFix": {},
+"trial": false
 },
 {
 "id": "bundle-custom",
 "brand": "station",
 "bundle": true,
 "name": "Custom bundle",
-"what": "Every product at its highest usage tier, on one plan. Worth $3,282/mo a-la-carte, so it saves $482/mo. A custom website is quoted separately.",
+"what": "Every product at its highest usage tier, on one plan. Worth $3,282/mo bought one by one, so it saves $482/mo. A custom website is quoted separately.",
 "price": "$2,800 a month, no setup fee",
 "mrr": 2800,
 "setup": 0,
@@ -588,11 +570,15 @@ window.PW={
 "who": "Owners who want several products at once. Billed at checkout; no free trial on bundles.",
 "easy": false,
 "ask": "What part of your week costs you the most work?",
-"why": [],
+"why": [
+"Every Station product at its highest usage level, on one plan.",
+"Costs $482 a month less than buying them one by one, and the $297 Echo setup fee is waived.",
+"A custom website isn’t included; Station quotes that separately."
+],
 "about": [
 "Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
-"Core and Pro use each product's Standard plan. If a client outgrows one product, they upgrade just that product for the difference. Station's Cancellation and Refund Policy also mentions annual prepay plans at 10 times the monthly rate. Ask Station before offering one."
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
+"Core and Pro use each product’s standard (entry-level) plan. If a client outgrows one product, they upgrade just that product for the difference."
 ],
 "call": {
 "opener": "What part of your week costs you the most work: missed calls, following up, reviews, or booking?",
@@ -600,8 +586,9 @@ window.PW={
 "pitch": "The Custom bundle covers them together for $2,800 a month, less than buying them one by one, and there’s no setup fee. It starts with a 15-minute kickoff call with Station.",
 "close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
 },
-"email": null,
-"link": "https://station.solutions/?ref={code}#bundles"
+"link": "https://station.solutions/?ref={code}#bundles",
+"replyFix": {},
+"trial": false
 },
 {
 "id": "ribbon",
@@ -624,18 +611,19 @@ window.PW={
 "There is a free Monday list to try with no card, and a 7-day free trial on both paid plans."
 ],
 "about": [
-"Ribbon Leads reads public alcohol-board, health-department and city licensing filings in 8 states every morning (Texas, Florida, California, Oklahoma, Oregon, New York, Missouri and Chicago) and sends subscribers the new venues, with the phone and website when the name and address match a public listing.",
+"Ribbon Leads reads public alcohol-board, health-department and city licensing filings in 8 states every morning (Texas, Florida, California, Oklahoma, Oregon, New York, Missouri and Illinois (Chicago only)) and sends subscribers the new venues, with the phone and website when the name and address match a public listing.",
 "<b>Plans:</b> the free Monday list is last week&rsquo;s filings, 7 days behind, with no contact details. <b>Market, $49 a month:</b> Florida or New York every morning, with phones and websites where matched, stage filters and CSV. <b>National, $129 a month:</b> all 8 states plus an API and webhooks. Both paid plans start with a 7-day free trial and cancel in one click.",
-"Send people to ribbon.srv1748596.hstgr.cloud to see a sample and sign up for the free list. Buying for a sales team is quoted on request."
+"Send people to ribbonleads.com to see a sample and sign up for the free list. Buying for a sales team is quoted on request."
 ],
 "call": {
 "opener": "You sell to restaurants, right? When a new one opens near you, how early do you usually find out?",
 "discovery": "By the time the doors open, have they usually already picked who they buy from?",
-"pitch": "Ribbon Leads sends you every restaurant and bar that files to open, the morning it files, weeks before it opens, with the phone number when we can match it. Florida or New York is $49 a month, and there is a free Monday list to try first.",
-"objection": "\"I already hear about openings.\" — Usually on opening day, after they have chosen. This is the filing, weeks earlier."
+"pitch": "Ribbon Leads sends you every restaurant and bar that files to open, the morning it files, weeks before it opens, with the phone number when it can be matched. Florida or New York is $49 a month, and there’s a free Monday list to try first.",
+"objection": "“I already hear about openings.” — Usually on opening day, after they’ve chosen. This is the filing, weeks earlier."
 },
-"email": null,
-"link": "https://ribbon.srv1748596.hstgr.cloud/"
+"link": "https://ribbonleads.com/",
+"replyFix": {},
+"trial": false
 },
 {
 "id": "quorum",
@@ -668,8 +656,9 @@ window.PW={
 "pitch": "Quorum does a free review of your site and documents, in plain English, within a day. If you want the repairs and the ongoing record after that, it starts at $2,400 a year.",
 "objection": "\"Our web vendor handles it.\" — Worth checking the documents: in our national scan, 94% of posted agendas and minutes failed, even on sites that looked fine."
 },
-"email": null,
-"link": "https://quorumcompliance.com/"
+"link": "https://quorumcompliance.com/",
+"replyFix": {},
+"trial": false
 }
 ],
 "replies": [
@@ -691,7 +680,7 @@ window.PW={
 {
 "they": "Is this a scam? / Who are you?",
 "say": "Fair question. I'm [your name], an independent partner with Station. Station is Station Automations Group LLC, based in Houston, Texas, and every product and price is published at station.solutions. I earn a commission if you sign up. There's no contract, and single products start with a 7-day free trial. You can email Station directly at main@station.solutions. If you'd rather I didn't contact you again, just say so.",
-"dont": "that you're a Station employee. Don't push. If they ask you to stop, stop and mark the lead Not interested."
+"dont": "that you're a Station employee. Don't push. If they ask you to stop, stop and mark the lead Do not call."
 },
 {
 "they": "I need to think about it",
@@ -724,8 +713,8 @@ window.PW={
 "What kind of work do you do, and where?",
 "When the phone rings and you can't answer, what happens to that caller?",
 "How do customers book you today?",
-"When someone enquires and goes quiet, how many times do you follow up?",
-"How many Google reviews do you have compared with the firm you lose work to?",
+"When someone asks about a job and goes quiet, how many times do you follow up?",
+"How many Google reviews do you have compared with the competitor you lose work to?",
 "Do you have past customers you never email?",
 "Who else makes the decision with you?"
 ],
