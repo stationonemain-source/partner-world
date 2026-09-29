@@ -40,9 +40,9 @@ window.PW={
 "They see a free demo of their own site in 2 to 3 business days, before paying anything."
 ],
 "about": [
-"A website designed around the business, not a template. It has booking and lead forms wired to their Station inbox, and Station revises it until it's right. The domain and site stay the client's.",
-"It's <b>priced to the project</b>, with no published price, so never quote a number. The owner answers about 5 minutes of questions at station.solutions/custom/. Station builds a free demo by hand and emails it within 2 to 3 business days. Nothing is charged until they've seen it and said yes.",
-"After it's built, the client either takes the site over and runs it themselves, or Station hosts it and looks after it for them. <b>Hosting &amp; care</b> is one monthly subscription with <b>no list price</b>: Station quotes it for each client, and the quote covers what their domain costs plus the amount of care that fits that business. Never quote, estimate or discount it. Email Station at main@station.solutions with what the client needs, and Station sends them the quote. It's recurring, so you earn your 40% on whatever the client actually pays for it."
+"A website designed around the business, not a template. It has booking and lead forms wired to their Station inbox, and Station revises it until it’s right. The domain and site stay the client’s.",
+"It’s <b>priced to the project</b>, with no published price, so never quote a number. The owner answers about 5 minutes of questions at station.solutions/custom/. Station builds a free demo by hand and emails it within 2 to 3 business days. Nothing is charged until they’ve seen it and said yes.",
+"After it’s built, the client either takes the site over and runs it themselves, or Station hosts it and looks after it for them. <b>Hosting &amp; care</b> is one monthly subscription with <b>no list price</b>: Station quotes it for each client, and the quote covers what their domain costs plus the amount of care that fits that business. Never quote, estimate or discount it. Email Station at main@station.solutions with what the client needs, and Station sends them the quote. It’s recurring, so you earn your 40% on whatever the client actually pays for it."
 ],
 "call": {
 "opener": "Is your website bringing in the kind of customers you want, or is it something you’ve been meaning to fix?",
@@ -54,6 +54,9 @@ window.PW={
 "link": "https://station.solutions/custom/?ref={code}",
 "replyFix": {
 "How much is it?": "Good question. A custom website is priced to the project, so there’s no set price and I can’t quote one. Station builds a free demo of your own site first, usually within 2 to 3 business days, and nothing’s charged unless you like it and say yes.",
+"Send me more info": "Happy to. Here’s the link to the questions for a custom website: [link]. They take about five minutes, and Station builds a free demo of your own site, usually within 2 to 3 business days. There’s no set price; Station quotes the project after you’ve seen the demo.",
+"Is this a scam? / Who are you?": "Fair question. I’m [your name], an independent partner with Station. Station is Station Automations Group LLC, based in Houston, Texas, and you can see its work at station.solutions. I earn a commission if you go ahead. The demo of your site is free, and nothing’s charged unless you say yes. You can email Station directly at main@station.solutions. If you’d rather I didn’t contact you again, just say so.",
+"What’s the contract? / Can I cancel?": "The website itself is a one-time project, and Station quotes it after you’ve seen the free demo. After it’s built, you can run the site yourself, or Station can host and look after it for a monthly fee it quotes for your business. The domain and the site stay yours.",
 "Can you do it cheaper?": "I can’t set or change prices; Station quotes each website for the project. The free demo is the best way to see what you’d get before any number comes up."
 },
 "trial": false
@@ -78,7 +81,7 @@ window.PW={
 ],
 "about": [
 "A chat assistant on their site. It answers from their business facts, qualifies visitors and captures name, number and the job into their inbox. They can take over live, and it never quotes prices unless allowed.",
-"It costs <b>$79 a month</b> for 250 chats. Busy is $149 (750 chats) and High Volume is $249 (1,750). A chat is one visitor's conversation in 24 hours. It's live in minutes: nothing is needed if Station built their site, otherwise one line of code or site access."
+"It costs <b>$79 a month</b> for 250 chats. Busy is $149 (750 chats) and High Volume is $249 (1,750). A chat is one visitor’s conversation in 24 hours. It’s live in minutes: nothing is needed if Station built their site, otherwise one line of code or site access."
 ],
 "call": {
 "opener": "When someone visits your website late at night with a question, what happens?",
@@ -111,7 +114,7 @@ window.PW={
 ],
 "about": [
 "Customers book themselves into real availability. Then they get text and email reminders, can reply to confirm, and get a rebook nudge if they miss.",
-"It costs <b>$59 a month</b> for 1,000 reminders, or Busy at $97 (2,500), and it's free inside Frontdesk. It's live today after a 5-minute hours form. Text reminders wait about 2 business days on carrier registration for new businesses."
+"It costs <b>$59 a month</b> for 1,000 reminders, or Busy at $97 (2,500), and it’s free inside Frontdesk. It’s live today after a 5-minute hours form. Text reminders wait about 2 business days on carrier registration for new businesses."
 ],
 "call": {
 "opener": "How do customers book with you right now? Do they call, or is there a lot of back-and-forth?",
@@ -143,8 +146,8 @@ window.PW={
 "It comes with a business number, so nothing changes about how they work."
 ],
 "about": [
-"Every missed call gets an instant text in the business's name, asking what the caller needs. Replies land in their inbox, and a business number is included.",
-"It costs <b>$197 a month</b> for 1,500 texts, or Busy at $297 (5,000). It's live in about 2 business days and needs the legal business name, EIN and address."
+"Every missed call gets an instant text in the business’s name, asking what the caller needs. Replies land in their inbox, and a business number is included.",
+"It costs <b>$197 a month</b> for 1,500 texts, or Busy at $297 (5,000). It’s live in about 2 business days and needs the legal business name, EIN and address."
 ],
 "call": {
 "opener": "About how many calls do you miss in a normal week, when you’re on a job or driving?",
@@ -177,7 +180,7 @@ window.PW={
 ],
 "about": [
 "It answers 24/7, books into the calendar, takes messages, transcribes every call and always offers a transfer to a human. It never quotes custom prices or promises timelines. Slate and a number are included.",
-"It costs <b>$397 a month</b> for 750 minutes. Busy is $597 (1,200 minutes) and High Volume is $897 (2,500). It's live the same day after business facts and one test call with Station, because voice has no carrier wait."
+"It costs <b>$397 a month</b> for 750 minutes. Busy is $597 (1,200 minutes) and High Volume is $897 (2,500). It’s live the same day after business facts and one test call with Station, because voice has no carrier wait."
 ],
 "call": {
 "opener": "Who answers the phone when you’re busy with a customer?",
@@ -243,7 +246,7 @@ window.PW={
 ],
 "about": [
 "It asks every customer for a review after the job, catches every review on their Google profile, and drafts replies in their voice. Low-star replies can always be held for approval, and auto-reply can be turned off.",
-"It costs <b>$197 a month</b>, and multi-location is quoted on request. It's live the same day with Google Business Profile access and a \"job done\" signal."
+"It costs <b>$197 a month</b>, and multi-location is quoted on request. It’s live the same day with Google Business Profile access and a \"job done\" signal."
 ],
 "call": {
 "opener": "How many Google reviews do you have, compared with the competitor you lose the most work to?",
@@ -260,7 +263,7 @@ window.PW={
 "id": "echo",
 "brand": "station",
 "name": "Echo",
-"what": "Their Google listing managed properly so they show up in the local map results",
+"what": "Their Google listing managed properly filled in properly and kept active every week",
 "price": "$297 setup + $247/mo · multi-location quoted on request",
 "mrr": 247,
 "setup": 297,
@@ -276,7 +279,7 @@ window.PW={
 ],
 "about": [
 "It claims and corrects their Google profile, posts weekly, keeps name, address and phone consistent, and watches for unwanted edits. It also writes LinkedIn posts and articles and sends a monthly map-rank report. The client approves every post.",
-"It costs <b>$247 a month plus a one-time $297 setup</b>, and multi-location is quoted on request. It's live in 2 to 3 days. An unverified Google profile can take 5 to 14 days on Google's clock. Fixes land in week one, and movement usually shows in the 60 to 90 day reports. Never promise a ranking."
+"It costs <b>$247 a month plus a one-time $297 setup</b>, and multi-location is quoted on request. It’s live in 2 to 3 days. An unverified Google profile can take 5 to 14 days on Google’s clock. Fixes land in week one, and movement usually shows in the 60 to 90 day reports. Never promise a ranking."
 ],
 "call": {
 "opener": "If you search Google for what you do in your town, where does your business show up on the map?",
@@ -294,7 +297,7 @@ window.PW={
 "brand": "station",
 "name": "Dispatch",
 "what": "Email marketing to their customer list, self-serve or fully managed",
-"price": "$94/mo self-serve · $397 managed (we write and send four campaigns a month)",
+"price": "$94/mo self-serve · $397 managed (Station writes and sends four campaigns a month)",
 "mrr": 94,
 "setup": 0,
 "earn": 37.6,
@@ -309,7 +312,7 @@ window.PW={
 ],
 "about": [
 "Email campaigns to their own customer list, with editable templates, saved snippets, and open, click and booking stats. Unsubscribe handling is built in.",
-"It costs <b>$94 a month</b> self-serve, with email unmetered below 100,000 sends a month. Managed is <b>$397 a month</b>: Station writes four campaigns a month, and the owner approves before anything sends. It's live instantly once the list is in."
+"It costs <b>$94 a month</b> self-serve, with email unmetered below 100,000 sends a month. Managed is <b>$397 a month</b>: Station writes four campaigns a month, and the owner approves before anything sends. It’s live instantly once the list is in."
 ],
 "call": {
 "opener": "About how many past customers do you have email addresses for?",
@@ -341,7 +344,7 @@ window.PW={
 "Email first, and texts only go to people who agreed to get them."
 ],
 "about": [
-"Station scrubs their old customer list and runs a six-touch win-back campaign over about three weeks. It's email-first, and texting is used only where consent is documented.",
+"Station scrubs their old customer list and runs a six-touch win-back campaign over about three weeks. It’s email-first, and texting is used only where consent is documented.",
 "It costs <b>$497 a quarter</b> for up to 5,000 contacts, and they can cancel any time. It runs 1 to 2 days after the list arrives."
 ],
 "call": {
@@ -352,7 +355,9 @@ window.PW={
 "close": "Want me to send you the page so you can see how it works? Station takes the customer list from you directly, so you never need to send it to me. What’s the best email?"
 },
 "link": "https://station.solutions/revive/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"What’s the contract? / Can I cancel?": "There’s no long-term contract. Revive is billed $497 a quarter, and you can cancel any time by emailing main@station.solutions from the account owner’s email. Service stays on until the end of the quarter you’ve paid for, and time already delivered isn’t refunded."
+},
 "trial": false
 },
 {
@@ -365,18 +370,17 @@ window.PW={
 "setup": 0,
 "earn": 118.8,
 "earnLabel": "$118.80 every month they stay",
-"who": "Only trades and services that want business (B2B) customers.",
+"who": "Only trades and services that sell to other businesses, like offices or builders. If that’s not who you’re talking to, don’t sell it.",
 "easy": false,
 "ask": "What kind of work do you do, and where?",
 "why": [
 "Each message opens with something specific and true about the prospect’s own website or listing.",
 "Five new prospects every week (twenty on Pro), so there’s always someone new to talk to.",
-"Replies land in the same Station inbox as everything else.",
-"Only for businesses that sell to other businesses. If that’s not who you’re talking to, don’t sell it."
+"Replies land in the same Station inbox as everything else."
 ],
 "about": [
-"For trades and business-to-business services only. It finds the businesses the client wants as customers, audits each one's marketing, and handles outreach from the client's Station account. Email includes an opt-out, and texting only goes to people who've consented.",
-"It costs <b>$297 a month</b> for 5 new prospects a week. Pro is <b>$497 a month</b> for 20 a week across six trade targets instead of three. It's live the same day after a 15-minute setup."
+"For trades and business-to-business services only. It finds the businesses the client wants as customers, audits each one’s marketing, and handles outreach from the client’s Station account. Email includes an opt-out, and texting only goes to people who’ve consented.",
+"It costs <b>$297 a month</b> for 5 new prospects a week. Pro is <b>$497 a month</b> for 20 a week across six trade targets instead of three. It’s live the same day after a 15-minute setup."
 ],
 "call": {
 "opener": "Are there businesses you’d love to have as customers, like offices, property managers or builders?",
@@ -409,11 +413,11 @@ window.PW={
 ],
 "about": [
 "A local business number with two-way texting from their phone or desk, so their personal cell phone stops being the company line.",
-"It costs <b>$47 a month</b> for 1,000 texts. It's live in about 2 business days and needs the legal name, EIN and address. They don't need it if they're buying Lineback or Frontdesk, which include a number."
+"It costs <b>$47 a month</b> for 1,000 texts. It’s live in about 2 business days and needs the legal name, EIN and address. They don’t need it if they’re buying Lineback or Frontdesk, which include a number."
 ],
 "call": {
 "opener": "Is the number on your truck and your website your personal cell phone?",
-"discovery": "Does that mean you’re answering work calls on a Sunday?",
+"discovery": "Do you ever end up answering work calls on your day off?",
 "pitch": "Dial gives your business its own local number, with texting, that works from your phone. It’s $47 a month.",
 "objection": "“Everyone already has my cell number.” — And that keeps working. But the day you hire help or want a weekend off, a business number makes that possible, and it goes with the business if you ever sell.",
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
@@ -441,8 +445,8 @@ window.PW={
 "Station takes none of their revenue; the money goes straight to their bank."
 ],
 "about": [
-"Tap-to-pay on the owner's phone, text-to-pay links, unlimited estimates and invoices, and automatic receipts. The client connects their own free Stripe or Square account, so money goes straight to their bank.",
-"It costs <b>$47 a month plus their processor's standard card rates</b>, which the site puts at about 2.6 to 2.9%. Station takes zero percent of their revenue. It's live in 1 to 2 days."
+"Tap-to-pay on the owner’s phone, text-to-pay links, unlimited estimates and invoices, and automatic receipts. The client connects their own free Stripe or Square account, so money goes straight to their bank.",
+"It costs <b>$47 a month plus their processor’s standard card rates</b>, which the site puts at about 2.6 to 2.9%. Station takes zero percent of their revenue. It’s live in 1 to 2 days."
 ],
 "call": {
 "opener": "How do customers pay you right now: invoice, cash, check or card?",
@@ -475,7 +479,7 @@ window.PW={
 ],
 "about": [
 "A brand board in week one, posting to nine platforms (Facebook, Instagram, Google profile, LinkedIn, TikTok, Pinterest, YouTube, Threads and Bluesky, but not X), and a self-serve ad manager for Meta and Google.",
-"It costs <b>$197 a month</b> self-serve. Managed is <b>$597 a month plus ad spend</b>: 12 posts a month, ads built and run, and monthly numbers. Ad spend goes on the client's own card with a cap they set, and managed ads above $2,000 a month of spend add 10% of spend. It's live in 5 to 7 days."
+"It costs <b>$197 a month</b> self-serve. Managed is <b>$597 a month plus ad spend</b>: 12 posts a month, ads built and run, and monthly numbers. Ad spend goes on the client’s own card with a cap they set, and managed ads above $2,000 a month of spend add 10% of spend. It’s live in 5 to 7 days."
 ],
 "call": {
 "opener": "When did you last post anything on your business’s social media?",
@@ -493,7 +497,7 @@ window.PW={
 "brand": "station",
 "bundle": true,
 "name": "Core bundle",
-"what": "The starter bundle: Greet, Slate, Lineback, Pursuit, Repute and Dispatch. Worth $873/mo bought one by one, so it saves $123 a month",
+"what": "The starter bundle: Greet, Slate, Lineback, Pursuit, Repute and Dispatch. Worth $873 a month bought one by one, so it saves $123 a month",
 "price": "$750 a month, no setup fee",
 "mrr": 750,
 "setup": 0,
@@ -508,8 +512,8 @@ window.PW={
 "No setup fee, and one 15-minute kickoff call with Station sets it all up."
 ],
 "about": [
-"Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
+"Bundles have no setup fee. The site shows each bundle’s saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They’re worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They’re worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They’re worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn’t included and is quoted separately.</li></ul>",
 "Core and Pro use each product’s standard (entry-level) plan. If a client outgrows one product, they upgrade just that product for the difference."
 ],
 "call": {
@@ -527,7 +531,7 @@ window.PW={
 "brand": "station",
 "bundle": true,
 "name": "Pro bundle",
-"what": "The full stack for a busy operator: Core plus Frontdesk, Echo and Marquee. Worth $1,655/mo bought one by one (Slate is free with Frontdesk), so it saves $260/mo, and the $297 Echo setup fee is waived",
+"what": "The full stack for a busy operator: Core plus Frontdesk, Echo and Marquee. Worth $1,655 a month bought one by one (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup fee is waived",
 "price": "$1,395 a month, no setup fee",
 "mrr": 1395,
 "setup": 0,
@@ -542,8 +546,8 @@ window.PW={
 "No setup fee, and one 15-minute kickoff call with Station sets it all up."
 ],
 "about": [
-"Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
+"Bundles have no setup fee. The site shows each bundle’s saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They’re worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They’re worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They’re worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn’t included and is quoted separately.</li></ul>",
 "Core and Pro use each product’s standard (entry-level) plan. If a client outgrows one product, they upgrade just that product for the difference."
 ],
 "call": {
@@ -561,7 +565,7 @@ window.PW={
 "brand": "station",
 "bundle": true,
 "name": "Custom bundle",
-"what": "Every product at its highest usage tier, on one plan. Worth $3,282/mo bought one by one, so it saves $482/mo. A custom website is quoted separately.",
+"what": "Every product at its highest usage tier, on one plan. Worth $3,282 a month bought one by one, so it saves $482 a month. A custom website is quoted separately.",
 "price": "$2,800 a month, no setup fee",
 "mrr": 2800,
 "setup": 0,
@@ -576,8 +580,8 @@ window.PW={
 "A custom website isn’t included; Station quotes that separately."
 ],
 "about": [
-"Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
+"Bundles have no setup fee. The site shows each bundle’s saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They’re worth $873 separately, so it saves $123 a month.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They’re worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They’re worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn’t included and is quoted separately.</li></ul>",
 "Core and Pro use each product’s standard (entry-level) plan. If a client outgrows one product, they upgrade just that product for the difference."
 ],
 "call": {
@@ -640,7 +644,7 @@ window.PW={
 "easy": false,
 "ask": "Has anyone looked at whether your agendas and minutes meet the new ADA Title II rule?",
 "why": [
-"Federal law now requires state and local government websites and published documents to meet WCAG 2.1 AA. Deadlines: 26 April 2027 for places serving 50,000+, 26 April 2028 for everyone else.",
+"Federal law now requires state and local government websites and published documents to meet WCAG 2.1 AA. Deadlines: April 26, 2027 for places serving 50,000+, April 26, 2028 for everyone else.",
 "In a September 2026 scan of 676 local governments, 97.8% failed on their home page and 94% of 213 published agendas and minutes failed at least one check.",
 "Quorum reviews every page and document, repairs the documents, and keeps a dated record the government’s counsel can use.",
 "The first step is free: a review of their own site, in plain English, within a day."
@@ -652,9 +656,9 @@ window.PW={
 ],
 "call": {
 "opener": "I’m calling about the new ADA Title II web rule for local governments. Who looks after your website and the agendas you post?",
-"discovery": "Have you had a chance to check your posted agendas and minutes against it? Those are the part almost everyone misses.",
+"discovery": "Have you had a chance to check your posted agendas and minutes against it? That’s the part almost everyone misses.",
 "pitch": "Quorum does a free review of your site and documents, in plain English, within a day. If you want the repairs and the ongoing record after that, it starts at $2,400 a year.",
-"objection": "\"Our web vendor handles it.\" — Worth checking the documents: in our national scan, 94% of posted agendas and minutes failed, even on sites that looked fine."
+"objection": "“Our web vendor handles it.” — Worth checking the documents: in Quorum’s national scan, 94% of posted agendas and minutes failed, even on sites that looked fine."
 },
 "link": "https://quorumcompliance.com/",
 "replyFix": {},
@@ -664,54 +668,54 @@ window.PW={
 "replies": [
 {
 "they": "How much is it?",
-"say": "Good question. It depends on what you need, because each product is priced on its own, and most are month to month with no contract. For example, missed-call text-back is $197 a month, and the receptionist that answers every call starts at $397 a month. Every price is published on station.solutions. What's costing you the most work right now? Then I can point you at the one that fits.",
-"dont": "a price you haven't just checked, a discount, \"I can get you a deal,\" or any price for a custom website."
+"say": "Good question. It depends on what you need, because each product is priced on its own, and most are month to month with no contract. For example, missed-call text-back is $197 a month, and the receptionist that answers every call starts at $397 a month. Every price is published on station.solutions. What’s costing you the most work right now? Then I can point you at the one that fits.",
+"dont": "a price you haven’t just checked, a discount, \"I can get you a deal,\" or any price for a custom website."
 },
 {
 "they": "Send me more info",
-"say": "Happy to. So I send the right thing, what's the main thing you'd want to fix: missed calls, follow-up, reviews, booking or the website? Meanwhile, here's the page for [product]: station.solutions/[product]/?ref=[yourcode]. It shows the price, what it does, how long it takes to go live and what we'd need from you.",
-"dont": "anything that isn't on the product page. Don't send old price sheets or screenshots."
+"say": "Happy to. So I send the right thing, what’s the main thing you’d want to fix: missed calls, follow-up, reviews, booking or the website? Meanwhile, here’s the page for [product]: station.solutions/[product]/?ref=[yourcode]. It shows the price, what it does, how long it takes to go live and what Station would need from you.",
+"dont": "anything that isn’t on the product page. Don’t send old price sheets or screenshots."
 },
 {
 "they": "I already have a website",
-"say": "That's fine, you can keep it. A lot of what we do works alongside an existing site, like the chat, the missed-call text-back and reviews. If you ever want to compare, we can build a free demo of a new site to see side by side. Nothing is charged unless you say yes.",
+"say": "That’s fine, you can keep it. A lot of what Station does works alongside an existing site, like the chat, the missed-call text-back and reviews. If you ever want to compare, Station can build a free demo of a new site to see side by side. Nothing is charged unless you say yes.",
 "dont": "that their site is bad, or that a new site will bring more customers."
 },
 {
 "they": "Is this a scam? / Who are you?",
-"say": "Fair question. I'm [your name], an independent partner with Station. Station is Station Automations Group LLC, based in Houston, Texas, and every product and price is published at station.solutions. I earn a commission if you sign up. There's no contract, and single products start with a 7-day free trial. You can email Station directly at main@station.solutions. If you'd rather I didn't contact you again, just say so.",
-"dont": "that you're a Station employee. Don't push. If they ask you to stop, stop and mark the lead Do not call."
+"say": "Fair question. I’m [your name], an independent partner with Station. Station is Station Automations Group LLC, based in Houston, Texas, and every product and price is published at station.solutions. I earn a commission if you sign up. There’s no contract, and single products start with a 7-day free trial. You can email Station directly at main@station.solutions. If you’d rather I didn’t contact you again, just say so.",
+"dont": "that you’re a Station employee. Don’t push. If they ask you to stop, stop and mark the lead Do not call."
 },
 {
 "they": "I need to think about it",
-"say": "Of course, take your time. Would it help if I sent you the page for [product] so everything's in one place? Is there a question I can answer that would make it easier, like setup time or what we'd need from you? If it's OK, I'll check back on [day].",
+"say": "Of course, take your time. Would it help if I sent you the page for [product] so everything’s in one place? Is there a question I can answer that would make it easier, like setup time or what Station would need from you? If it’s OK, I’ll check back on [day].",
 "dont": "\"the price goes up tomorrow,\" \"only a few spots left,\" or any other false urgency."
 },
 {
 "they": "Can you do it cheaper?",
-"say": "I can't change prices. Station sets them, and they're the same for everyone. What I can do is make sure you're on the right thing. If [product] is more than you need, [smaller option] may do the job. Single products start with a 7-day free trial and there's no contract, so you can try it. If you want several products, a bundle usually costs less than buying them separately.",
-"dont": "\"I'll give you part of my commission,\" \"I'll get you a special price,\" or offer a longer trial. That goes for website hosting &amp; care too: Station quotes it for each client, so pass the question to Station instead of offering a number."
+"say": "I can’t change prices. Station sets them, and they’re the same for everyone. What I can do is make sure you’re on the right thing. If [product] is more than you need, [smaller option] may do the job. Single products start with a 7-day free trial and there’s no contract, so you can try it. If you want several products, a bundle usually costs less than buying them separately.",
+"dont": "\"I’ll give you part of my commission,\" \"I’ll get you a special price,\" or offer a longer trial. That goes for website hosting &amp; care too: Station quotes it for each client, so pass the question to Station instead of offering a number."
 },
 {
-"they": "What's the contract? / Can I cancel?",
-"say": "There's no long-term contract. It's month to month, and you can cancel any time by emailing main@station.solutions from the account owner's email. Service stays on until the end of the period you've paid for, and months already delivered aren't refunded. You keep your data and get a full export when you leave. The full policy is on station.solutions under Cancellation.",
+"they": "What’s the contract? / Can I cancel?",
+"say": "There’s no long-term contract. It’s month to month, and you can cancel any time by emailing main@station.solutions from the account owner’s email. Service stays on until the end of the period you’ve paid for, and months already delivered aren’t refunded. You keep your data and get a full export when you leave. The full policy is on station.solutions under Cancellation.",
 "dont": "\"you can get your money back any time.\" Refunds are only for billing errors, or for a setup fee if no work has started."
 },
 {
 "they": "How long does setup take?",
-"say": "Each product page states its time to go live. For example, the website chat is live in minutes, and booking and the receptionist go live the same day. Anything that sends texts first needs US carrier registration, which takes about 2 business days and is controlled by the carriers. We file it; you just give us your legal business name, EIN and address. A custom website starts with a free demo in 2 to 3 business days.",
+"say": "Each product page states its time to go live. For example, the website chat is live in minutes, and booking and the receptionist go live the same day. Anything that sends texts first needs US carrier registration, which takes about 2 business days and is controlled by the carriers. Station files it; you just give Station your legal business name, EIN and address. A custom website starts with a free demo in 2 to 3 business days.",
 "dont": "\"live today\" for anything that texts, or a launch date for a website."
 },
 {
 "they": "Do I need to be techy?",
-"say": "No. Station sets it up for you, and every message is already written. You can change the wording any time, but you don't have to. You'll book a short onboarding call where Station walks you through your account. After that, you mostly just reply to customers.",
-"dont": "\"you won't have to do anything.\" Some products need a little from them, like business facts, Google profile access or a customer list."
+"say": "No. Station sets it up for you, and every message is already written. You can change the wording any time, but you don’t have to. You’ll book a short onboarding call where Station walks you through your account. After that, you mostly just reply to customers.",
+"dont": "\"you won’t have to do anything.\" Some products need a little from them, like business facts, Google profile access or a customer list."
 }
 ],
-"pitch": "Most local businesses lose work in the gaps: the call they miss on a job, the lead they only follow up once, the review they never ask for. Station fills those gaps with simple tools we set up for you, like a missed-call text-back, a receptionist that answers around the clock, automatic follow-up, review requests and online booking. You pick the one thing that's hurting most. Most single products start with a 7-day free trial, and there's no contract. What part of your week costs you the most work?",
+"pitch": "Most local businesses lose work in the gaps: the call they miss on a job, the lead they only follow up once, the review they never ask for. Station fills those gaps with simple tools Station sets up for you, like a missed-call text-back, a receptionist that answers around the clock, automatic follow-up, review requests and online booking. You pick the one thing that’s hurting most. Most single products start with a 7-day free trial, and there’s no contract. What part of your week costs you the most work?",
 "qualify": [
 "What kind of work do you do, and where?",
-"When the phone rings and you can't answer, what happens to that caller?",
+"When the phone rings and you can’t answer, what happens to that caller?",
 "How do customers book you today?",
 "When someone asks about a job and goes quiet, how many times do you follow up?",
 "How many Google reviews do you have compared with the competitor you lose work to?",
