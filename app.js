@@ -99,7 +99,10 @@
     LEADS.forEach(function (l) { c[['due', 'fresh', 'again', 'done'][rank(l)]]++; });
     c.toCall = c.due + c.fresh + c.again; return c;
   }
-  function statusText(s) { return s.o === 'callback' && s.due ? (s.due < today() ? 'Call back: overdue since ' + dayLabel(s.due) : 'Call back ' + dayLabel(s.due)) : OUT[s.o]; }
+  function statusText(s) {
+    var t = s.o === 'callback' && s.due ? (s.due < today() ? 'Call back: overdue since ' + dayLabel(s.due) : 'Call back ' + dayLabel(s.due)) : OUT[s.o];
+    return s.wasInterested && !CLOSED[s.o] ? 'Interested \u00b7 ' + t : t;
+  }
   function callsSummary(c) {
     var parts = [];
     if (c.due) parts.push(c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due');
@@ -313,7 +316,7 @@
     function fill(t) {
       t = t.replace('station.solutions/[product]/?ref=[yourcode]', mine).replace(/\[link\]/g, mine).replace(/\[yourcode\]/g, code()).replace(/\[your name\]/g, S.name).replace(/on \[day\]/g, 'later this week');
       t = smaller ? t.replace(/\[smaller option\]/g, smaller) : t.replace(/ ?If \[product\] is more than you need, \[smaller option\] may do the job\./, '');
-      if (!b.trial) t = t.replace(/ ?Single products start with a 7-day free trial and there's no contract, so you can try it\./, ' There’s no contract.').replace('and single products start with a 7-day free trial', 'and most single products start with a 7-day free trial');
+      if (!b.trial) t = t.replace(/ ?Single products start with a 7-day free trial and there[’']s no contract, so you can try it\./, ' There’s no contract.').replace('and single products start with a 7-day free trial', 'and most single products start with a 7-day free trial');
       return t.replace(/\[product\]/g, named);
     }
     if (b.brand === 'station') PW.replies.forEach(function (r) {
@@ -376,12 +379,13 @@
   }
   window.addEventListener('resize', sizeFeed);
   /* scroll the FEED, never the page: scrollIntoView would also scroll the window and slide the page off the screen */
-  function feedShow(el, whole) {
+  function feedShow(el, whole, instant) {
     var f = feedEl(); if (!f || !el) return;
     var fr = f.getBoundingClientRect(), r = el.getBoundingClientRect();
-    if (whole) { f.scrollTo({ top: f.scrollTop + r.top - fr.top }); return; }
-    if (r.bottom > fr.bottom) f.scrollTo({ top: f.scrollTop + r.bottom - fr.bottom + 12 });
-    else if (r.top < fr.top) f.scrollTo({ top: f.scrollTop + r.top - fr.top - 12 });
+    var how = instant ? 'instant' : 'smooth';
+    if (whole) { f.scrollTo({ top: f.scrollTop + r.top - fr.top, behavior: how }); return; }
+    if (r.bottom > fr.bottom) f.scrollTo({ top: f.scrollTop + r.bottom - fr.bottom + 12, behavior: how });
+    else if (r.top < fr.top) f.scrollTo({ top: f.scrollTop + r.top - fr.top - 12, behavior: how });
   }
 
   VIEWS.calls = function (id) {
@@ -410,15 +414,16 @@
   function updateEnd(b) {
     var c = counts(), end = document.querySelector('#endCard .lead-card');
     document.getElementById('leftCount').textContent = c.toCall + ' to call';
-    var can = c.fresh === 0 && c.due === 0 && !S.asked, h, p, btn;
-    if (c.fresh || c.due) {
-      h = 'You skipped ' + (c.fresh + c.due) + '.';
-      p = 'Station sends the next batch once you’ve tried every business on your list.';
+    var can = c.fresh === 0 && !S.asked, h, p, btn, due = c.due ? c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due' : '';
+    if (c.fresh) {
+      h = 'You skipped ' + c.fresh + '.';
+      p = 'Station sends the next batch once you’ve tried every new business on your list.' + (due ? ' You also have ' + due + '.' : '');
       btn = '<button class="btn btn-dark btn-big" type="button" id="toFirst">Go to the first one</button>';
     } else {
-      h = 'You’ve tried every business.';
-      p = (S.asked ? 'Station has your request and will send the next batch.' : 'Ask Station for the next batch.') + (c.again ? ' Your ' + c.again + ' to try again stay on your list.' : '');
-      btn = '<button class="btn btn-dark btn-big" type="button" id="askMore"' + (can ? '' : ' disabled') + '>' + (S.asked ? 'Asked. Station will send more' : 'Ask Station for more businesses') + '</button>';
+      h = 'You’ve tried every new business.';
+      p = (S.asked ? 'Station has your request and will send the next batch.' : 'Ask Station for the next batch.') + (due ? ' You have ' + due + '.' : '') + (c.again ? ' Your ' + c.again + ' to try again stay on your list.' : '');
+      btn = '<button class="btn btn-dark btn-big" type="button" id="askMore"' + (can ? '' : ' disabled') + '>' + (S.asked ? 'Asked. Station will send more' : 'Ask Station for more businesses') + '</button>' +
+        (c.due ? '<button class="btn" type="button" id="toFirst">Go to your call-backs</button>' : '');
     }
     end.innerHTML = '<h2>' + h + '</h2><p>' + p + '</p>' + btn + '<a class="btn" href="#box/' + b.id + '">Review ' + esc(b.name) + '</a>';
     var tf = document.getElementById('toFirst');
@@ -434,8 +439,33 @@
       var l = LEAD[card.getAttribute('data-id')], t = localTime(l.st), line = card.querySelector('[data-time]');
       if (!line) return;
       line.className = t.ok ? 'okc' : 'late'; line.textContent = (t.ok ? 'OK to call now' : t.why) + ' \u00b7 it\u2019s ' + t.text + ' there';
-      if (String(t.ok) !== card.getAttribute('data-ok') && !card.contains(document.activeElement)) renderCard(card, b);
+      if (String(t.ok) !== card.getAttribute('data-ok')) applyHours(card, l, t);
     });
+  }
+  function applyHours(card, l, t) {
+    card.setAttribute('data-ok', String(t.ok));
+    var btn = card.querySelector('.call-btn');
+    if (btn) { var tmp = document.createElement('div'); tmp.innerHTML = callBtnHtml(l, t); btn.parentNode.replaceChild(tmp.firstChild, btn); }
+    var cn = card.querySelector('[data-copynum]');
+    if (!t.ok && cn) cn.parentNode.removeChild(cn);
+    if (t.ok && !cn && btn) card.querySelector('[data-next]').insertAdjacentHTML('beforebegin', '<button class="link-btn" type="button" data-copynum>Copy number</button>');
+    var rd = card.querySelector('[data-row="day"]');
+    if (rd) { [].slice.call(rd.querySelectorAll('[data-day]')).forEach(function (x) { x.parentNode.removeChild(x); }); rd.insertAdjacentHTML('beforeend', dayButtons(t.ok)); }
+  }
+  function callBtnHtml(l, t) {
+    return t.ok ? '<a class="btn btn-green call-btn" href="tel:' + l.dial + '">' + (touch ? 'Call now' : 'Call from your phone') + '<small>' + l.phone + '</small></a>'
+      : '<button class="btn call-btn closed" type="button" disabled>Calls open ' + t.opens + '<small>' + l.phone + '</small></button>';
+  }
+  /* 9: call-back choices, without two buttons that land on the same day (Saturday: tomorrow and in 2 days are both Monday) */
+  function dayButtons(ok) {
+    var o = [], seen = {};
+    if (ok) { o.push([0, 'Later today']); seen[today()] = 1; }
+    [[1, 'Tomorrow'], [2, 'In 2 days'], [7, 'Next week']].forEach(function (x) {
+      var d = addDays(x[0]); if (seen[d]) return; seen[d] = 1;
+      var lab = x[0] === 1 && d !== ymd(new Date(Date.now() + 864e5)) ? new Date(d + 'T12:00').toLocaleDateString('en-US', { weekday: 'long' }) : x[1];
+      o.push([x[0], lab]);
+    });
+    return o.map(function (x, i) { return '<button type="button"' + (o.length % 2 && i === o.length - 1 ? ' class="wide"' : '') + ' data-day="' + x[0] + '">' + x[1] + '</button>'; }).join('');
   }
   function goTo(el) {
     if (!el) return;
@@ -454,7 +484,8 @@
   function cleanEmail(e) { return String(e || '').replace(/[\s?&#<>"']/g, ''); }
   function sendBox(l, b, s) {
     var bx = BOX[s.box] || b, link = linkFor(bx), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    var body = 'Hi, it was good to talk today. Here\u2019s the page for ' + bx.name + ' I mentioned: ' + link + '\n\n' + S.name + ', independent partner with Station';
+    var what = bx.id === 'website' ? 'the questions for your custom website' : 'the page for ' + (bx.bundle ? 'the ' + bx.name : bx.name);
+    var body = 'Hi, it was good to talk today. Here\u2019s ' + what + ' I mentioned: ' + link + '\n\n' + S.name + ', independent partner with Station';
     var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> Send them your link so the sale is credited to you. Station checks the sale and sets them up.'
       : '<strong>Interested.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
     return '<div class="won-next' + (s.o === 'won' ? '' : ' warm') + '"><p>' + head + '</p>' +
@@ -472,8 +503,7 @@
     var t = localTime(l.st), s = S.log[l.id], rk = rank(l), closed = s && CLOSED[s.o];
     var suggest = (l.fits !== b.id && BOX[l.fits] && !b.bundle) ? ' <span class="small">Best fit: ' + esc(BOX[l.fits].name) + '.</span>' : '';
     var pill = s ? '<span class="pill ' + (closed ? 'status' : rk === 0 ? 'due' : 'again') + '">' + esc(statusText(s)) + '</span>' : '<span class="pill">New</span>';
-    var callBtn = t.ok ? '<a class="btn btn-green call-btn" href="tel:' + l.dial + '">' + (touch ? 'Call now' : 'Call from your phone') + '<small>' + l.phone + '</small></a>'
-      : '<button class="btn call-btn closed" type="button" disabled>Calls open ' + t.opens + '<small>' + l.phone + '</small></button>';
+    var callBtn = callBtnHtml(l, t);
     var outcomes = '<div class="outcome-area"' + (closed ? ' hidden' : '') + '><div class="what-row"><span class="small">What happened?</span><button class="link-btn" type="button" data-glossary>What do these mean?</button></div><div class="outcomes" data-row="1">' +
       '<button type="button" data-o="noanswer">No answer</button><button type="button" data-o="voicemail">Voicemail</button>' +
       '<button type="button" data-o="bad">Bad lead</button><button type="button" data-o="talked">Talked to them</button></div>' +
@@ -482,13 +512,13 @@
       '<button type="button" data-o="notint">Not interested</button><button type="button" data-o="dnc">Do not call</button>' +
       '<button type="button" class="wide won" data-o="won">Won: they’re buying</button></div>' +
       '<div class="outcomes" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' +
-      (t.ok ? '<button type="button" data-day="0">Later today</button>' : '') + '<button type="button" data-day="1">Tomorrow</button><button type="button" data-day="2">In 2 days</button><button type="button"' + (t.ok ? '' : ' class="wide"') + ' data-day="7">Next week</button></div></div>';
+      dayButtons(t.ok) + '</div></div>';
     return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
       '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ From Station · ' + l.days + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
       '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ' reviews)</span></div></div>' +
       (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there</span></div>') +
       '<div class="fit"><b>Talking point</b>' + esc(l.gap) + suggest + '</div>' +
-      (closed ? doneBlock(l, b, s) : callBtn) + (s && s.o === 'interested' ? sendBox(l, b, s) : '') + outcomes +
+      (closed ? doneBlock(l, b, s) : callBtn) + (s && !closed && (s.o === 'interested' || s.wasInterested || s.email) ? sendBox(l, b, s) : '') + outcomes +
       '<div class="note-box"' + (S.notes[l.id] ? '' : ' hidden') + '><label class="sr" for="note-' + l.id + '">Note about ' + esc(l.name) + '</label><input class="text" id="note-' + l.id + '" placeholder="One-line note, saved as you type" value="' + esc(S.notes[l.id] || '') + '"></div>' +
       '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button>' + (t.ok && !closed ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') + '<button class="link-btn" type="button" data-next>Next ↓</button></div></div></article>';
   }
@@ -505,18 +535,18 @@
     function reveal(el) { el.hidden = false; feedShow(el); el.querySelector('.row-h').focus({ preventScroll: true }); }
     function rerender(focusSel) {
       var fresh = renderCard(card, b);
-      if (focusSel) { var f = fresh.querySelector(focusSel); if (f) { feedShow(f); f.focus({ preventScroll: true }); } }
+      if (focusSel) { var f = fresh.querySelector(focusSel); if (f) { feedShow(fresh, true, true); feedShow(f, false, true); f.focus({ preventScroll: true }); } }
       return fresh;
     }
     function record(o, extra) {
-      var prev = S.log[id] || {};
-      S.log[id] = Object.assign({ o: o, box: b.id, at: Date.now() }, prev.email ? { email: prev.email } : {}, extra || {}); save();
+      var prev = S.log[id] || {}, was = prev.o === 'interested' || prev.wasInterested;
+      S.log[id] = Object.assign({ o: o, box: b.id, at: Date.now() }, prev.email ? { email: prev.email } : {}, was && o !== 'interested' ? { wasInterested: true } : {}, extra || {}); save();
     }
     function advance(el) { setTimeout(function () { goTo(el.nextElementSibling); }, 700); }
     card.querySelector('[data-next]').addEventListener('click', function () { goTo(card.nextElementSibling); });
     card.querySelector('[data-note]').addEventListener('click', function () { var nb = card.querySelector('.note-box'); nb.hidden = false; feedShow(nb); nb.querySelector('input').focus({ preventScroll: true }); });
     card.querySelector('.note-box input').addEventListener('input', function () { var v = this.value.slice(0, 200); if (v.trim()) S.notes[id] = v; else delete S.notes[id]; save(); });
-    var cn = card.querySelector('[data-copynum]'); if (cn) cn.addEventListener('click', function () { copy(l.phone, cn); });
+    card.querySelector('.card-links').addEventListener('click', function (e) { var cn = e.target.closest('[data-copynum]'); if (cn) copy(l.phone, cn); });
     card.querySelector('[data-glossary]').addEventListener('click', openGlossary);
     var ch = card.querySelector('[data-change]');
     if (ch) ch.addEventListener('click', function () {
@@ -547,14 +577,16 @@
         advance(fresh);
       });
     });
-    rd.querySelectorAll('[data-day]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var n = +btn.getAttribute('data-day'), due = n === 0 ? today() : addDays(n);
+    rd.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-day]'); if (!btn) return;
+      (function () {
+        var n = +btn.getAttribute('data-day'); if (n === 0 && !localTime(l.st).ok) n = 1;
+        var due = n === 0 ? today() : addDays(n);
         record('callback', { due: due });
         var fresh = rerender();
         toast('Call back ' + dayLabel(due) + '. They stay on your list.');
         advance(fresh);
-      });
+      })();
     });
   }
 
@@ -603,8 +635,8 @@
     var won = Object.keys(S.log).filter(function (k) { return S.log[k].o === 'won' && LEAD[k]; }).map(function (k) {
       var bx = BOX[S.log[k].box]; return { client: LEAD[k].name, on: bx ? bx.name : '', earn: bx && bx.earn, per: bx ? period(bx) : 'month' };
     });
-    var rows = BOOK.map(function (r) { return '<tr><td data-l="Client"><b>' + esc(r.client) + '</b></td><td data-l="On">' + esc(r.on) + '</td><td data-l="They pay" class="r num">' + money(r.pays) + ' / mo</td><td data-l="You get" class="r num">' + money(r.pays * PW.rate) + ' / mo</td><td data-l="Where it stands">' + esc(r.state) + '</td></tr>'; }).join('');
-    rows += won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="They pay" class="r">Not yet</td><td data-l="You’ll get" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' / qtr' : ' / mo') : 'Set by their plan') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('');
+    var rows = BOOK.map(function (r) { return '<tr><td data-l="Client"><b>' + esc(r.client) + '</b></td><td data-l="On">' + esc(r.on) + '</td><td data-l="They pay" class="r num">' + money(r.pays) + ' a month</td><td data-l="You get" class="r num">' + money(r.pays * PW.rate) + ' a month</td><td data-l="Where it stands">' + esc(r.state) + '</td></tr>'; }).join('');
+    rows += won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="They pay" class="r">Not yet</td><td data-l="You’ll get" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' a quarter' : ' a month') : 'Set by their plan') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('');
     mount('<div class="wrap money"><h1>Your money</h1><p class="sub">Sample figures for this preview. In the real thing these come straight from Stripe.</p>' +
       '<div class="setup"><h2 class="setup-h">Waiting on you: 2 steps before your first payout</h2>' +
       '<div class="setup-row"><span><b>1. Your tax form (W-9).</b> Nothing can be paid until it’s on file. Your commission keeps building up meanwhile.</span><button class="btn" type="button" data-demo="tax">Upload W-9</button></div>' +

@@ -57,7 +57,9 @@ window.PW={
 "Send me more info": "Happy to. Here’s the link to the questions for a custom website: [link]. They take about five minutes, and Station builds a free demo of your own site, usually within 2 to 3 business days. There’s no set price; Station quotes the project after you’ve seen the demo.",
 "Is this a scam? / Who are you?": "Fair question. I’m [your name], an independent partner with Station. Station is Station Automations Group LLC, based in Houston, Texas, and you can see its work at station.solutions. I earn a commission if you go ahead. The demo of your site is free, and nothing’s charged unless you say yes. You can email Station directly at main@station.solutions. If you’d rather I didn’t contact you again, just say so.",
 "What’s the contract? / Can I cancel?": "The website itself is a one-time project, and Station quotes it after you’ve seen the free demo. After it’s built, you can run the site yourself, or Station can host and look after it for a monthly fee it quotes for your business. The domain and the site stay yours.",
-"Can you do it cheaper?": "I can’t set or change prices; Station quotes each website for the project. The free demo is the best way to see what you’d get before any number comes up."
+"Can you do it cheaper?": "I can’t set or change prices; Station quotes each website for the project. The free demo is the best way to see what you’d get before any number comes up.",
+"How long does setup take?": "You answer about five minutes of questions, and Station builds a free demo of your own site, usually within 2 to 3 business days. If you go ahead, Station agrees the page list with you and gives you the timeline. I can’t give you a launch date myself.",
+"Do I need to be techy?": "No. Station designs and builds the whole site. You’ll share things like your logo and photos, and say what you like. After it’s built, Station can host and look after it, or you can run it yourself."
 },
 "trial": false
 },
@@ -66,7 +68,7 @@ window.PW={
 "brand": "station",
 "name": "Greet",
 "what": "AI chat on their website that answers and captures every visitor",
-"price": "$79/mo (250 chats) · $149 busy (750 chats) · $249 high volume (1,750 chats)",
+"price": "$79 a month (250 chats) · $149 busy (750 chats) · $249 high volume (1,750 chats)",
 "mrr": 79,
 "setup": 0,
 "earn": 31.6,
@@ -91,7 +93,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/greet/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Greet is $79 a month for up to 250 chats, with bigger plans for busier websites. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -99,7 +103,7 @@ window.PW={
 "brand": "station",
 "name": "Slate",
 "what": "Customers book themselves, and reminders make sure they turn up",
-"price": "$59/mo (1,000 reminders) · $97 busy (2,500 reminders)",
+"price": "$59 a month (1,000 reminders) · $97 busy (2,500 reminders)",
 "mrr": 59,
 "setup": 0,
 "earn": 23.6,
@@ -124,7 +128,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/slate/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Slate is $59 a month for up to 1,000 reminders, or $97 a month if you’re busier. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -132,7 +138,7 @@ window.PW={
 "brand": "station",
 "name": "Lineback",
 "what": "Every missed call gets a text back within seconds",
-"price": "$197/mo (1,500 texts) · $297 busy (5,000 texts)",
+"price": "$197 a month (1,500 texts) · $297 busy (5,000 texts)",
 "mrr": 197,
 "setup": 0,
 "earn": 78.8,
@@ -157,7 +163,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/lineback/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Lineback is $197 a month for up to 1,500 texts, or $297 a month if you’re busier. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -165,7 +173,7 @@ window.PW={
 "brand": "station",
 "name": "Frontdesk",
 "what": "An AI receptionist that answers every call 24/7 and books the job",
-"price": "$397/mo (750 min) · $597 busy (1,200 min) · $897 high volume (2,500 min)",
+"price": "$397 a month (750 min) · $597 busy (1,200 min) · $897 high volume (2,500 min)",
 "mrr": 397,
 "setup": 0,
 "earn": 158.8,
@@ -190,7 +198,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/frontdesk/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Frontdesk is $397 a month for 750 minutes of calls, with bigger plans for busier businesses. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -198,7 +208,7 @@ window.PW={
 "brand": "station",
 "name": "Pursuit",
 "what": "Every lead followed up by text and email until they reply or book",
-"price": "$247/mo (2,500 texts + 15,000 emails) · $347 busy (6,000 texts + 40,000 emails)",
+"price": "$247 a month (2,500 texts + 15,000 emails) · $347 busy (6,000 texts + 40,000 emails)",
 "mrr": 247,
 "setup": 0,
 "earn": 98.8,
@@ -223,7 +233,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the messages it sends? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/pursuit/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Pursuit is $247 a month, or $347 a month if you get a lot of leads. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -231,7 +243,7 @@ window.PW={
 "brand": "station",
 "name": "Repute",
 "what": "Asks every happy customer for a review, and replies to the ones that come in",
-"price": "$197/mo · multi-location quoted on request",
+"price": "$197 a month · multi-location quoted on request",
 "mrr": 197,
 "setup": 0,
 "earn": 78.8,
@@ -246,7 +258,7 @@ window.PW={
 ],
 "about": [
 "It asks every customer for a review after the job, catches every review on their Google profile, and drafts replies in their voice. Low-star replies can always be held for approval, and auto-reply can be turned off.",
-"It costs <b>$197 a month</b>, and multi-location is quoted on request. It’s live the same day with Google Business Profile access and a \"job done\" signal."
+"It costs <b>$197 a month</b>, and multi-location is quoted on request. It’s live the same day with Google Business Profile access and a\u0001“job done” signal."
 ],
 "call": {
 "opener": "How many Google reviews do you have, compared with the competitor you lose the most work to?",
@@ -256,15 +268,17 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/repute/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Repute is $197 a month. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
 "id": "echo",
 "brand": "station",
 "name": "Echo",
-"what": "Their Google listing managed properly filled in properly and kept active every week",
-"price": "$297 setup + $247/mo · multi-location quoted on request",
+"what": "Their Google listing filled in properly and kept active every week",
+"price": "$297 setup + $247 a month · multi-location quoted on request",
 "mrr": 247,
 "setup": 297,
 "earn": 98.8,
@@ -286,18 +300,20 @@ window.PW={
 "discovery": "Do you know who shows up above you?",
 "pitch": "Often the businesses above you just have a more complete Google listing. Echo fills yours in properly, posts to it every week, keeps it accurate and sends you a monthly report. It’s $297 to set up, then $247 a month.",
 "objection": "“I already have a Google listing.” — Most businesses do. Echo makes sure it’s complete and stays active, which a lot of listings aren’t. Nobody can honestly promise a ranking, and Station doesn’t.",
-"close": "Want me to send you the page so you can see everything that’s included? What’s the best email?"
+"close": "Want me to send you the page so you can see everything that’s included? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/echo/?ref={code}",
-"replyFix": {},
-"trial": false
+"replyFix": {
+"How much is it?": "Good question. Echo is $297 to set up, then $247 a month. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
+"trial": true
 },
 {
 "id": "dispatch",
 "brand": "station",
 "name": "Dispatch",
 "what": "Email marketing to their customer list, self-serve or fully managed",
-"price": "$94/mo self-serve · $397 managed (Station writes and sends four campaigns a month)",
+"price": "$94 a month self-serve · $397 managed (Station writes and sends four campaigns a month)",
 "mrr": 94,
 "setup": 0,
 "earn": 37.6,
@@ -308,7 +324,7 @@ window.PW={
 "why": [
 "Past customers already trust them, so they’re the easiest people to win work from.",
 "Self-serve, so they send whenever they want.",
-"On Managed ($397/mo), Station writes and sends four campaigns a month, and they approve each one first."
+"On Managed ($397 a month), Station writes and sends four campaigns a month, and they approve each one first."
 ],
 "about": [
 "Email campaigns to their own customer list, with editable templates, saved snippets, and open, click and booking stats. Unsubscribe handling is built in.",
@@ -322,7 +338,9 @@ window.PW={
 "close": "Want me to send you the page so you can see both options? The self-serve plan starts with a 7-day free trial, and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/dispatch/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Dispatch is $94 a month if you send the emails yourself, or $397 a month if Station writes and sends them for you. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -352,20 +370,21 @@ window.PW={
 "discovery": "Did they leave for a reason, or did they just drift away?",
 "pitch": "A lot of them just haven’t thought about you in a while. Revive sends them a six-message campaign over about three weeks, with a reason to come back. It’s $497 a quarter for up to 5,000 contacts, and you can cancel any time.",
 "objection": "“They’ve probably gone somewhere else.” — Some have. A lot just forgot. A friendly reminder is how you find out which is which.",
-"close": "Want me to send you the page so you can see how it works? Station takes the customer list from you directly, so you never need to send it to me. What’s the best email?"
+"close": "Want me to send you the page so you can see how it works? It starts with a 7-day free trial and there’s no contract. Station takes the customer list from you directly, so you never need to send it to me. What’s the best email?"
 },
 "link": "https://station.solutions/revive/?ref={code}",
 "replyFix": {
-"What’s the contract? / Can I cancel?": "There’s no long-term contract. Revive is billed $497 a quarter, and you can cancel any time by emailing main@station.solutions from the account owner’s email. Service stays on until the end of the quarter you’ve paid for, and time already delivered isn’t refunded."
+"What’s the contract? / Can I cancel?": "There’s no long-term contract. Revive is billed $497 a quarter, and you can cancel any time by emailing main@station.solutions from the account owner’s email. Service stays on until the end of the quarter you’ve paid for, and time already delivered isn’t refunded.",
+"How much is it?": "Good question. Revive is $497 a quarter for up to 5,000 contacts. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
 },
-"trial": false
+"trial": true
 },
 {
 "id": "radar",
 "brand": "station",
 "name": "Radar",
 "what": "Finds the businesses they want as customers, audits each one, and reaches out for them",
-"price": "$297/mo (5 new prospects a week) · $497 pro (20 new prospects a week)",
+"price": "$297 a month (5 new prospects a week) · $497 pro (20 new prospects a week)",
 "mrr": 297,
 "setup": 0,
 "earn": 118.8,
@@ -387,10 +406,12 @@ window.PW={
 "discovery": "How do you find new business customers now?",
 "pitch": "Radar finds the kind of businesses you want as customers in your area, checks each one’s website and listing, and reaches out to them for you from your Station account. It finds five new prospects a week, for $297 a month.",
 "objection": "“I’m not a salesperson.” — You don’t need to be. Each message points out something specific and true about that business’s own website or listing, so it comes across as helpful, not pushy.",
-"close": "Want me to send you the page so you can see a sample report? What’s the best email?"
+"close": "Want me to send you the page so you can see a sample report? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/radar/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Radar is $297 a month for five new prospects a week, or $497 a month for twenty. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -398,7 +419,7 @@ window.PW={
 "brand": "station",
 "name": "Dial",
 "what": "A proper business number with texting",
-"price": "$47/mo (1,000 texts)",
+"price": "$47 a month (1,000 texts)",
 "mrr": 47,
 "setup": 0,
 "earn": 18.8,
@@ -423,7 +444,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/dial/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Dial is $47 a month for up to 1,000 texts. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -431,7 +454,7 @@ window.PW={
 "brand": "station",
 "name": "Tap",
 "what": "Taking payments, in person and online",
-"price": "$47/mo + card rates",
+"price": "$47 a month + card rates",
 "mrr": 47,
 "setup": 0,
 "earn": 18.8,
@@ -456,7 +479,9 @@ window.PW={
 "close": "Want me to send you the page so you can see the price and how it works? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/tap/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Tap is $47 a month plus the normal card fees from Stripe or Square. Station takes none of your revenue. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -464,7 +489,7 @@ window.PW={
 "brand": "station",
 "name": "Marquee",
 "what": "Social posts, ads and a brand board, self-serve or managed for them",
-"price": "$197/mo self-serve · $597 managed (12 posts a month and ads run for you, ad spend extra)",
+"price": "$197 a month self-serve · $597 managed (12 posts a month and ads run for you, ad spend extra)",
 "mrr": 197,
 "setup": 0,
 "earn": 78.8,
@@ -475,7 +500,7 @@ window.PW={
 "why": [
 "Their social pages stop looking abandoned.",
 "Posts keep going out in a busy week, which is exactly when they usually stop.",
-"On Managed ($597/mo plus ad spend), Station makes twelve posts a month and runs the ads."
+"On Managed ($597 a month plus ad spend), Station makes twelve posts a month and runs the ads."
 ],
 "about": [
 "A brand board in week one, posting to nine platforms (Facebook, Instagram, Google profile, LinkedIn, TikTok, Pinterest, YouTube, Threads and Bluesky, but not X), and a self-serve ad manager for Meta and Google.",
@@ -486,10 +511,12 @@ window.PW={
 "discovery": "If someone looks you up there before they call, what do they find?",
 "pitch": "Marquee keeps your social media posting regularly, on Facebook, Instagram, your Google profile and more. It’s $197 a month, and you can still post your own jobs whenever you like. For $597 a month plus ad spend, Station makes the posts and runs your ads for you.",
 "objection": "“Social media doesn’t bring me work.” — Often not directly. But people check it after your reviews, and a page that stopped posting two years ago makes them wonder if you’re still open.",
-"close": "Want me to send you the page so you can see what’s included? What’s the best email?"
+"close": "Want me to send you the page so you can see what’s included? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/marquee/?ref={code}",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. Marquee is $197 a month if you post yourself, or $597 a month plus ad spend if Station does it for you. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+},
 "trial": true
 },
 {
@@ -523,7 +550,10 @@ window.PW={
 "close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
 },
 "link": "https://station.solutions/?ref={code}#bundles",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. The Core bundle is $750 a month with no setup fee. That’s $123 a month less than buying the six products one by one. There’s no free trial on bundles, and no long-term contract. Every price is published on station.solutions.",
+"Can you do it cheaper?": "I can’t change prices. Station sets them, and they’re the same for everyone. What I can do is make sure you’re on the right thing. If [product] is more than you need, [smaller option] may do the job. A bundle already costs less than buying the same products one by one."
+},
 "trial": false
 },
 {
@@ -557,7 +587,10 @@ window.PW={
 "close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
 },
 "link": "https://station.solutions/?ref={code}#bundles",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. The Pro bundle is $1,395 a month with no setup fee. That’s $260 a month less than buying the products one by one, and the Echo setup fee is waived. There’s no free trial on bundles, and no long-term contract. Every price is published on station.solutions.",
+"Can you do it cheaper?": "I can’t change prices. Station sets them, and they’re the same for everyone. What I can do is make sure you’re on the right thing. If [product] is more than you need, [smaller option] may do the job. A bundle already costs less than buying the same products one by one."
+},
 "trial": false
 },
 {
@@ -591,7 +624,10 @@ window.PW={
 "close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
 },
 "link": "https://station.solutions/?ref={code}#bundles",
-"replyFix": {},
+"replyFix": {
+"How much is it?": "Good question. The Custom bundle is $2,800 a month with no setup fee. That’s $482 a month less than buying everything one by one. There’s no free trial on bundles, and no long-term contract. Every price is published on station.solutions.",
+"Can you do it cheaper?": "I can’t change prices. Station sets them, and they’re the same for everyone. What I can do is make sure you’re on the right thing. If [product] is more than you need, [smaller option] may do the job. A bundle already costs less than buying the same products one by one."
+},
 "trial": false
 },
 {
@@ -599,7 +635,7 @@ window.PW={
 "brand": "ribbon",
 "name": "Ribbon Leads",
 "what": "A morning list of restaurants, bars and cafes that just filed to open, before they open.",
-"price": "Free Monday list · Market $49/mo (Florida or New York, every morning) · National $129/mo (all 8 states + API)",
+"price": "Free Monday list · Market $49 a month (Florida or New York, every morning) · National $129 a month (all 8 states + API)",
 "soon": true,
 "mrr": 49,
 "setup": 0,
@@ -615,7 +651,7 @@ window.PW={
 "There is a free Monday list to try with no card, and a 7-day free trial on both paid plans."
 ],
 "about": [
-"Ribbon Leads reads public alcohol-board, health-department and city licensing filings in 8 states every morning (Texas, Florida, California, Oklahoma, Oregon, New York, Missouri and Illinois (Chicago only)) and sends subscribers the new venues, with the phone and website when the name and address match a public listing.",
+"Ribbon Leads reads public alcohol-board, health-department and city licensing filings in 8 states every morning (Texas, Florida, California, Oklahoma, Oregon, New York, Missouri and Illinois, where it covers Chicago only) and sends subscribers the new venues, with the phone and website when the name and address match a public listing.",
 "<b>Plans:</b> the free Monday list is last week&rsquo;s filings, 7 days behind, with no contact details. <b>Market, $49 a month:</b> Florida or New York every morning, with phones and websites where matched, stage filters and CSV. <b>National, $129 a month:</b> all 8 states plus an API and webhooks. Both paid plans start with a 7-day free trial and cancel in one click.",
 "Send people to ribbonleads.com to see a sample and sign up for the free list. Buying for a sales team is quoted on request."
 ],
@@ -669,7 +705,7 @@ window.PW={
 {
 "they": "How much is it?",
 "say": "Good question. It depends on what you need, because each product is priced on its own, and most are month to month with no contract. For example, missed-call text-back is $197 a month, and the receptionist that answers every call starts at $397 a month. Every price is published on station.solutions. What’s costing you the most work right now? Then I can point you at the one that fits.",
-"dont": "a price you haven’t just checked, a discount, \"I can get you a deal,\" or any price for a custom website."
+"dont": "a price you haven’t just checked, a discount, “I can get you a deal,” or any price for a custom website."
 },
 {
 "they": "Send me more info",
@@ -689,27 +725,27 @@ window.PW={
 {
 "they": "I need to think about it",
 "say": "Of course, take your time. Would it help if I sent you the page for [product] so everything’s in one place? Is there a question I can answer that would make it easier, like setup time or what Station would need from you? If it’s OK, I’ll check back on [day].",
-"dont": "\"the price goes up tomorrow,\" \"only a few spots left,\" or any other false urgency."
+"dont": "“the price goes up tomorrow,” “only a few spots left,” or any other false urgency."
 },
 {
 "they": "Can you do it cheaper?",
 "say": "I can’t change prices. Station sets them, and they’re the same for everyone. What I can do is make sure you’re on the right thing. If [product] is more than you need, [smaller option] may do the job. Single products start with a 7-day free trial and there’s no contract, so you can try it. If you want several products, a bundle usually costs less than buying them separately.",
-"dont": "\"I’ll give you part of my commission,\" \"I’ll get you a special price,\" or offer a longer trial. That goes for website hosting &amp; care too: Station quotes it for each client, so pass the question to Station instead of offering a number."
+"dont": "“I’ll give you part of my commission,” “I’ll get you a special price,” or offer a longer trial. That goes for website hosting &amp; care too: Station quotes it for each client, so pass the question to Station instead of offering a number."
 },
 {
 "they": "What’s the contract? / Can I cancel?",
 "say": "There’s no long-term contract. It’s month to month, and you can cancel any time by emailing main@station.solutions from the account owner’s email. Service stays on until the end of the period you’ve paid for, and months already delivered aren’t refunded. You keep your data and get a full export when you leave. The full policy is on station.solutions under Cancellation.",
-"dont": "\"you can get your money back any time.\" Refunds are only for billing errors, or for a setup fee if no work has started."
+"dont": "“you can get your money back any time.” Refunds are only for billing errors, or for a setup fee if no work has started."
 },
 {
 "they": "How long does setup take?",
 "say": "Each product page states its time to go live. For example, the website chat is live in minutes, and booking and the receptionist go live the same day. Anything that sends texts first needs US carrier registration, which takes about 2 business days and is controlled by the carriers. Station files it; you just give Station your legal business name, EIN and address. A custom website starts with a free demo in 2 to 3 business days.",
-"dont": "\"live today\" for anything that texts, or a launch date for a website."
+"dont": "“live today” for anything that texts, or a launch date for a website."
 },
 {
 "they": "Do I need to be techy?",
 "say": "No. Station sets it up for you, and every message is already written. You can change the wording any time, but you don’t have to. You’ll book a short onboarding call where Station walks you through your account. After that, you mostly just reply to customers.",
-"dont": "\"you won’t have to do anything.\" Some products need a little from them, like business facts, Google profile access or a customer list."
+"dont": "“you won’t have to do anything.” Some products need a little from them, like business facts, Google profile access or a customer list."
 }
 ],
 "pitch": "Most local businesses lose work in the gaps: the call they miss on a job, the lead they only follow up once, the review they never ask for. Station fills those gaps with simple tools Station sets up for you, like a missed-call text-back, a receptionist that answers around the clock, automatic follow-up, review requests and online booking. You pick the one thing that’s hurting most. Most single products start with a 7-day free trial, and there’s no contract. What part of your week costs you the most work?",
