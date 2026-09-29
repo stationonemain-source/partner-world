@@ -1,17 +1,21 @@
 /* Partner World (UI preview). Every Station fact comes from window.PW (built from the live partner guide and product list,
    with Partner World's script corrections from script_fixes.py).
-   Leads, clients and money here are SAMPLE data: fictional businesses with reserved 555-01xx numbers, labelled on screen. */
+   Leads, clients and money here are SAMPLE data: fictional businesses with reserved 555-01xx numbers, labelled on screen.
+
+   How a call works (09-29 UX pass): each lead card carries its own pitch and opener. "Call now" opens a short
+   "Ready to call" card (the lines to say, speaker tip), then the phone. When the partner comes back to the app,
+   "How did it go?" opens by itself. Every save can be undone for a few seconds. */
 (function () {
   'use strict';
   var PW = window.PW, KEY = 'pw-preview-v2';
   var main = document.getElementById('main');
   var BOX = {}; PW.boxes.forEach(function (b) { BOX[b.id] = b; });
-  function fresh() { return { name: '', code: '', entered: false, log: {}, notes: {}, lastBox: 'lineback', filter: 'all', asked: false }; }
+  function fresh() { return { name: '', code: '', entered: false, log: {}, notes: {}, pitch: {}, focus: '', filter: 'all', asked: false, big: false, toured: false, skipPrep: false }; }
 
   /* ---------- state (this browser only; a preview has no account) ---------- */
   var S = fresh();
   try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
-  if (!S.notes) S.notes = {};
+  ['notes', 'pitch', 'log'].forEach(function (k) { if (!S[k] || typeof S[k] !== 'object') S[k] = {}; });
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   /* ---------- demo link: ?demo skips the welcome form and the check (optional &name=Linda, &code=lsmith) ---------- */
@@ -31,18 +35,30 @@
   function toast(t) {
     var el = document.getElementById('toast'), f = document.getElementById('feed');
     el.style.top = f && window.innerWidth <= 760 ? Math.round(f.getBoundingClientRect().top + 8) + 'px' : '';
-    el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2000); }
+    el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2000);
+  }
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} }
   function code() { return (S.code || '').toLowerCase().replace(/[^a-z0-9-]/g, ''); }
   function brandName(id) { return ({ station: 'Station', ribbon: 'Ribbon Leads', quorum: 'Quorum' })[id]; }
   function perMonth(b) { return b.id === 'revive' ? b.earn / 3 : b.earn; }
   function period(b) { return b.id === 'revive' ? 'quarter' : 'month'; }
-  function usable(b) { return b && !b.soon ? b : BOX.lineback; }
   function linkFor(b) { return b.link.replace('{code}', code()); }
   var touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
   function copy(text, btn) {
     function done(ok) { if (btn) { var o = btn.getAttribute('data-label') || btn.textContent; btn.setAttribute('data-label', o); btn.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(function () { btn.textContent = o; }, 1800); } }
     try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
   }
+
+  /* ---------- text size (A / A+), remembered on this device ---------- */
+  function applySize() {
+    document.documentElement.classList.toggle('big', !!S.big);
+    document.querySelectorAll('[data-size]').forEach(function (b) { b.setAttribute('aria-pressed', String(!!S.big)); });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-size]'); if (!b) return;
+    S.big = !S.big; save(); applySize(); sizeFeed(); toast(S.big ? 'Bigger text on.' : 'Normal text.');
+  });
+  applySize();
 
   /* ---------- dates (the partner's own calendar) ---------- */
   function ymd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
@@ -93,11 +109,20 @@
     return { text: p.hour + ':' + p.minute + ' ' + p.dayPeriod.toLowerCase(), ok: ok, why: why, opens: opens, sun: sun, early: !sun && h < 9 };
   }
 
+  /* ---------- what each business gets pitched: your pick for that card, else the product you chose to focus on, else its best fit ---------- */
+  function sellable(b) { return b && !b.soon; }
+  function pitchFor(l) {
+    if (sellable(BOX[S.pitch[l.id]])) return BOX[S.pitch[l.id]];
+    if (sellable(BOX[S.focus])) return BOX[S.focus];
+    return BOX[l.fits];
+  }
+
   /* ---------- lead status ----------
      Follow-ups (No answer, Voicemail, Interested, Call back) stay on the list. Only a closed outcome finishes a lead,
      and a finished lead can't be called from the app. Order: call-backs due today, new, to try again, finished. */
   var OUT = { noanswer: 'No answer', voicemail: 'Voicemail', bad: 'Bad lead', interested: 'Interested', callback: 'Call back', notint: 'Not interested', dnc: 'Do not call', won: 'Won' };
   var CLOSED = { bad: 1, notint: 1, dnc: 1, won: 1 };
+  var TALKED = { interested: 1, callback: 1, notint: 1, dnc: 1, won: 1 };
   function rank(l) {
     var s = S.log[l.id];
     if (!s) return 1;
@@ -105,14 +130,20 @@
     if (s.o === 'callback' && s.due && s.due <= today()) return 0;
     return 2;
   }
+  function sortedLeads() { return LEADS.slice().sort(function (x, y) { var d = rank(x) - rank(y); return d || ((S.log[x.id] || {}).due || '').localeCompare((S.log[y.id] || {}).due || ''); }); }
   function counts() {
     var c = { due: 0, fresh: 0, again: 0, done: 0 };
     LEADS.forEach(function (l) { c[['due', 'fresh', 'again', 'done'][rank(l)]]++; });
-    c.toCall = c.due + c.fresh + c.again; return c;
+    c.toCall = c.due + c.fresh + c.again; c.tried = LEADS.length - c.fresh; return c;
+  }
+  function todayStats() {
+    var t = today(), s = { calls: 0, talked: 0, warm: 0 };
+    Object.keys(S.log).forEach(function (k) { var x = S.log[k]; if (!x.at || ymd(new Date(x.at)) !== t) return; s.calls++; if (TALKED[x.o]) s.talked++; if (x.o === 'interested' || x.o === 'won') s.warm++; });
+    return s;
   }
   function statusText(s) {
     var t = s.o === 'callback' && s.due ? (s.due < today() ? 'Call back: overdue since ' + dayLabel(s.due) : 'Call back ' + dayLabel(s.due)) : OUT[s.o];
-    return s.wasInterested && !CLOSED[s.o] ? 'Interested \u00b7 ' + t : t;
+    return s.wasInterested && !CLOSED[s.o] ? 'Interested · ' + t : t;
   }
   function callsSummary(c) {
     var parts = [];
@@ -155,7 +186,8 @@
   /* ---------- router ---------- */
   var VIEWS = {}, tick = null;
   function route() {
-    clearInterval(tick); tick = null;
+    clearInterval(tick); tick = null; hideUndo(); endTour();
+    if (!sheet.hidden) { sheet.hidden = true; }
     var parts = (location.hash || '').replace(/^#/, '').split('/');
     if (!S.entered && parts[0] !== 'check') { renderWelcome(); return; }
     if (parts[0] === 'check' && !S.name) { renderWelcome(); return; }
@@ -165,6 +197,7 @@
     document.getElementById('bar').hidden = !on; document.getElementById('tabbar').hidden = !on;
     document.body.classList.toggle('has-tabs', on);
     document.body.classList.toggle('calls-mode', tab === 'calls');
+    document.documentElement.classList.toggle('calls-lock', tab === 'calls'); // only the feed scrolls on Calls, never the page
     document.querySelectorAll('[data-tab]').forEach(function (a) { var here = a.getAttribute('data-tab') === tab; a.classList.toggle('on', here); if (here) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     document.getElementById('chipBal').textContent = money(totals().ready);
   }
@@ -181,8 +214,8 @@
       '<span class="tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>' +
       '<h1>Welcome to Partner World</h1>' +
       '<p class="intro">Pick something to sell, call the businesses Station gives you, and get paid every month your clients stay.</p>' +
-      '<ol class="steps3"><li><b>1</b><span><strong>Pick a product.</strong> Each product page tells you who to call, what to say and what you earn.</span></li>' +
-      '<li><b>2</b><span><strong>Call your list.</strong> One business per screen. Tap to call, tap what happened, next.</span></li>' +
+      '<ol class="steps3"><li><b>1</b><span><strong>Pick a product.</strong> Each product has a one-screen cheat sheet: who to call, what to say, what you earn.</span></li>' +
+      '<li><b>2</b><span><strong>Call your list.</strong> One business per screen, with the words to say right on it. After each call, tap how it went.</span></li>' +
       '<li><b>3</b><span><strong>Get paid.</strong> 40% of what your clients pay Station, every month they stay.</span></li></ol>' +
       '<form id="hello" novalidate>' +
       '<label class="field" for="w-name">Your first name<input class="text" id="w-name" autocomplete="given-name" aria-describedby="e-name" value="' + esc(S.name) + '"></label><p class="field-err" id="e-name" role="alert"></p>' +
@@ -238,13 +271,55 @@
       mount(body, 'Quick check');
       main.querySelectorAll('.choice').forEach(function (b) { b.addEventListener('click', function () { draw(+b.getAttribute('data-k')); }); });
       var nx = document.getElementById('qNext'), rt = document.getElementById('qRetry');
-      if (nx) { nx.focus(); nx.addEventListener('click', function () { if (i === QUIZ.length - 1) { S.entered = true; save(); location.hash = retake ? '#help' : '#home'; toast(retake ? 'Check passed.' : 'You’re in. Pick a product to start.'); } else { i++; order = null; draw(null); } }); }
+      if (nx) { nx.focus(); nx.addEventListener('click', function () { if (i === QUIZ.length - 1) { S.entered = true; save(); location.hash = retake ? '#help' : '#home'; toast(retake ? 'Check passed.' : 'You’re in.'); } else { i++; order = null; draw(null); } }); }
       if (rt) { rt.focus(); rt.addEventListener('click', function () { order = shuffle(q.a.length); draw(null); }); }
     }
     draw(null);
   };
 
-  /* ---------- home: money, your calls, every product ---------- */
+  /* ---------- home: one clear next step ---------- */
+  function closedNote(n) {
+    if (n.ok) return 'Calls are 9 am to 8 pm, Monday to Saturday, in their time zone.';
+    if (n.sun) return 'Calls are closed on Sundays. They open Monday at 9 am, their time.';
+    if (n.early) return 'It’s too early to call. Calls open at 9 am, their time.';
+    return 'It’s too late to call. Calls open ' + n.opens + ', their time.';
+  }
+  function openerOf(b) { return (b.call && b.call.opener) || b.ask; }
+  VIEWS.home = function () {
+    chrome(true, 'home');
+    var t = totals(), c = counts(), now = localTime('TX'), next = sortedLeads().filter(function (l) { return rank(l) < 3; })[0], st = todayStats();
+    var nextHtml;
+    if (next) {
+      var nb = pitchFor(next), due = rank(next) === 0;
+      nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">' + (due ? 'Call-back due' : 'Your next call') + '</span>' +
+        '<h2 id="nextH">' + esc(next.name) + '</h2><p class="facts"><span>' + esc(next.trade) + ' · ' + esc(next.city) + ', ' + next.st + '</span><span>★ ' + next.rating + '</span></p>' +
+        '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>. Open with: “' + esc(openerOf(nb)) + '”</p>' +
+        '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote">' + closedNote(now) + '</p>' +
+        '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">' + (now.ok ? 'Start calling' : 'See my list') + '</a><span class="small">' + c.toCall + ' to call: ' + callsSummary(c) + '</span></div></section>';
+    } else {
+      nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your calls</span><h2 id="nextH">You’ve worked your whole list.</h2>' +
+        '<p class="pitch-line">Ask Station for the next batch from the end of your list.</p><div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">Go to my list</a></div></section>';
+    }
+    var fresh = !Object.keys(S.log).length, lb = BOX.lineback;
+    var side = fresh
+      ? '<a class="start-here" href="#box/lineback"><span class="lbl">New here? Start with this one</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(lb.what) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per client</span><span class="go"><span>Learn it in 2 minutes</span><span aria-hidden="true">&rarr;</span></span></a>'
+      : '<div class="start-here today"><span class="lbl">Today</span><div class="stats"><div><b>' + st.calls + '</b><span>calls logged</span></div><div><b>' + st.talked + '</b><span>conversations</span></div><div><b>' + st.warm + '</b><span>interested or won</span></div></div>' +
+        '<div class="bar-track" aria-hidden="true"><i style="width:' + Math.min(100, st.calls * 10) + '%"></i></div><span class="small">' + (st.calls >= 10 ? 'You hit 10 calls today. Nice work.' : (10 - st.calls) + ' more to reach 10 calls today.') + '</span></div>';
+    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1><p>Here’s your next step.</p></div></div>' + nextHtml +
+      '<div class="top-row"><a class="money-box" href="#money"><span class="lbl">Earned so far (sample)</span><span class="big">' + money(t.ready) + '</span>' +
+      '<span class="row"><span>On hold <b>' + money(t.hold) + '</b></span><span>Paid to date <b>' + money(t.paid) + '</b></span></span>' +
+      '<span class="row warnline">Waiting on you: 2 setup steps before your first payout</span>' +
+      '<span class="go"><span>See my money</span><span aria-hidden="true">&rarr;</span></span></a>' + side + '</div>' +
+      '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a></div>', 'Home');
+    tick = setInterval(function () {
+      if (!/^#?(home)?$/.test(location.hash)) return;
+      var n2 = localTime('TX'), el = document.getElementById('callNote'); if (!el) return;
+      el.textContent = closedNote(n2); el.classList.toggle('closed-note', !n2.ok);
+      document.getElementById('callGo').textContent = n2.ok ? 'Start calling' : 'See my list';
+    }, 60000);
+  };
+
+  /* ---------- the product catalogue ---------- */
   function boxCard(b) {
     var badges = '';
     if (b.easy) badges += '<span class="badge first">Good first pick</span>';
@@ -254,16 +329,10 @@
       : '<span class="earn tbd">' + (b.id === 'website' ? 'You earn on their monthly care plan' : 'Not open to partners yet') + '</span>';
     return '<a class="box' + (b.soon ? ' is-soon' : '') + '" href="#box/' + b.id + '"><div class="badges">' + badges + '</div><span class="name">' + esc(b.name) + '</span><span class="what">' + esc(b.what) + '</span>' + earn + '</a>';
   }
-  function closedNote(n) {
-    if (n.ok) return 'Calls are 9 am to 8 pm, Monday to Saturday, in their time zone.';
-    if (n.sun) return 'Calls are closed on Sundays. They open Monday at 9 am, their time.';
-    if (n.early) return 'It’s too early to call. Calls open at 9 am, their time.';
-    return 'It’s too late to call. Calls open ' + n.opens + ', their time.';
-  }
   function easyFirst(a, b) { var k = function (x) { return x.easy ? 0 : x.id === 'website' ? 2 : 1; }; return k(a) - k(b); }
-  VIEWS.home = function () {
-    chrome(true, 'home');
-    var t = totals(), c = counts(), last = usable(BOX[S.lastBox]), f = S.filter, now = localTime('TX');
+  VIEWS.products = function () {
+    chrome(true, 'products');
+    var f = S.filter;
     if (['all', 'easy', 'pay', 'bundles', 'soon'].indexOf(f) < 0) f = 'all';
     var list = PW.boxes.slice(), groups = '', note = '';
     if (f === 'easy') { list = list.filter(function (b) { return b.easy; }); note = 'The simplest products to explain on a first call.'; }
@@ -279,44 +348,38 @@
         (bundles.length ? '<h3 class="sub-h">Station bundles: several products, one bigger monthly</h3><div class="grid">' + bundles.map(boxCard).join('') + '</div>' : '');
     });
     var chip = function (k, label) { return '<button class="chip" type="button" data-f="' + k + '" aria-pressed="' + (f === k) + '">' + label + '</button>'; };
-    var callNote = closedNote(now);
-    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1><p>Pick a product, learn it in two minutes, start calling.</p></div></div>' +
-      '<div class="top-row"><a class="money-box" href="#money"><span class="lbl">Earned so far (sample)</span><span class="big">' + money(t.ready) + '</span>' +
-      '<span class="row"><span>On hold <b>' + money(t.hold) + '</b></span><span>Paid to date <b>' + money(t.paid) + '</b></span></span>' +
-      '<span class="row warnline">Waiting on you: 2 setup steps before your first payout</span>' +
-      '<span class="go"><span>See my money</span><span aria-hidden="true">&rarr;</span></span></a>' +
-      '<div class="resume"><span class="small">Your calls</span><span class="count">' + c.toCall + '</span><p>' + (c.toCall === 1 ? 'business' : 'businesses') + ' to call' + (c.toCall ? ': ' + callsSummary(c) : '') + '. You’re pitching <strong>' + esc(last.name) + '</strong>.</p>' +
-      '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote">' + callNote + '</p>' +
-      '<a class="btn btn-dark btn-big" id="callGo" href="#calls/' + last.id + '">' + (c.toCall && now.ok ? 'Start calling' : 'See my list') + '</a></div></div>' +
-      '<section id="wall" aria-labelledby="wallH"><h2 class="sr" id="wallH">Products you can sell</h2><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest to start') + chip('pay', 'Biggest monthly pay') + chip('bundles', 'Bundles') + chip('soon', 'Coming soon') + '</div></div>' +
+    mount('<div class="wrap home"><div class="hello"><div><h1>Products</h1><p>Pick one, learn it in two minutes, start calling.</p></div></div>' +
+      '<section id="wall" aria-label="Products you can sell"><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest to start') + chip('pay', 'Biggest monthly pay') + chip('bundles', 'Bundles') + chip('soon', 'Coming soon') + '</div></div>' +
       groups + '</section></div>', 'Products');
-    tick = setInterval(function () {
-      if (!/^#?(home)?$/.test(location.hash)) return;
-      var n2 = localTime('TX'), el = document.getElementById('callNote'); if (!el) return;
-      el.textContent = closedNote(n2); el.classList.toggle('closed-note', !n2.ok);
-      document.getElementById('callGo').textContent = counts().toCall && n2.ok ? 'Start calling' : 'See my list';
-    }, 60000);
     main.querySelectorAll('[data-f]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        S.filter = btn.getAttribute('data-f'); save(); VIEWS.home();
-        document.getElementById('wall').scrollIntoView({ block: 'start' });
+        var y = window.scrollY;
+        S.filter = btn.getAttribute('data-f'); save(); VIEWS.products();
+        window.scrollTo(0, Math.min(y, document.getElementById('wall').offsetTop));
         var fc = main.querySelector('[data-f="' + S.filter + '"]'); fc.focus({ preventScroll: true });
         fc.scrollIntoView({ inline: 'center', block: 'nearest' });
       });
     });
   };
 
-  /* ---------- the call script, in the order you say it ---------- */
+  /* ---------- the call script ---------- */
+  function introLine(b) { return (b.brand === 'station' ? 'Hi, is this the owner? My name is ' : 'Hi, my name is ') + S.name + '. I’m an independent partner with ' + brandName(b.brand) + '. Do you have a minute?'; }
+  function closeLineOf(b) { return (b.call && b.call.close) || 'Want me to send you the link so you can take a look? What’s the best email?'; }
+  function priceLine(b) {
+    var r = (b.replyFix || {})['How much is it?'];
+    return r ? r.replace(/^Good question\. /, '').replace(/ Every price is published on station\.solutions\.$/, '') : b.price;
+  }
   function script(b) {
     var c = b.call || {}, lines = [];
-    lines.push(['Say who you are', (b.brand === 'station' ? 'Hi, is this the owner? My name is ' : 'Hi, my name is ') + S.name + '. I’m an independent partner with ' + brandName(b.brand) + '. Do you have a minute?']);
-    lines.push(['Open with', c.opener || b.ask]);
+    lines.push(['Say who you are', introLine(b)]);
+    lines.push(['Open with', openerOf(b)]);
     if (c.discovery) lines.push(['Then ask', c.discovery]);
     lines.push(['The pitch', c.pitch || PW.pitch]);
-    lines.push(['Close', c.close || 'Want me to send you the link so you can take a look? What’s the best email?']);
+    lines.push(['Close', closeLineOf(b)]);
     return lines;
   }
-  function scriptBlock(b) { return script(b).map(function (l, k) { return '<div class="say"><small>' + (k + 1) + ' · ' + l[0] + '</small>' + esc(l[1]) + '</div>'; }).join(''); }
+  function sayBoxes(lines, numbered) { return lines.map(function (l, k) { return '<div class="say"><small>' + (numbered ? (k + 1) + ' · ' : '') + l[0] + '</small>' + esc(l[1]) + '</div>'; }).join(''); }
+  function quickLines(b) { return [['Say who you are', introLine(b)], ['Open with', openerOf(b)], ['If they ask the price', priceLine(b)], ['Close', closeLineOf(b)]]; }
   function scriptText(b) { return script(b).map(function (l) { return l[1]; }).join('\n\n'); }
   function repliesBlock(b) {
     var h = '';
@@ -340,91 +403,92 @@
     if (b.brand !== 'station') return '';
     if (b.id === 'website') return 'There’s no published price, so never quote one. Station quotes after the free demo.';
     if (b.bundle) return 'Check the live page before you quote. Bundles have no free trial.';
-    if (b.trial) return 'Check the live product page before you quote. It starts with a 7-day free trial on its standard plan, with no contract.';
-    return 'Check the live product page before you quote, including whether a free trial applies.';
+    return 'Check the live product page before you quote. It starts with a 7-day free trial on its standard plan, with no contract.';
   }
 
-  /* ---------- one product: everything to sell it ---------- */
+  /* ---------- one product: a one-screen cheat sheet first, everything else folded below ---------- */
   VIEWS.box = function (id) {
-    var b = BOX[id]; if (!b) { location.hash = '#home'; return; }
-    if (!b.soon) { S.lastBox = id; save(); }
-    chrome(true, 'home');
+    var b = BOX[id]; if (!b) { location.hash = '#products'; return; }
+    chrome(true, 'products');
     var link = linkFor(b), st = b.brand === 'station';
     var earnNote = b.soon ? 'Station sets partner pay for ' + b.name + ' before it opens to partners. Learn it now; calling opens when it does.'
       : b.bundle ? 'That’s 40% of the bundle price, starting with their first monthly payment once it clears. Bundles have no free trial.'
       : b.id === 'website' ? 'Station quotes each client’s monthly hosting & care. You earn 40% of whatever they pay for it, every month. The build fee earns nothing.'
-      : b.id === 'revive' ? 'That\u2019s 40% of the $497 each client pays per quarter, starting after their 7-day free trial, once the payment clears. No limit on clients.'
-      : b.id === 'echo' ? 'That\u2019s 40% of the $247 each client pays per month, starting after their 7-day free trial, once the payment clears. The one-time $297 setup fee earns nothing.'
-      : b.trial ? 'That\u2019s 40% of what each client pays, starting after their 7-day free trial, once the payment clears. No limit on clients.'
-      : 'That’s 40% of what each client pays, starting with their first payment once it clears (after any free trial). One-time setup fees earn nothing.';
-    var steps = [
-      ['Who to call', '<p>' + esc(b.who) + '</p>' + (st ? '<p class="small">Station sends you these businesses, a set number at a time.</p>' : '')],
-      ['What to say', scriptBlock(b) + '<button class="link-btn" type="button" data-copy-script>Copy this script</button>'],
+      : b.id === 'revive' ? 'That’s 40% of the $497 each client pays per quarter, starting after their 7-day free trial, once the payment clears.'
+      : b.id === 'echo' ? 'That’s 40% of the $247 each client pays per month, starting after their 7-day free trial. The one-time $297 setup fee earns nothing.'
+      : 'That’s 40% of what each client pays, starting after their 7-day free trial, once the payment clears. No limit on clients.';
+    function row(label, body, say) { return '<div class="cheat-row' + (say ? ' is-say' : '') + '"><span class="cheat-lbl">' + label + '</span><p>' + esc(body) + '</p></div>'; }
+    var cheat = '<section class="cheat" aria-labelledby="cheatH"><h2 id="cheatH">' + esc(b.name) + ' on one screen</h2>' +
+      row('Who it’s for', b.who) + row('Open with', openerOf(b), 1) + row('If they ask the price', priceLine(b), 1) + row('Close', closeLineOf(b), 1) +
+      (b.call && b.call.objection ? row('The push-back you’ll hear', b.call.objection) : '') +
+      '<div class="cheat-row"><span class="cheat-lbl">' + (st ? 'Your link' : 'Their website') + '</span><div class="copyrow"><code>' + esc(link) + '</code><button class="btn" type="button" data-copy-link>Copy</button></div>' + (st ? '' : '<p class="small">For learning about it. Referral links come when it opens to partners.</p>') + '</div></section>';
+    var more = [
+      ['The full script', sayBoxes(script(b), true) + '<button class="link-btn" type="button" data-copy-script>Copy the whole script</button>'],
       ['If they push back', repliesBlock(b) || '<p>Keep it simple: answer the question, then offer to send the link.</p>'],
-      ['When they say yes', b.id === 'website' ? '<ul class="ticks"><li>Send them your link (below) to the questions, so the demo is credited to you.</li><li>Mark the call <strong>Interested</strong>. Station builds the free demo and quotes the project.</li><li>Mark it <strong>Won</strong> only when Station tells you they’ve said yes. You earn on their monthly hosting & care.</li></ul>'
-        : st ? '<ul class="ticks"><li>If they want to look first, mark the call <strong>Interested</strong> and send them your link (below). They stay on your list.</li><li>When they’re signing up, mark it <strong>Won</strong> and send the link, so the sale is credited to you. Station checks it and sets everything up; you don’t set anything up yourself.</li><li>You earn once they start paying. Station handles billing and support.</li></ul>'
-        : '<p>' + esc(b.name) + ' isn’t open to partners yet, so there are no sales to log. When it opens, this step will tell you exactly what to do.</p>'],
+      ['When they say yes', b.id === 'website' ? '<ul class="ticks"><li>Send them your link to the questions, so the demo is credited to you.</li><li>Mark the call <strong>Interested</strong>. Station builds the free demo and quotes the project.</li><li>Mark it <strong>Won</strong> only when Station tells you they’ve said yes. You earn on their monthly hosting & care.</li></ul>'
+        : st ? '<ul class="ticks"><li>If they want to look first, mark the call <strong>Interested</strong> and send them your link. They stay on your list.</li><li>When they’re signing up, mark it <strong>Won</strong> and send the link, so the sale is credited to you. Station checks it and sets everything up; you don’t set anything up yourself.</li><li>You earn once they start paying. Station handles billing and support.</li></ul>'
+        : '<p>' + esc(b.name) + ' isn’t open to partners yet, so there are no sales to log. When it opens, this will tell you exactly what to do.</p>'],
       ['Why they buy it', '<ul class="ticks">' + (b.why.length ? b.why : [b.what]).map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>'],
-      ['Price', '<p><strong>' + esc(b.price) + '</strong></p>' + (priceNote(b) ? '<p class="small">' + priceNote(b) + '</p>' : '')],
-      [st ? 'Your link' : 'Their website', (st ? '<p>Send this so the sale is credited to you.</p>' : '<p>For learning about it. Referral links come when it opens to partners.</p>') + '<div class="copyrow"><code>' + esc(link) + '</code><button class="btn" type="button" data-copy-link>Copy</button></div>'],
-      ['More detail', b.about.map(function (p) { return p.indexOf('<ul') === 0 ? p : '<p>' + p + '</p>'; }).join('')]
-    ];
-    var stepsHtml = steps.map(function (s, k) { return '<section class="step"><span class="n" aria-hidden="true">' + (k + 1) + '</span><div><h2 class="step-h">' + s[0] + '</h2>' + s[1] + '</div></section>'; }).join('');
-    mount('<div class="wrap prod"><a class="back" href="#home">&larr; All products</a>' +
-      '<div class="prod-hero"><div><span class="pill"><span class="dot ' + b.brand + '" aria-hidden="true"></span>' + esc(brandName(b.brand)) + (b.soon ? ' · Coming soon' : '') + '</span><h1 style="margin-top:12px">' + esc(b.name) + '</h1><p class="what">' + esc(b.what) + '</p></div>' +
+      ['Price details', '<p><strong>' + esc(b.price) + '</strong></p>' + (priceNote(b) ? '<p class="small">' + priceNote(b) + '</p>' : '')],
+      ['More about ' + esc(b.name), b.about.map(function (p) { return p.indexOf('<ul') === 0 ? p : '<p>' + p + '</p>'; }).join('')]
+    ].map(function (m) { return '<details class="more"><summary><h3>' + m[0] + '</h3></summary><div>' + m[1] + '</div></details>'; }).join('');
+    mount('<div class="wrap prod"><a class="back" href="#products">&larr; All products</a>' +
+      '<div class="prod-top"><span class="pill"><span class="dot ' + b.brand + '" aria-hidden="true"></span>' + esc(brandName(b.brand)) + (b.soon ? ' · Coming soon' : '') + '</span><h1>' + esc(b.name) + '</h1><p class="what">' + esc(b.what) + '</p>' +
+      '<p class="earn-line">' + (b.earn ? 'You earn <b class="num">' + money(b.earn) + '</b> every ' + period(b) + ' per client' : b.id === 'website' ? 'You earn 40% of their monthly care plan' : 'Partner pay is set before it opens') + '</p></div>' + cheat +
       '<div class="earn-card' + (b.earn ? '' : ' tbd') + '"><span class="lbl">What you earn per client</span>' +
       (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they stay</div>' : '<div class="big">' + (b.id === 'website' ? '40% of their monthly care' : 'Set before it opens') + '</div>') +
-      '<p>' + earnNote + '</p></div></div>' +
-      '<div class="steps">' + stepsHtml + '</div></div>' +
-      '<div class="cta-bar">' + (b.soon ? '<a class="btn btn-big" href="#home">Coming soon · back to products</a>' : '<a class="btn btn-dark btn-big" href="#calls/' + b.id + '">Start calling for ' + esc(b.name) + '</a>') + '</div>', b.name);
+      '<p>' + earnNote + '</p></div>' +
+      '<h2 class="more-h">Everything else</h2><div class="more-list">' + more + '</div></div>' +
+      '<div class="cta-bar">' + (b.soon ? '<a class="btn btn-big" href="#products">Coming soon · back to products</a>' : '<a class="btn btn-dark btn-big" href="#calls/' + b.id + '">Start calling for ' + esc(b.name) + '</a>') + '</div>', b.name);
     var cl = main.querySelector('[data-copy-link]'); cl.addEventListener('click', function () { copy(link, cl); });
     var cs = main.querySelector('[data-copy-script]'); cs.addEventListener('click', function () { copy(scriptText(b), cs); });
   };
 
   /* ---------- the feed ---------- */
   function feedEl() { return document.getElementById('feed'); }
+  function zoom() { return parseFloat(getComputedStyle(document.body).zoom) || 1; }
   function sizeFeed() {
     var f = feedEl(); if (!f) return;
-    var tb = document.getElementById('tabbar'), under = getComputedStyle(tb).display === 'none' ? 0 : tb.offsetHeight;
-    f.style.height = Math.max(320, window.innerHeight - f.getBoundingClientRect().top - under) + 'px';
+    var tb = document.getElementById('tabbar'), under = getComputedStyle(tb).display === 'none' ? 0 : tb.getBoundingClientRect().height;
+    f.style.height = Math.max(320, (window.innerHeight - f.getBoundingClientRect().top - under) / zoom()) + 'px';
   }
   window.addEventListener('resize', sizeFeed);
   /* scroll the FEED, never the page: scrollIntoView would also scroll the window and slide the page off the screen */
   function feedShow(el, whole, instant) {
     var f = feedEl(); if (!f || !el) return;
-    var fr = f.getBoundingClientRect(), r = el.getBoundingClientRect();
+    var fr = f.getBoundingClientRect(), r = el.getBoundingClientRect(), z = zoom();
     var how = instant ? 'instant' : 'smooth';
-    if (whole) { f.scrollTo({ top: f.scrollTop + r.top - fr.top, behavior: how }); return; }
-    if (r.bottom > fr.bottom) f.scrollTo({ top: f.scrollTop + r.bottom - fr.bottom + 12, behavior: how });
-    else if (r.top < fr.top) f.scrollTo({ top: f.scrollTop + r.top - fr.top - 12, behavior: how });
+    if (whole) { f.scrollTo({ top: f.scrollTop + (r.top - fr.top) / z, behavior: how }); return; }
+    if (r.bottom > fr.bottom) f.scrollTo({ top: f.scrollTop + (r.bottom - fr.bottom) / z + 12, behavior: how });
+    else if (r.top < fr.top) f.scrollTo({ top: f.scrollTop + (r.top - fr.top) / z - 12, behavior: how });
   }
+  function cardEl(id) { return document.getElementById('lead-' + id); }
 
   VIEWS.calls = function (id) {
     clearInterval(tick); tick = null;
-    var b = usable(BOX[id] || BOX[S.lastBox]);
-    S.lastBox = b.id; save(); chrome(true, 'calls');
-    var leads = LEADS.slice().sort(function (x, y) { var d = rank(x) - rank(y); return d || ((S.log[x.id] || {}).due || '').localeCompare((S.log[y.id] || {}).due || ''); });
-    function opt(x) { return '<option value="' + x.id + '"' + (x.id === b.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }
-    var sellable = PW.boxes.filter(function (x) { return !x.soon; });
-    var opts = '<optgroup label="Products">' + sellable.filter(function (x) { return !x.bundle; }).sort(easyFirst).map(opt).join('') + '</optgroup>' +
-      '<optgroup label="Bundles">' + sellable.filter(function (x) { return x.bundle; }).map(opt).join('') + '</optgroup>';
-    var cards = leads.map(function (l, k) { return leadCard(l, b, k, leads.length); }).join('');
+    if (id && sellable(BOX[id])) { S.focus = id; save(); }
+    chrome(true, 'calls');
+    var leads = sortedLeads();
+    var cards = leads.map(function (l, k) { return leadCard(l, k, leads.length); }).join('');
     cards += '<article class="lead" id="endCard"><div class="lead-card end-card"></div></article>';
-    mount('<h1 class="sr">Calls</h1><div class="calls-top"><label class="sr" for="pitchSel">Product you are pitching</label><select class="text" id="pitchSel">' + opts + '</select>' +
-      '<button class="btn" type="button" id="sayBtn">What do I say?</button><span class="count" id="leftCount" aria-live="polite"></span></div>' +
-      '<div class="feed" id="feed" role="region" aria-label="Businesses to call, one per screen">' + cards + '</div>', 'Calls');
-    var sel = document.getElementById('pitchSel');
-    sel.addEventListener('change', function () { // arrow keys fire change: re-render in place and keep focus on the picker
-      history.replaceState(null, '', '#calls/' + sel.value); VIEWS.calls(sel.value); document.getElementById('pitchSel').focus();
-    });
-    document.getElementById('sayBtn').addEventListener('click', function () { openScript(b); });
-    feedEl().querySelectorAll('.lead[data-id]').forEach(function (card) { wireCard(card, b); });
-    wireKeys(); updateEnd(b); sizeFeed();
-    tick = setInterval(function () { refreshTimes(b); }, 15000); // times go stale and calling hours open or close while the page sits there
+    var focus = sellable(BOX[S.focus]) ? BOX[S.focus] : null;
+    mount('<h1 class="sr">Calls</h1><div class="calls-top">' +
+      '<div class="prog"><div class="prog-row"><span class="count" id="leftCount" aria-live="polite"></span><span class="small" id="triedCount"></span><button class="size-btn small-size" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">A<b>A</b></span><span class="sr">Bigger text</span></button></div>' +
+      '<div class="bar-track" aria-hidden="true"><i id="progBar"></i></div></div>' +
+      (focus ? '<div class="focus-chip"><span>Pitching <b>' + esc(focus.name) + '</b> to everyone</span><button class="link-btn" type="button" id="clearFocus">Use each business’s best fit</button></div>' : '') +
+      '</div><div class="feed" id="feed" role="region" aria-label="Businesses to call, one per screen">' + cards + '</div>', 'Calls');
+    var cf = document.getElementById('clearFocus');
+    if (cf) cf.addEventListener('click', function () { S.focus = ''; save(); history.replaceState(null, '', '#calls'); VIEWS.calls(); toast('Each business now gets its best fit.'); });
+    feedEl().querySelectorAll('.lead[data-id]').forEach(wireCard);
+    wireKeys(); updateEnd(); sizeFeed();
+    tick = setInterval(refreshTimes, 15000); // times go stale and calling hours open or close while the page sits there
+    if (!S.toured) setTimeout(startTour, 450);
   };
-  function updateEnd(b) {
-    var c = counts(), end = document.querySelector('#endCard .lead-card');
+  function updateEnd() {
+    var c = counts(), end = document.querySelector('#endCard .lead-card'); if (!end) return;
     document.getElementById('leftCount').textContent = c.toCall + ' to call';
+    document.getElementById('triedCount').textContent = c.tried + ' of ' + LEADS.length + ' tried';
+    document.getElementById('progBar').style.width = Math.round(100 * c.tried / LEADS.length) + '%';
     var can = c.fresh === 0 && !S.asked, h, p, btn, due = c.due ? c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due' : '';
     if (c.fresh) {
       h = 'You skipped ' + c.fresh + '.';
@@ -436,20 +500,20 @@
       btn = '<button class="btn btn-dark btn-big" type="button" id="askMore"' + (can ? '' : ' disabled') + '>' + (S.asked ? 'Asked. Station will send more' : 'Ask Station for more businesses') + '</button>' +
         (c.due ? '<button class="btn" type="button" id="toFirst">Go to your call-backs</button>' : '');
     }
-    end.innerHTML = '<h2>' + h + '</h2><p>' + p + '</p>' + btn + '<a class="btn" href="#box/' + b.id + '">Review ' + esc(b.name) + '</a>';
+    end.innerHTML = '<h2>' + h + '</h2><p>' + p + '</p>' + btn + '<a class="btn" href="#products">Browse products</a>';
     var tf = document.getElementById('toFirst');
     if (tf) tf.addEventListener('click', function () {
       var first = [].filter.call(feedEl().querySelectorAll('.lead[data-id]'), function (el) { return rank(LEAD[el.getAttribute('data-id')]) < 2; })[0];
       goTo(first);
     });
-    if (can) document.getElementById('askMore').addEventListener('click', function () { S.asked = true; save(); updateEnd(b); toast('Station got your request.'); });
+    if (can) document.getElementById('askMore').addEventListener('click', function () { S.asked = true; save(); updateEnd(); toast('Station got your request.'); });
   }
-  function refreshTimes(b) {
+  function refreshTimes() {
     if (location.hash.indexOf('#calls') !== 0 || !feedEl()) { clearInterval(tick); tick = null; return; }
     feedEl().querySelectorAll('.lead[data-id]').forEach(function (card) {
       var l = LEAD[card.getAttribute('data-id')], t = localTime(l.st), line = card.querySelector('[data-time]');
       if (!line) return;
-      line.className = t.ok ? 'okc' : 'late'; line.textContent = (t.ok ? 'OK to call now' : t.why) + ' \u00b7 it\u2019s ' + t.text + ' there';
+      line.className = t.ok ? 'okc' : 'late'; line.textContent = (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there';
       if (String(t.ok) !== card.getAttribute('data-ok')) applyHours(card, l, t);
     });
   }
@@ -459,16 +523,13 @@
     if (btn) { var tmp = document.createElement('div'); tmp.innerHTML = callBtnHtml(l, t); btn.parentNode.replaceChild(tmp.firstChild, btn); }
     var cn = card.querySelector('[data-copynum]');
     if (!t.ok && cn) cn.parentNode.removeChild(cn);
-    if (t.ok && !cn && btn) card.querySelector('[data-next]').insertAdjacentHTML('beforebegin', '<button class="link-btn" type="button" data-copynum>Copy number</button>');
-    var rd = card.querySelector('[data-row="day"]');
-    if (rd) { [].slice.call(rd.querySelectorAll('[data-day]')).forEach(function (x) { x.parentNode.removeChild(x); }); rd.insertAdjacentHTML('beforeend', dayButtons(t.ok || t.early)); }
+    if (t.ok && !cn && btn) card.querySelector('[data-script]').insertAdjacentHTML('afterend', '<button class="link-btn" type="button" data-copynum>Copy number</button>');
   }
   function callBtnHtml(l, t) {
-    if (t.ok && !touch) return '<button class="btn btn-green call-btn" type="button" data-copycall>Copy number, then dial it on your phone<small>' + l.phone + '</small></button>';
-    return t.ok ? '<a class="btn btn-green call-btn" href="tel:' + l.dial + '">Call now<small>' + l.phone + '</small></a>'
-      : '<button class="btn call-btn closed" type="button" disabled>Calls open ' + t.opens + '<small>' + l.phone + '</small></button>';
+    if (!t.ok) return '<button class="btn call-btn closed" type="button" disabled>Calls open ' + t.opens + '<small>' + l.phone + '</small></button>';
+    return '<a class="btn btn-green call-btn" href="tel:' + l.dial + '" data-call>' + (touch ? 'Call now' : 'Call') + '<small>' + l.phone + '</small></a>';
   }
-  /* 9: call-back choices, without two buttons that land on the same day (Saturday: tomorrow and in 2 days are both Monday) */
+  /* call-back choices, without two buttons that land on the same day (Saturday: tomorrow and in 2 days are both Monday) */
   function dayButtons(ok) {
     var o = [], seen = {};
     if (ok) { o.push([0, 'Later today']); seen[today()] = 1; }
@@ -482,7 +543,7 @@
   function goTo(el) {
     if (!el) return;
     feedShow(el, true);
-    var f = el.querySelector('.call-btn:not([disabled])') || el.querySelector('[data-row="1"] button') || el.querySelector('.btn:not([disabled])') || el.querySelector('button');
+    var f = el.querySelector('.call-btn:not([disabled])') || el.querySelector('[data-log]') || el.querySelector('.btn:not([disabled])') || el.querySelector('button');
     if (f) setTimeout(function () { f.focus({ preventScroll: true }); }, 350);
   }
   function wireKeys() {
@@ -494,10 +555,10 @@
   }
 
   function cleanEmail(e) { return String(e || '').replace(/[\s?&#<>"']/g, ''); }
-  function sendBox(l, b, s) {
-    var bx = BOX[s.box] || b, link = linkFor(bx), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  function sendBox(l, s) {
+    var bx = BOX[s.box] || pitchFor(l), link = linkFor(bx), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     var web = bx.id === 'website', named = bx.bundle ? 'the ' + bx.name : bx.name;
-    var body = 'Hi, it was good to talk today. ' + (web ? 'Here are the questions for your custom website I mentioned: ' : 'Here\u2019s the page for ' + named + ' I mentioned: ') + link + '\n\n' + S.name + ', independent partner with Station';
+    var body = 'Hi, it was good to talk today. ' + (web ? 'Here are the questions for your custom website I mentioned: ' : 'Here’s the page for ' + named + ' I mentioned: ') + link + '\n\n' + S.name + ', independent partner with Station';
     var subject = web ? 'Your custom website questions' : 'The page for ' + named;
     var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> Send them your ' + esc(bx.name) + ' link so the sale is credited to you. Station checks the sale and sets them up.'
       : '<strong>Interested in ' + esc(bx.name) + '.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
@@ -506,122 +567,227 @@
       '<div class="won-btns"><a class="btn btn-green" data-mail href="mailto:' + cleanEmail(s.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body) + '">Email them the link</a><button class="btn" type="button" data-copy-won>Copy link</button></div>' +
       (s.o === 'won' ? '<button class="link-btn" type="button" data-change>Marked Won by mistake? Change it</button>' : '') + '</div>';
   }
-  function doneBlock(l, b, s) {
+  function doneBlock(l, s) {
     var when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    if (s.o === 'won') return sendBox(l, b, s);
+    if (s.o === 'won') return sendBox(l, s);
     return '<div class="done-box"><p><strong>' + esc(OUT[s.o]) + '</strong> · marked ' + when + '. ' + (s.o === 'dnc' ? 'Never call this business again.' : s.o === 'bad' ? 'Station takes it back.' : 'This business is finished.') + '</p>' +
       '<button class="link-btn" type="button" data-change>Change this</button></div>';
   }
-  function leadCard(l, b, k, n) {
-    var t = localTime(l.st), s = S.log[l.id], rk = rank(l), closed = s && CLOSED[s.o];
-    var suggest = (l.fits !== b.id && BOX[l.fits] && !b.bundle) ? ' <span class="small">Best fit: ' + esc(BOX[l.fits].name) + '.</span>' : '';
+  function leadCard(l, k, n) {
+    var t = localTime(l.st), s = S.log[l.id], rk = rank(l), closed = s && CLOSED[s.o], b = pitchFor(l);
     var pill = s ? '<span class="pill ' + (closed ? 'status' : rk === 0 ? 'due' : 'again') + '">' + esc(statusText(s)) + '</span>' : '<span class="pill">New</span>';
-    var callBtn = callBtnHtml(l, t);
-    var outcomes = '<div class="outcome-area"' + (closed ? ' hidden' : '') + '><div class="what-row"><span class="small">What happened?</span><button class="link-btn" type="button" data-glossary>What do these mean?</button></div><div class="outcomes" data-row="1">' +
-      '<button type="button" data-o="noanswer">No answer</button><button type="button" data-o="voicemail">Voicemail</button>' +
-      '<button type="button" data-o="bad">Bad lead</button><button type="button" data-o="talked">Talked to them</button></div>' +
-      '<div class="outcomes" data-row="2" hidden><p class="small wide row-h" tabindex="-1">How did it go?</p>' +
-      '<button type="button" data-o="interested">Interested</button><button type="button" data-o="callback">Call back</button>' +
-      '<button type="button" data-o="notint">Not interested</button><button type="button" data-o="dnc">Do not call</button>' +
-      '<button type="button" class="wide won" data-o="won">Won: they’re buying</button></div>' +
-      '<div class="outcomes" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' +
-      dayButtons(t.ok || t.early) + '</div></div>';
+    var fitNote = b.id !== l.fits && sellable(BOX[l.fits]) ? '<span class="small"> Best fit here: ' + esc(BOX[l.fits].name) + '</span>' : '';
     return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
-      '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ From Station · ' + l.days + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
-      '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ' reviews)</span></div></div>' +
+      '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ ' + l.days + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
+      '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ')</span></div></div>' +
       (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there</span></div>') +
-      '<div class="fit"><b>Talking point</b>' + esc(l.gap) + suggest + '</div>' +
-      (closed ? doneBlock(l, b, s) : callBtn) + (s && !closed && (s.o === 'interested' || s.wasInterested) ? sendBox(l, b, s) : '') + outcomes +
+      '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(closed && BOX[s.box] ? BOX[s.box].name : b.name) + '</b>' + (closed ? '' : fitNote) + '</span>' + (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' +
+      '<p class="opener"><span class="sr">Open with: </span>“' + esc(openerOf(b)) + '”</p><p class="gap"><b>Why them:</b> ' + esc(l.gap) + '</p></div>' +
+      (closed ? doneBlock(l, s) : callBtnHtml(l, t)) + (s && !closed && (s.o === 'interested' || s.wasInterested) ? sendBox(l, s) : '') +
+      (closed ? '' : '<div class="card-actions"><button class="btn" type="button" data-log>How did it go?</button><button class="btn btn-next" type="button" data-next>Next business ↓</button></div>') +
       '<div class="note-box"' + (S.notes[l.id] ? '' : ' hidden') + '><label class="sr" for="note-' + l.id + '">Note about ' + esc(l.name) + '</label><input class="text" id="note-' + l.id + '" placeholder="One-line note, saved as you type" value="' + esc(S.notes[l.id] || '') + '"></div>' +
-      '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button>' + (t.ok && !closed ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') + '<button class="link-btn" type="button" data-next>Next ↓</button></div></div></article>';
+      '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button><button class="link-btn" type="button" data-script>Full script</button>' +
+      (t.ok && !closed ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') + (closed ? '<button class="link-btn" type="button" data-next>Next ↓</button>' : '') + '</div></div></article>';
   }
-  function renderCard(card, b) {
+  function renderCard(card) {
     var l = LEAD[card.getAttribute('data-id')], list = [].slice.call(feedEl().querySelectorAll('.lead[data-id]')), k = list.indexOf(card);
-    var tmp = document.createElement('div'); tmp.innerHTML = leadCard(l, b, k, list.length);
-    var fresh = tmp.firstChild; card.parentNode.replaceChild(fresh, card); wireCard(fresh, b);
-    updateEnd(b);
+    var tmp = document.createElement('div'); tmp.innerHTML = leadCard(l, k, list.length);
+    var fresh = tmp.firstChild; card.parentNode.replaceChild(fresh, card); wireCard(fresh);
+    updateEnd();
     return fresh;
   }
-  function wireCard(card, b) {
+  function wireCard(card) {
     var id = card.getAttribute('data-id'), l = LEAD[id];
-    var area = card.querySelector('.outcome-area'), r2 = card.querySelector('[data-row="2"]'), rd = card.querySelector('[data-row="day"]');
-    function reveal(el) { el.hidden = false; feedShow(el); el.querySelector('.row-h').focus({ preventScroll: true }); }
-    function rerender(focusSel) {
-      var fresh = renderCard(card, b);
-      if (focusSel) { var f = fresh.querySelector(focusSel); if (f) { feedShow(fresh, true, true); feedShow(f, false, true); f.focus({ preventScroll: true }); } }
-      return fresh;
-    }
-    function record(o, extra) {
-      var prev = S.log[id] || {}, was = prev.o === 'interested' || prev.wasInterested;
-      S.log[id] = Object.assign({ o: o, box: b.id, at: Date.now() }, prev.email ? { email: prev.email } : {}, was && o !== 'interested' ? { wasInterested: true } : {}, extra || {}); save();
-    }
-    function advance(el) { setTimeout(function () { goTo(el.nextElementSibling); }, 700); }
-    card.querySelector('[data-next]').addEventListener('click', function () { goTo(card.nextElementSibling); });
-    card.querySelector('[data-note]').addEventListener('click', function () { var nb = card.querySelector('.note-box'); nb.hidden = false; feedShow(nb); nb.querySelector('input').focus({ preventScroll: true }); });
-    card.querySelector('.note-box input').addEventListener('input', function () { var v = this.value.slice(0, 200); if (v.trim()) S.notes[id] = v; else delete S.notes[id]; save(); });
-    card.querySelector('.card-links').addEventListener('click', function (e) { var cn = e.target.closest('[data-copynum]'); if (cn) copy(l.phone, cn); });
     card.addEventListener('click', function (e) {
-      var cb = e.target.closest('.call-btn'); if (!cb || cb.disabled) return;
-      var now = localTime(l.st);
-      if (!now.ok) { e.preventDefault(); applyHours(card, l, now); toast('Calls just closed for this business.'); return; }
-      if (cb.hasAttribute('data-copycall')) { try { navigator.clipboard.writeText(l.phone); toast('Number copied. Dial it on your phone.'); } catch (x) { toast('Dial ' + l.phone + ' on your phone.'); } }
+      var t = e.target;
+      if (t.closest('[data-next]')) { goTo(card.nextElementSibling); return; }
+      if (t.closest('[data-log]')) { openCallSheet(l, 'after'); return; }
+      if (t.closest('[data-script]')) { openScript(pitchFor(l)); return; }
+      if (t.closest('[data-pitch]')) { openPitchPicker(l); return; }
+      var cn = t.closest('[data-copynum]'); if (cn) { copy(l.phone, cn); return; }
+      if (t.closest('[data-note]')) { var nb = card.querySelector('.note-box'); nb.hidden = false; feedShow(nb); nb.querySelector('input').focus({ preventScroll: true }); return; }
+      var cw = t.closest('[data-copy-won]'); if (cw) { copy(linkFor(BOX[S.log[id].box] || pitchFor(l)), cw); return; }
+      var ch = t.closest('[data-change]');
+      if (ch) {
+        if (S.log[id].o === 'dnc' && ch.getAttribute('data-armed') !== '1') { ch.setAttribute('data-armed', '1'); ch.textContent = 'They asked not to be called. Only change it if you tapped it by mistake. Tap again to change.'; return; }
+        openCallSheet(l, 'after', true); return;
+      }
+      var cb = t.closest('.call-btn');
+      if (cb && !cb.disabled) {
+        var now = localTime(l.st);
+        e.preventDefault();
+        if (!now.ok) { applyHours(card, l, now); toast('Calls just closed for this business.'); return; }
+        if (touch && S.skipPrep) { startCall(l); location.href = 'tel:' + l.dial; return; }
+        openCallSheet(l, 'before');
+      }
     });
-    card.querySelector('[data-glossary]').addEventListener('click', openGlossary);
-    var ch = card.querySelector('[data-change]');
-    if (ch) ch.addEventListener('click', function () {
-      var s = S.log[id];
-      if (s.o === 'dnc' && ch.getAttribute('data-armed') !== '1') { ch.setAttribute('data-armed', '1'); ch.textContent = 'They asked not to be called. Only change it if you tapped it by mistake. Tap again to change.'; return; }
-      area.hidden = false; ch.parentNode.hidden = true; card.querySelector('.lead-card').classList.remove('done');
-      var cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'link-btn'; cancel.textContent = 'Cancel, keep it as ' + OUT[s.o];
-      cancel.addEventListener('click', function () { renderCard(card, b).querySelector('[data-change]').focus(); });
-      area.appendChild(cancel); feedShow(area); area.querySelector('button[data-o]').focus({ preventScroll: true });
-    });
+    card.querySelector('.note-box input').addEventListener('input', function () { var v = this.value.slice(0, 200); if (v.trim()) S.notes[id] = v; else delete S.notes[id]; save(); });
     var em = card.querySelector('[data-email]');
     if (em) em.addEventListener('input', function () {
       S.log[id].email = em.value.trim().slice(0, 120); save();
       var a = card.querySelector('[data-mail]'); a.setAttribute('href', a.getAttribute('href').replace(/^mailto:[^?]*/, 'mailto:' + cleanEmail(S.log[id].email)));
     });
-    var cw = card.querySelector('[data-copy-won]'); if (cw) cw.addEventListener('click', function () { copy(linkFor(BOX[S.log[id].box] || b), cw); });
-    card.querySelectorAll('[data-o]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var o = btn.getAttribute('data-o'), inRow2 = r2.contains(btn);
-        card.querySelectorAll('[data-o]').forEach(function (x) { x.classList.toggle('sel', x === btn || (inRow2 && x.getAttribute('data-o') === 'talked')); });
+  }
+
+  /* ---------- during a call: "Ready to call", then "How did it go?" when they come back from the phone ---------- */
+  var pending = null;
+  function startCall(l) { pending = { id: l.id, left: false, at: Date.now() }; }
+  document.addEventListener('visibilitychange', function () {
+    if (!pending) return;
+    if (document.visibilityState === 'hidden') { pending.left = true; return; }
+    if (pending.left && location.hash.indexOf('#calls') === 0) { var l = LEAD[pending.id]; pending = null; openCallSheet(l, 'after'); }
+  });
+  function openCallSheet(l, mode, changing) {
+    var b = pitchFor(l), quick = sayBoxes(quickLines(b));
+    if (mode === 'before') {
+      openSheet('Ready to call ' + l.name,
+        (touch ? '<a class="btn btn-green btn-big btn-block" href="tel:' + l.dial + '" data-dial>Call ' + l.phone + '</a>'
+               : '<button class="btn btn-green btn-big btn-block" type="button" data-copydial>Copy ' + l.phone + '</button><p class="small center">Then dial it on your phone.</p>') +
+        '<p class="tip"><b>Tip:</b> put the call on speaker, then come back to this app. Your lines stay right here.</p>' + quick +
+        '<button class="btn btn-block" type="button" data-hungup>I’ve hung up: tell the app how it went</button>' +
+        (touch ? '<label class="check"><input type="checkbox" data-skip' + (S.skipPrep ? ' checked' : '') + '> Skip this card and go straight to the phone next time</label>' : ''));
+      var body = document.getElementById('sheetBody');
+      function stillOpen(e) { // the card may have sat open past 8 pm
+        var now = localTime(l.st); if (now.ok) return true;
+        e.preventDefault(); sheet.hidden = true; var c = cardEl(l.id); if (c) applyHours(c, l, now); toast('Calls just closed for this business.'); return false;
+      }
+      var dial = body.querySelector('[data-dial]'); if (dial) dial.addEventListener('click', function (e) { if (stillOpen(e)) startCall(l); });
+      var cd = body.querySelector('[data-copydial]'); if (cd) cd.addEventListener('click', function (e) { if (stillOpen(e)) { startCall(l); copy(l.phone, cd); } });
+      body.querySelector('[data-hungup]').addEventListener('click', function () { pending = null; openCallSheet(l, 'after'); });
+      var sk = body.querySelector('[data-skip]'); if (sk) sk.addEventListener('change', function () { S.skipPrep = sk.checked; save(); });
+      return;
+    }
+    var t = localTime(l.st);
+    openSheet('How did it go?',
+      '<p class="sheet-sub">' + esc(l.name) + ' · pitching ' + esc(b.name) + '</p>' +
+      (changing ? '' : '<details class="script-peek"><summary>Show my lines</summary>' + quick + '</details>') +
+      '<div class="outcomes big" data-row="1"><button type="button" data-o="noanswer">No answer</button><button type="button" data-o="voicemail">Voicemail</button>' +
+      '<button type="button" data-o="bad">Bad lead</button><button type="button" data-o="talked">Talked to them</button></div>' +
+      '<div class="outcomes big" data-row="2" hidden><p class="small wide row-h" tabindex="-1">How did the conversation go?</p>' +
+      '<button type="button" data-o="interested">Interested</button><button type="button" data-o="callback">Call back</button>' +
+      '<button type="button" data-o="notint">Not interested</button><button type="button" data-o="dnc">Do not call</button>' +
+      '<button type="button" class="wide won" data-o="won">Won: they’re buying</button></div>' +
+      '<div class="outcomes big" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(t.ok || t.early) + '</div>' +
+      '<label class="field slim note-in" for="sheetNote">Anything to remember? (optional)<input class="text" id="sheetNote" value="' + esc(S.notes[l.id] || '') + '" placeholder="For example: ask for Maria after 2"></label>' +
+      '<details class="script-peek"><summary>What do these buttons mean?</summary>' + glossaryHtml() + '</details>');
+    var body = document.getElementById('sheetBody'), r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]');
+    function reveal(el) { el.hidden = false; el.scrollIntoView({ block: 'nearest' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
+    body.querySelector('#sheetNote').addEventListener('input', function () { var v = this.value.slice(0, 200); if (v.trim()) S.notes[l.id] = v; else delete S.notes[l.id]; save(); });
+    body.addEventListener('click', function (e) {
+      var ob = e.target.closest('[data-o]'), db = e.target.closest('[data-day]');
+      if (ob) {
+        var o = ob.getAttribute('data-o');
+        body.querySelectorAll('[data-o]').forEach(function (x) { x.classList.toggle('sel', x === ob || (r2.contains(ob) && x.getAttribute('data-o') === 'talked')); });
         if (o !== 'callback') rd.hidden = true;
         if (o === 'talked') { reveal(r2); return; }
         if (o === 'callback') { reveal(rd); return; }
-        record(o);
-        if (o === 'won' || o === 'interested') { rerender('[data-email]'); toast(o === 'won' ? 'Won! Now send them your link.' : 'Saved. Send them your link.'); return; }
-        var fresh = rerender();
-        toast(o === 'dnc' ? 'Saved. Nobody calls them again.' : o === 'interested' ? 'Saved. They stay on your list.' : CLOSED[o] ? 'Saved. That one’s finished.' : 'Saved. Try them again another day.');
-        advance(fresh);
-      });
+        commit(l, o);
+      } else if (db) {
+        var lt = localTime(l.st), n = +db.getAttribute('data-day'); if (n === 0 && !lt.ok && !lt.early) n = 1;
+        commit(l, 'callback', { due: n === 0 ? today() : addDays(n) });
+      }
     });
-    rd.addEventListener('click', function (e) {
-      var btn = e.target.closest('[data-day]'); if (!btn) return;
-      (function () {
-        var lt = localTime(l.st), n = +btn.getAttribute('data-day'); if (n === 0 && !lt.ok && !lt.early) n = 1;
-        var due = n === 0 ? today() : addDays(n);
-        record('callback', { due: due });
-        var fresh = rerender();
-        toast('Call back ' + dayLabel(due) + '. They stay on your list.');
-        advance(fresh);
-      })();
+  }
+  function record(l, o, extra) {
+    var prev = S.log[l.id] || {}, was = prev.o === 'interested' || prev.wasInterested;
+    S.log[l.id] = Object.assign({ o: o, box: pitchFor(l).id, at: Date.now() }, prev.email ? { email: prev.email } : {}, was && o !== 'interested' && !CLOSED[o] ? { wasInterested: true } : {}, extra || {}); save();
+  }
+  function commit(l, o, extra) {
+    var before = S.log[l.id] ? JSON.parse(JSON.stringify(S.log[l.id])) : null;
+    record(l, o, extra);
+    sheet.hidden = true;
+    buzz();
+    var card = cardEl(l.id); if (!card) return;
+    var fresh = renderCard(card), adv = null;
+    var s = S.log[l.id], msg = o === 'callback' ? 'Call back ' + dayLabel(s.due) : OUT[o];
+    if (o === 'won' || o === 'interested') {
+      feedShow(fresh, true, true); var f = fresh.querySelector('[data-email]'); if (f) { feedShow(f, false, true); f.focus({ preventScroll: true }); }
+    } else {
+      adv = setTimeout(function () { var c = cardEl(l.id); if (c) goTo(c.nextElementSibling); }, 900);
+    }
+    showUndo('Saved: ' + msg + (o === 'won' ? '. Now send them your link.' : o === 'interested' ? '. Send them your link.' : ''), l.id, before, adv);
+  }
+
+  /* ---------- undo: every save can be taken back for a few seconds ---------- */
+  var U = null, undoEl = document.getElementById('undo');
+  function showUndo(text, id, before, adv) {
+    clearTimeout(U && U.t);
+    U = { id: id, before: before, adv: adv };
+    document.getElementById('undoText').textContent = text;
+    undoEl.hidden = false; undoEl.classList.add('on');
+    U.t = setTimeout(hideUndo, 6000);
+  }
+  function hideUndo() { if (U) clearTimeout(U.t); U = null; undoEl.hidden = true; undoEl.classList.remove('on'); }
+  document.getElementById('undoBtn').addEventListener('click', function () {
+    if (!U) return;
+    var u = U; hideUndo(); clearTimeout(u.adv);
+    if (u.before) S.log[u.id] = u.before; else delete S.log[u.id];
+    save();
+    var card = cardEl(u.id); if (card) { var fresh = renderCard(card); goTo(fresh); }
+    toast('Undone.');
+  });
+
+  /* ---------- pick a product for one business ---------- */
+  function openPitchPicker(l) {
+    var cur = pitchFor(l), list = PW.boxes.filter(sellable);
+    function item(x) {
+      var tags = (x.id === l.fits ? '<span class="badge first">Best fit here</span>' : '') + (x.id === cur.id ? '<span class="badge bundle">Pitching now</span>' : '');
+      return '<button type="button" class="pick' + (x.id === cur.id ? ' on' : '') + '" data-pick="' + x.id + '"><span class="pick-name">' + esc(x.name) + ' ' + tags + '</span><span class="pick-what">' + esc(x.what) + '</span></button>';
+    }
+    var singles = list.filter(function (x) { return !x.bundle; }).sort(function (a, b) { return (a.id === l.fits ? -1 : 0) - (b.id === l.fits ? -1 : 0) || easyFirst(a, b); });
+    openSheet('What to pitch ' + l.name, '<p class="sheet-sub">' + esc(l.gap) + '</p><div class="picks">' + singles.map(item).join('') + '</div><h3 class="sheet-h">Bundles</h3><div class="picks">' + list.filter(function (x) { return x.bundle; }).map(item).join('') + '</div>');
+    document.getElementById('sheetBody').addEventListener('click', function (e) {
+      var p = e.target.closest('[data-pick]'); if (!p) return;
+      S.pitch[l.id] = p.getAttribute('data-pick'); save(); sheet.hidden = true;
+      var card = cardEl(l.id); if (card) { var fresh = renderCard(card); var ch = fresh.querySelector('[data-pitch]'); if (ch) ch.focus(); }
+      toast('Pitching ' + BOX[S.pitch[l.id]].name + ' here.');
     });
   }
 
-  /* ---------- sheets (script + button glossary); focus stays inside while open ---------- */
+  /* ---------- first visit to Calls: a 4-step tour of the first card ---------- */
+  var TOUR = null;
+  function startTour() {
+    var card = feedEl() && feedEl().querySelector('.lead[data-id]'); if (!card || location.hash.indexOf('#calls') !== 0) return;
+    TOUR = { i: 0, steps: [
+      [card.querySelector('h2'), 'This is the business to call. Station sends you each one, a few at a time.'],
+      [card.querySelector('.pitch-box'), 'What to pitch them, and the first thing to say. Tap Change to pitch something else.'],
+      [card.querySelector('.call-btn'), 'Tap to call. Put it on speaker so you can read your lines while you talk.'],
+      [card.querySelector('[data-log]'), 'When you hang up, come back to the app and tell it how it went. You can undo any mistake.']
+    ].filter(function (s) { return s[0]; }) };
+    document.getElementById('coach').hidden = false; showStep();
+  }
+  function showStep() {
+    var s = TOUR.steps[TOUR.i], el = s[0], ring = document.getElementById('coachRing'), bub = document.getElementById('coachBubble');
+    feedShow(el, false, true);
+    var r = el.getBoundingClientRect();
+    ring.style.cssText = 'top:' + (r.top - 8) + 'px;left:' + (r.left - 8) + 'px;width:' + (r.width + 16) + 'px;height:' + (r.height + 16) + 'px';
+    document.getElementById('coachStep').textContent = (TOUR.i + 1) + ' of ' + TOUR.steps.length;
+    document.getElementById('coachText').textContent = s[1];
+    document.getElementById('coachNext').textContent = TOUR.i === TOUR.steps.length - 1 ? 'Got it' : 'Next';
+    var below = r.bottom + 16, h = bub.offsetHeight || 150;
+    bub.style.top = (below + h < window.innerHeight - 8 ? below : Math.max(8, r.top - h - 16)) + 'px';
+    document.getElementById('coachNext').focus();
+  }
+  function endTour() { if (!TOUR) return; TOUR = null; document.getElementById('coach').hidden = true; S.toured = true; save(); }
+  document.getElementById('coachNext').addEventListener('click', function () { if (!TOUR) return; if (TOUR.i < TOUR.steps.length - 1) { TOUR.i++; showStep(); } else { endTour(); var c = feedEl() && feedEl().querySelector('.call-btn'); if (c) c.focus(); } });
+  document.getElementById('coachSkip').addEventListener('click', endTour);
+  document.addEventListener('keydown', function (e) { if (TOUR && e.key === 'Escape') endTour(); });
+
+  /* ---------- sheets; focus stays inside while open ---------- */
   var lastFocus = null, sheet = document.getElementById('sheet');
   function openSheet(title, html) {
-    lastFocus = document.activeElement;
-    document.getElementById('sheetTitle').textContent = title; document.getElementById('sheetBody').innerHTML = html;
+    if (sheet.hidden) lastFocus = document.activeElement;
+    var old = document.getElementById('sheetBody'), nb = old.cloneNode(false); old.parentNode.replaceChild(nb, old); // drop old listeners
+    document.getElementById('sheetTitle').textContent = title; nb.innerHTML = html;
     sheet.hidden = false; document.getElementById('sheetClose').focus();
   }
   function openScript(b) {
-    openSheet(b.name + ': what to say', scriptBlock(b) + '<h3 class="sheet-h">If they push back</h3>' + (repliesBlock(b) || '<p>Answer the question, then offer to send the link.</p>') +
+    openSheet(b.name + ': what to say', sayBoxes(script(b), true) + '<h3 class="sheet-h">If they push back</h3>' + (repliesBlock(b) || '<p>Answer the question, then offer to send the link.</p>') +
       (b.brand === 'station' ? '<h3 class="sheet-h">Other good questions</h3><ul class="ticks">' + PW.qualify.map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ul>' : ''));
   }
-  function openGlossary() {
-    openSheet('What the buttons mean', '<dl class="gloss">' +
+  function openGlossary() { openSheet('What the buttons mean', glossaryHtml()); }
+  function glossaryHtml() {
+    return ('<dl class="gloss">' +
       '<dt>No answer, Voicemail</dt><dd>You couldn’t reach them. They stay on your list to try another day.</dd>' +
       '<dt>Bad lead</dt><dd>Wrong number, closed down, or not a business that could use it. Station takes it back.</dd>' +
       '<dt>Talked to them</dt><dd>You spoke to someone. Then pick how it went.</dd>' +
@@ -630,6 +796,7 @@
       '<dt>Not interested</dt><dd>They said no. That business is finished.</dd>' +
       '<dt>Do not call</dt><dd>They asked you to stop. Nobody calls them again, and the call button goes away.</dd>' +
       '<dt>Won</dt><dd>They’re buying. Send them your link; Station checks it and sets them up.</dd>' +
+      '<dt>Undo</dt><dd>Tapped the wrong one? Press Undo at the bottom of the screen right after you save.</dd>' +
       '<dt>Days to work it</dt><dd>How long this business stays on your list before Station gives it to someone else.</dd></dl>');
   }
   function closeSheet() { sheet.hidden = true; if (lastFocus && document.contains(lastFocus)) lastFocus.focus(); }
@@ -639,7 +806,7 @@
     if (sheet.hidden) return;
     if (e.key === 'Escape') { closeSheet(); return; }
     if (e.key !== 'Tab') return;
-    var f = [].filter.call(sheet.querySelectorAll('button, summary, a[href]'), function (x) { return x.offsetParent !== null; });
+    var f = [].filter.call(sheet.querySelectorAll('button, summary, a[href], input'), function (x) { return x.offsetParent !== null; });
     if (!f.length) return;
     var first = f[0], last = f[f.length - 1];
     if (!sheet.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
@@ -677,21 +844,26 @@
     chrome(true, 'help');
     mount('<div class="wrap help"><h1>Help</h1>' +
       '<h2>Stuck on something?</h2><p>Email the Station team at <a href="mailto:main@station.solutions">main@station.solutions</a>. People answer, usually the same day. Station doesn’t have a phone line, so never give out a number for Station.</p>' +
+      '<h2>Easier to read</h2><p>Make all the text bigger on this device.</p><button class="btn" type="button" data-size aria-pressed="' + !!S.big + '">Bigger text on or off</button>' +
       '<h2>The rules, in one breath</h2><ul class="ticks">' +
       '<li>You’re an independent partner. Say so if anyone asks.</li><li>Never change a price, offer a deal or share your commission.</li>' +
       '<li>Never promise results, a ranking or a go-live date. Anything that texts waits about 2 business days on the carriers.</li>' +
       '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. If someone says stop, stop, and mark them Do not call.</li>' +
       '<li>Your link is what credits a sale to you, so send it every time. Log every call too, so Station knows who’s been called and can send you more.</li>' +
       '<li>Don’t copy leads or client details into your own spreadsheet or CRM, and never ask a business to send you their customer list.</li></ul>' +
-      '<h2>What the call buttons mean</h2><p>No answer, Call back, Won and the rest, in plain words.</p><button class="btn" type="button" id="glossBtn">Show me</button>' +
+      '<h2>How a call works</h2><p>Tap <b>Call now</b>, put it on speaker, read your lines. When you hang up, the app asks how it went. Pressed the wrong button? Tap <b>Undo</b>.</p>' +
+      '<div class="help-btns"><button class="btn" type="button" id="tourBtn">Show me the tour again</button><button class="btn" type="button" id="glossBtn">What the buttons mean</button>' +
+      (S.skipPrep ? '<button class="btn" type="button" id="prepBtn">Show the “Ready to call” card again</button>' : '') + '</div>' +
       '<h2>Your 30-second pitch for Station</h2><div class="say">' + esc(PW.pitch) + '</div>' +
       '<h2>Take the check again</h2><p>Five questions, one minute.</p><a class="btn" href="#check">Retake the check</a>' +
       '<h2>Start over</h2><p>Clears your name and the calls you logged in this preview, on this device only.</p><button class="btn" type="button" id="reset">Reset the preview</button></div>', 'Help');
     document.getElementById('glossBtn').addEventListener('click', openGlossary);
+    document.getElementById('tourBtn').addEventListener('click', function () { S.toured = false; save(); location.hash = '#calls'; });
+    var pb = document.getElementById('prepBtn'); if (pb) pb.addEventListener('click', function () { S.skipPrep = false; save(); pb.remove(); toast('You’ll see the card before each call.'); });
     var r = document.getElementById('reset'), armed = null;
     r.addEventListener('click', function () {
       if (!armed) { r.textContent = (touch ? 'Tap' : 'Click') + ' again to reset'; armed = setTimeout(function () { armed = null; r.textContent = 'Reset the preview'; }, 4000); return; }
-      clearTimeout(armed); try { localStorage.removeItem(KEY); } catch (e) {} S = fresh(); if (location.hash) location.hash = ''; else route();
+      clearTimeout(armed); try { localStorage.removeItem(KEY); } catch (e) {} S = fresh(); applySize(); if (location.hash) location.hash = ''; else route();
     });
   };
 
