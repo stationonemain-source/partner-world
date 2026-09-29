@@ -14,6 +14,17 @@
   if (!S.notes) S.notes = {};
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
+  /* ---------- demo link: ?demo skips the welcome form and the check (optional &name=Linda, &code=lsmith) ---------- */
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (!q.has('demo')) return;
+    var name = (q.get('name') || '').trim().slice(0, 40), c = (q.get('code') || '').trim().toLowerCase();
+    if (name) S.name = name; else if (!S.name) S.name = 'Sam';
+    if (/^[a-z0-9-]{2,30}$/.test(c)) S.code = c; else if (!S.code) S.code = 'demo';
+    S.entered = true; save();
+    history.replaceState(null, '', location.pathname + (location.hash && location.hash !== '#' ? location.hash : '#home'));
+  })();
+
   /* ---------- helpers ---------- */
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function money(n) { return '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
