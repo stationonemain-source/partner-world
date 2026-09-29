@@ -264,7 +264,7 @@
       ['Your link', '<p>Send this so the sale is credited to you.</p><div class="copyrow"><code id="myLink">' + esc(link) + '</code><button class="btn" type="button" data-copy-link>Copy</button></div>'],
       ['More detail', b.about.map(function (p) { return '<p>' + p + '</p>'; }).join('')]
     ];
-    var stepsHtml = steps.map(function (s, k) { return '<section class="step"><span class="n" aria-hidden="true">' + (k + 1) + '</span><div><h3>' + s[0] + '</h3>' + s[1] + '</div></section>'; }).join('');
+    var stepsHtml = steps.map(function (s, k) { return '<section class="step"><span class="n" aria-hidden="true">' + (k + 1) + '</span><div><h2 class="step-h">' + s[0] + '</h2>' + s[1] + '</div></section>'; }).join('');
     mount('<div class="wrap prod"><a class="back" href="#home">&larr; All products</a>' +
       '<div class="prod-hero"><div><span class="pill"><span class="dot ' + b.brand + '" aria-hidden="true"></span>' + esc(brandName(b.brand)) + '</span><h1 style="margin-top:12px">' + esc(b.name) + '</h1><p class="what">' + esc(b.what) + '</p></div>' +
       '<div class="earn-card' + (tbd ? ' tbd' : '') + '"><span class="lbl">What you earn per client</span>' + (tbd ? '<div class="big">' + esc(b.earnLabel) + '</div>' : '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + (b.id === 'revive' ? 'quarter' : 'month') + ' they stay</div>') +
