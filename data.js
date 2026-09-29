@@ -533,12 +533,17 @@ window.PW={
 "why": [],
 "about": [
 "Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"- <b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.\n- <b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.\n- <b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.",
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
 "Core and Pro use each product's Standard plan. If a client outgrows one product, they upgrade just that product for the difference. Station's Cancellation and Refund Policy also mentions annual prepay plans at 10 times the monthly rate. Ask Station before offering one."
 ],
-"call": {},
+"call": {
+"opener": "What part of your week costs you the most work: missed calls, following up, reviews, or booking?",
+"discovery": "If it’s more than one of those, is it worth fixing them together?",
+"pitch": "The Core bundle covers them together for $750 a month, less than buying them one by one, and there’s no setup fee. It starts with a 15-minute kickoff call with Station.",
+"close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
+},
 "email": null,
-"link": "https://station.solutions/?ref={code}"
+"link": "https://station.solutions/?ref={code}#bundles"
 },
 {
 "id": "bundle-pro",
@@ -557,12 +562,17 @@ window.PW={
 "why": [],
 "about": [
 "Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"- <b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.\n- <b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.\n- <b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.",
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
 "Core and Pro use each product's Standard plan. If a client outgrows one product, they upgrade just that product for the difference. Station's Cancellation and Refund Policy also mentions annual prepay plans at 10 times the monthly rate. Ask Station before offering one."
 ],
-"call": {},
+"call": {
+"opener": "What part of your week costs you the most work: missed calls, following up, reviews, or booking?",
+"discovery": "If it’s more than one of those, is it worth fixing them together?",
+"pitch": "The Pro bundle covers them together for $1,395 a month, less than buying them one by one, and there’s no setup fee. It starts with a 15-minute kickoff call with Station.",
+"close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
+},
 "email": null,
-"link": "https://station.solutions/?ref={code}"
+"link": "https://station.solutions/?ref={code}#bundles"
 },
 {
 "id": "bundle-custom",
@@ -581,12 +591,17 @@ window.PW={
 "why": [],
 "about": [
 "Bundles have no setup fee. The site shows each bundle's saving against buying the same products separately. Bundles are billed at checkout (the free trial is for single products) and start with a 15-minute kickoff call.",
-"- <b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.\n- <b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.\n- <b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.",
+"<ul class=\"ticks\"><li><b>Core, $750 a month:</b> Greet, Slate, Lineback, Pursuit, Repute and Dispatch. They're worth $873 separately, so it saves $123.</li><li><b>Pro, $1,395 a month:</b> Core plus Frontdesk, Echo and Marquee. They're worth $1,655 separately (Slate is free with Frontdesk), so it saves $260 a month, and the $297 Echo setup is waived.</li><li><b>Custom, $2,800 a month:</b> all 13 products, each on its highest usage tier. They're worth $3,282 separately, so it saves $482 a month, and the $297 setup is waived. A custom website isn't included and is quoted separately.</li></ul>",
 "Core and Pro use each product's Standard plan. If a client outgrows one product, they upgrade just that product for the difference. Station's Cancellation and Refund Policy also mentions annual prepay plans at 10 times the monthly rate. Ask Station before offering one."
 ],
-"call": {},
+"call": {
+"opener": "What part of your week costs you the most work: missed calls, following up, reviews, or booking?",
+"discovery": "If it’s more than one of those, is it worth fixing them together?",
+"pitch": "The Custom bundle covers them together for $2,800 a month, less than buying them one by one, and there’s no setup fee. It starts with a 15-minute kickoff call with Station.",
+"close": "Want me to send you the page so you can see exactly what’s in it? What’s the best email?"
+},
 "email": null,
-"link": "https://station.solutions/?ref={code}"
+"link": "https://station.solutions/?ref={code}#bundles"
 },
 {
 "id": "ribbon",
@@ -594,6 +609,7 @@ window.PW={
 "name": "Ribbon Leads",
 "what": "A morning list of restaurants, bars and cafes that just filed to open, before they open.",
 "price": "Free Monday list · Market $49/mo (Florida or New York, every morning) · National $129/mo (all 8 states + API)",
+"soon": true,
 "mrr": 49,
 "setup": 0,
 "earn": null,
@@ -614,7 +630,7 @@ window.PW={
 ],
 "call": {
 "opener": "You sell to restaurants, right? When a new one opens near you, how early do you usually find out?",
-"discovery": "By the time the doors open, who has already picked their [your product]?",
+"discovery": "By the time the doors open, have they usually already picked who they buy from?",
 "pitch": "Ribbon Leads sends you every restaurant and bar that files to open, the morning it files, weeks before it opens, with the phone number when we can match it. Florida or New York is $49 a month, and there is a free Monday list to try first.",
 "objection": "\"I already hear about openings.\" — Usually on opening day, after they have chosen. This is the filing, weeks earlier."
 },
@@ -627,6 +643,7 @@ window.PW={
 "name": "Quorum",
 "what": "Keeps a local government’s website and documents readable for disabled residents, as federal ADA Title II law now requires.",
 "price": "From $2,400 a year (the usual quote elsewhere is about $26,000). Larger plans quoted by Quorum.",
+"soon": true,
 "mrr": 200,
 "setup": 0,
 "earn": null,
@@ -646,7 +663,7 @@ window.PW={
 "Send them to quorumcompliance.com for the free review. Governments often buy by purchase order; Quorum handles that."
 ],
 "call": {
-"opener": "Hi, I’m calling about the new ADA Title II web rule for local governments. Who looks after your website and the agendas you post?",
+"opener": "I’m calling about the new ADA Title II web rule for local governments. Who looks after your website and the agendas you post?",
 "discovery": "Have you had a chance to check your posted agendas and minutes against it? Those are the part almost everyone misses.",
 "pitch": "Quorum does a free review of your site and documents, in plain English, within a day. If you want the repairs and the ongoing record after that, it starts at $2,400 a year.",
 "objection": "\"Our web vendor handles it.\" — Worth checking the documents: in our national scan, 94% of posted agendas and minutes failed, even on sites that looked fine."
