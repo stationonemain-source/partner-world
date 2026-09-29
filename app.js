@@ -10,12 +10,13 @@
   var PW = window.PW, KEY = 'pw-preview-v2';
   var main = document.getElementById('main');
   var BOX = {}; PW.boxes.forEach(function (b) { BOX[b.id] = b; });
-  function fresh() { return { name: '', code: '', entered: false, log: {}, notes: {}, pitch: {}, focus: '', filter: 'all', asked: false, big: false, toured: false, skipPrep: false }; }
+  function fresh() { return { name: '', code: '', entered: false, log: {}, notes: {}, pitch: {}, focus: '', focusDay: '', filter: 'all', asked: false, big: false, toured: false, skipPrep: false, calls: [], since: '' }; }
 
   /* ---------- state (this browser only; a preview has no account) ---------- */
   var S = fresh();
   try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   ['notes', 'pitch', 'log'].forEach(function (k) { if (!S[k] || typeof S[k] !== 'object') S[k] = {}; });
+  if (!Array.isArray(S.calls)) S.calls = [];
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
   /* ---------- demo link: ?demo skips the welcome form and the check (optional &name=Linda, &code=lsmith) ---------- */
@@ -33,8 +34,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function money(n) { return '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function toast(t) {
-    var el = document.getElementById('toast'), f = document.getElementById('feed');
-    el.style.top = f && window.innerWidth <= 760 ? Math.round(f.getBoundingClientRect().top + 8) + 'px' : '';
+    var el = document.getElementById('toast');
     el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 2000);
   }
   function buzz() { try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} }
@@ -96,6 +96,8 @@
       phone: '(' + r[5] + ') 555-' + last, dial: '+1' + r[5] + '555' + last, days: 28 - Math.floor(i * 1.4) };
   });
   var LEAD = {}; LEADS.forEach(function (l) { LEAD[l.id] = l; });
+  if (!S.since) { S.since = ymd(new Date()); save(); }
+  function daysLeft(l) { var gone = Math.round((new Date(today() + 'T12:00') - new Date(S.since + 'T12:00')) / 864e5); return Math.max(1, l.days - Math.max(0, gone)); }
   var TZ = { TX: 'America/Chicago', OK: 'America/Chicago' };
 
   function localTime(st) {
@@ -113,7 +115,7 @@
   function sellable(b) { return b && !b.soon; }
   function pitchFor(l) {
     if (sellable(BOX[S.pitch[l.id]])) return BOX[S.pitch[l.id]];
-    if (sellable(BOX[S.focus])) return BOX[S.focus];
+    if (sellable(BOX[S.focus]) && S.focusDay === today()) return BOX[S.focus];
     return BOX[l.fits];
   }
 
@@ -123,31 +125,34 @@
   var OUT = { noanswer: 'No answer', voicemail: 'Voicemail', bad: 'Bad lead', interested: 'Interested', callback: 'Call back', notint: 'Not interested', dnc: 'Do not call', won: 'Won' };
   var CLOSED = { bad: 1, notint: 1, dnc: 1, won: 1 };
   var TALKED = { interested: 1, callback: 1, notint: 1, dnc: 1, won: 1 };
+  function dueNow(s) { return s.o === 'callback' && s.due && (s.due < today() || (s.due === today() && (!s.dueAt || Date.now() >= s.dueAt))); }
   function rank(l) {
     var s = S.log[l.id];
-    if (!s) return 1;
-    if (CLOSED[s.o]) return 3;
-    if (s.o === 'callback' && s.due && s.due <= today()) return 0;
-    return 2;
+    if (!s) return 2;
+    if (CLOSED[s.o]) return 4;
+    if (dueNow(s)) return 0;
+    if (s.o === 'interested' || s.wasInterested) return 1;
+    return 3;
   }
   function sortedLeads() { return LEADS.slice().sort(function (x, y) { var d = rank(x) - rank(y); return d || ((S.log[x.id] || {}).due || '').localeCompare((S.log[y.id] || {}).due || ''); }); }
   function counts() {
-    var c = { due: 0, fresh: 0, again: 0, done: 0 };
-    LEADS.forEach(function (l) { c[['due', 'fresh', 'again', 'done'][rank(l)]]++; });
-    c.toCall = c.due + c.fresh + c.again; c.tried = LEADS.length - c.fresh; return c;
+    var c = { due: 0, warm: 0, fresh: 0, again: 0, done: 0 };
+    LEADS.forEach(function (l) { c[['due', 'warm', 'fresh', 'again', 'done'][rank(l)]]++; });
+    c.toCall = c.due + c.warm + c.fresh + c.again; c.tried = LEADS.length - c.fresh; return c;
   }
   function todayStats() {
     var t = today(), s = { calls: 0, talked: 0, warm: 0 };
-    Object.keys(S.log).forEach(function (k) { var x = S.log[k]; if (!x.at || ymd(new Date(x.at)) !== t) return; s.calls++; if (TALKED[x.o]) s.talked++; if (x.o === 'interested' || x.o === 'won') s.warm++; });
+    S.calls.forEach(function (x) { if (ymd(new Date(x.at)) !== t) return; s.calls++; if (TALKED[x.o]) s.talked++; if (x.o === 'interested' || x.o === 'won') s.warm++; });
     return s;
   }
   function statusText(s) {
-    var t = s.o === 'callback' && s.due ? (s.due < today() ? 'Call back: overdue since ' + dayLabel(s.due) : 'Call back ' + dayLabel(s.due)) : OUT[s.o];
+    var t = s.o === 'callback' && s.due ? (s.due < today() ? 'Call back: overdue since ' + dayLabel(s.due) : s.due === today() && s.dueAt && Date.now() < s.dueAt ? 'Call back after ' + new Date(s.dueAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() : 'Call back ' + dayLabel(s.due)) : OUT[s.o];
     return s.wasInterested && !CLOSED[s.o] ? 'Interested · ' + t : t;
   }
   function callsSummary(c) {
     var parts = [];
     if (c.due) parts.push(c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due');
+    if (c.warm) parts.push(c.warm + ' interested');
     if (c.fresh) parts.push(c.fresh + ' new');
     if (c.again) parts.push(c.again + ' to try again');
     return parts.join(', ');
@@ -272,7 +277,7 @@
       main.querySelectorAll('.choice').forEach(function (b) { b.addEventListener('click', function () { draw(+b.getAttribute('data-k')); }); });
       var nx = document.getElementById('qNext'), rt = document.getElementById('qRetry');
       if (nx) { nx.focus(); nx.addEventListener('click', function () { if (i === QUIZ.length - 1) { S.entered = true; save(); location.hash = retake ? '#help' : '#home'; toast(retake ? 'Check passed.' : 'You’re in.'); } else { i++; order = null; draw(null); } }); }
-      if (rt) { rt.focus(); rt.addEventListener('click', function () { order = shuffle(q.a.length); draw(null); }); }
+      if (rt) { rt.focus(); rt.addEventListener('click', function () { draw(null); }); }
     }
     draw(null);
   };
@@ -287,20 +292,20 @@
   function openerOf(b) { return (b.call && b.call.opener) || b.ask; }
   VIEWS.home = function () {
     chrome(true, 'home');
-    var t = totals(), c = counts(), now = localTime('TX'), next = sortedLeads().filter(function (l) { return rank(l) < 3; })[0], st = todayStats();
+    var t = totals(), c = counts(), now = localTime('TX'), next = sortedLeads().filter(function (l) { return rank(l) < 4; })[0], st = todayStats();
     var nextHtml;
     if (next) {
       var nb = pitchFor(next), due = rank(next) === 0;
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">' + (due ? 'Call-back due' : 'Your next call') + '</span>' +
         '<h2 id="nextH">' + esc(next.name) + '</h2><p class="facts"><span>' + esc(next.trade) + ' · ' + esc(next.city) + ', ' + next.st + '</span><span>★ ' + next.rating + '</span></p>' +
-        '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>. Open with: “' + esc(openerOf(nb)) + '”</p>' +
+        '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>' + (S.pitch[next.id] ? ' (your pick)' : sellable(BOX[S.focus]) && S.focusDay === today() && nb.id === S.focus ? ' (your pick for today)' : '') + '. Open with: “' + esc(openerOf(nb)) + '”</p>' +
         '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote">' + closedNote(now) + '</p>' +
-        '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">' + (now.ok ? 'Start calling' : 'See my list') + '</a><span class="small">' + c.toCall + ' to call: ' + callsSummary(c) + '</span></div></section>';
+        '<div class="next-go">' + (!Object.keys(S.log).length ? '<a class="btn btn-dark btn-big" href="#box/lineback">Learn Lineback first</a><a class="btn btn-big" id="callGo" href="#calls">' : '<a class="btn btn-dark btn-big" id="callGo" href="#calls">') + (now.ok ? 'Start calling' : 'See my list') + '</a><span class="small">' + c.toCall + ' to call: ' + callsSummary(c) + '</span></div></section>';
     } else {
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your calls</span><h2 id="nextH">You’ve worked your whole list.</h2>' +
         '<p class="pitch-line">Ask Station for the next batch from the end of your list.</p><div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">Go to my list</a></div></section>';
     }
-    var fresh = !Object.keys(S.log).length, lb = BOX.lineback;
+    var fresh = !Object.keys(S.log).length && !S.calls.length, lb = BOX.lineback;
     var side = fresh
       ? '<a class="start-here" href="#box/lineback"><span class="lbl">New here? Start with this one</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(lb.what) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per client</span><span class="go"><span>Learn it in 2 minutes</span><span aria-hidden="true">&rarr;</span></span></a>'
       : '<div class="start-here today"><span class="lbl">Today</span><div class="stats"><div><b>' + st.calls + '</b><span>calls logged</span></div><div><b>' + st.talked + '</b><span>conversations</span></div><div><b>' + st.warm + '</b><span>interested or won</span></div></div>' +
@@ -418,7 +423,7 @@
       : b.id === 'echo' ? 'That’s 40% of the $247 each client pays per month, starting after their 7-day free trial. The one-time $297 setup fee earns nothing.'
       : 'That’s 40% of what each client pays, starting after their 7-day free trial, once the payment clears. No limit on clients.';
     function row(label, body, say) { return '<div class="cheat-row' + (say ? ' is-say' : '') + '"><span class="cheat-lbl">' + label + '</span><p>' + esc(body) + '</p></div>'; }
-    var cheat = '<section class="cheat" aria-labelledby="cheatH"><h2 id="cheatH">' + esc(b.name) + ' on one screen</h2>' +
+    var cheat = '<section class="cheat" aria-labelledby="cheatH"><h2 id="cheatH">' + esc(b.name) + ' cheat sheet</h2>' +
       row('Who it’s for', b.who) + row('Open with', openerOf(b), 1) + row('If they ask the price', priceLine(b), 1) + row('Close', closeLineOf(b), 1) +
       (b.call && b.call.objection ? row('The push-back you’ll hear', b.call.objection) : '') +
       '<div class="cheat-row"><span class="cheat-lbl">' + (st ? 'Your link' : 'Their website') + '</span><div class="copyrow"><code>' + esc(link) + '</code><button class="btn" type="button" data-copy-link>Copy</button></div>' + (st ? '' : '<p class="small">For learning about it. Referral links come when it opens to partners.</p>') + '</div></section>';
@@ -466,16 +471,16 @@
 
   VIEWS.calls = function (id) {
     clearInterval(tick); tick = null;
-    if (id && sellable(BOX[id])) { S.focus = id; save(); }
+    if (id && sellable(BOX[id])) { S.focus = id; S.focusDay = today(); save(); }
     chrome(true, 'calls');
     var leads = sortedLeads();
     var cards = leads.map(function (l, k) { return leadCard(l, k, leads.length); }).join('');
     cards += '<article class="lead" id="endCard"><div class="lead-card end-card"></div></article>';
-    var focus = sellable(BOX[S.focus]) ? BOX[S.focus] : null;
+    var focus = sellable(BOX[S.focus]) && S.focusDay === today() ? BOX[S.focus] : null;
     mount('<h1 class="sr">Calls</h1><div class="calls-top">' +
       '<div class="prog"><div class="prog-row"><span class="count" id="leftCount" aria-live="polite"></span><span class="small" id="triedCount"></span><button class="size-btn small-size" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">A<b>A</b></span><span class="sr">Bigger text</span></button></div>' +
       '<div class="bar-track" aria-hidden="true"><i id="progBar"></i></div></div>' +
-      (focus ? '<div class="focus-chip"><span>Pitching <b>' + esc(focus.name) + '</b> to everyone</span><button class="link-btn" type="button" id="clearFocus">Use each business’s best fit</button></div>' : '') +
+      (focus ? '<div class="focus-chip"><span>Pitching <b>' + esc(focus.name) + '</b> to everyone today</span><button class="link-btn" type="button" id="clearFocus">Use each business’s best fit</button></div>' : '') +
       '</div><div class="feed" id="feed" role="region" aria-label="Businesses to call, one per screen">' + cards + '</div>', 'Calls');
     var cf = document.getElementById('clearFocus');
     if (cf) cf.addEventListener('click', function () { S.focus = ''; save(); history.replaceState(null, '', '#calls'); VIEWS.calls(); toast('Each business now gets its best fit.'); });
@@ -486,12 +491,12 @@
   };
   function updateEnd() {
     var c = counts(), end = document.querySelector('#endCard .lead-card'); if (!end) return;
-    document.getElementById('leftCount').textContent = c.toCall + ' to call';
-    document.getElementById('triedCount').textContent = c.tried + ' of ' + LEADS.length + ' tried';
+    document.getElementById('leftCount').textContent = c.tried + ' of ' + LEADS.length + ' tried';
+    document.getElementById('triedCount').textContent = c.toCall + ' still on your list';
     document.getElementById('progBar').style.width = Math.round(100 * c.tried / LEADS.length) + '%';
     var can = c.fresh === 0 && !S.asked, h, p, btn, due = c.due ? c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due' : '';
     if (c.fresh) {
-      h = 'You skipped ' + c.fresh + '.';
+      h = c.fresh + (c.fresh === 1 ? ' business is' : ' businesses are') + ' still new.';
       p = 'Station sends the next batch once you’ve tried every new business on your list.' + (due ? ' You also have ' + due + '.' : '');
       btn = '<button class="btn btn-dark btn-big" type="button" id="toFirst">Go to the first one</button>';
     } else {
@@ -503,7 +508,7 @@
     end.innerHTML = '<h2>' + h + '</h2><p>' + p + '</p>' + btn + '<a class="btn" href="#products">Browse products</a>';
     var tf = document.getElementById('toFirst');
     if (tf) tf.addEventListener('click', function () {
-      var first = [].filter.call(feedEl().querySelectorAll('.lead[data-id]'), function (el) { return rank(LEAD[el.getAttribute('data-id')]) < 2; })[0];
+      var first = [].filter.call(feedEl().querySelectorAll('.lead[data-id]'), function (el) { return rank(LEAD[el.getAttribute('data-id')]) < 3; })[0];
       goTo(first);
     });
     if (can) document.getElementById('askMore').addEventListener('click', function () { S.asked = true; save(); updateEnd(); toast('Station got your request.'); });
@@ -576,9 +581,9 @@
   function leadCard(l, k, n) {
     var t = localTime(l.st), s = S.log[l.id], rk = rank(l), closed = s && CLOSED[s.o], b = pitchFor(l);
     var pill = s ? '<span class="pill ' + (closed ? 'status' : rk === 0 ? 'due' : 'again') + '">' + esc(statusText(s)) + '</span>' : '<span class="pill">New</span>';
-    var fitNote = b.id !== l.fits && sellable(BOX[l.fits]) ? '<span class="small"> Best fit here: ' + esc(BOX[l.fits].name) + '</span>' : '';
+    var fitNote = b.id !== l.fits && sellable(BOX[l.fits]) ? ' <button class="link-btn fit-btn" type="button" data-fit>Pitch ' + esc(BOX[l.fits].name) + ' instead (best fit)</button>' : '';
     return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
-      '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ ' + l.days + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
+      '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ ' + daysLeft(l) + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
       '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ')</span></div></div>' +
       (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there</span></div>') +
       '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(closed && BOX[s.box] ? BOX[s.box].name : b.name) + '</b>' + (closed ? '' : fitNote) + '</span>' + (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' +
@@ -604,6 +609,7 @@
       if (t.closest('[data-log]')) { openCallSheet(l, 'after'); return; }
       if (t.closest('[data-script]')) { openScript(pitchFor(l)); return; }
       if (t.closest('[data-pitch]')) { openPitchPicker(l); return; }
+      if (t.closest('[data-fit]')) { S.pitch[id] = l.fits; save(); var fr = renderCard(card); var pc = fr.querySelector('[data-pitch]'); if (pc) pc.focus(); toast('Pitching ' + BOX[l.fits].name + ' here.'); return; }
       var cn = t.closest('[data-copynum]'); if (cn) { copy(l.phone, cn); return; }
       if (t.closest('[data-note]')) { var nb = card.querySelector('.note-box'); nb.hidden = false; feedShow(nb); nb.querySelector('input').focus({ preventScroll: true }); return; }
       var cw = t.closest('[data-copy-won]'); if (cw) { copy(linkFor(BOX[S.log[id].box] || pitchFor(l)), cw); return; }
@@ -635,10 +641,17 @@
   document.addEventListener('visibilitychange', function () {
     if (!pending) return;
     if (document.visibilityState === 'hidden') { pending.left = true; return; }
-    if (pending.left && location.hash.indexOf('#calls') === 0) { var l = LEAD[pending.id]; pending = null; openCallSheet(l, 'after'); }
+    if (pending.left && location.hash.indexOf('#calls') === 0) { var l = LEAD[pending.id]; pending = null; openCallSheet(l, 'during'); }
   });
   function openCallSheet(l, mode, changing) {
     var b = pitchFor(l), quick = sayBoxes(quickLines(b));
+    if (mode === 'during') {
+      openSheet('On the call with ' + l.name,
+        '<button class="btn btn-dark btn-big btn-block" type="button" data-hungup>I’ve hung up: how did it go?</button>' +
+        '<p class="tip">Still talking? Your lines are right here.</p>' + quick);
+      document.getElementById('sheetBody').querySelector('[data-hungup]').addEventListener('click', function () { openCallSheet(l, 'after'); });
+      return;
+    }
     if (mode === 'before') {
       openSheet('Ready to call ' + l.name,
         (touch ? '<a class="btn btn-green btn-big btn-block" href="tel:' + l.dial + '" data-dial>Call ' + l.phone + '</a>'
@@ -672,7 +685,11 @@
       '<details class="script-peek"><summary>What do these buttons mean?</summary>' + glossaryHtml() + '</details>');
     var body = document.getElementById('sheetBody'), r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]');
     function reveal(el) { el.hidden = false; el.scrollIntoView({ block: 'nearest' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
-    body.querySelector('#sheetNote').addEventListener('input', function () { var v = this.value.slice(0, 200); if (v.trim()) S.notes[l.id] = v; else delete S.notes[l.id]; save(); });
+    body.querySelector('#sheetNote').addEventListener('input', function () {
+      var v = this.value.slice(0, 200); if (v.trim()) S.notes[l.id] = v; else delete S.notes[l.id]; save();
+      var c = cardEl(l.id); if (!c) return; var nb = c.querySelector('.note-box'), ni = nb.querySelector('input'), nl = c.querySelector('[data-note]');
+      ni.value = S.notes[l.id] || ''; nb.hidden = !S.notes[l.id]; if (nl) nl.textContent = S.notes[l.id] ? 'Edit note' : 'Add a note';
+    });
     body.addEventListener('click', function (e) {
       var ob = e.target.closest('[data-o]'), db = e.target.closest('[data-day]');
       if (ob) {
@@ -684,13 +701,15 @@
         commit(l, o);
       } else if (db) {
         var lt = localTime(l.st), n = +db.getAttribute('data-day'); if (n === 0 && !lt.ok && !lt.early) n = 1;
-        commit(l, 'callback', { due: n === 0 ? today() : addDays(n) });
+        commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) });
       }
     });
   }
   function record(l, o, extra) {
     var prev = S.log[l.id] || {}, was = prev.o === 'interested' || prev.wasInterested;
-    S.log[l.id] = Object.assign({ o: o, box: pitchFor(l).id, at: Date.now() }, prev.email ? { email: prev.email } : {}, was && o !== 'interested' && !CLOSED[o] ? { wasInterested: true } : {}, extra || {}); save();
+    var at = Date.now();
+    S.log[l.id] = Object.assign({ o: o, box: pitchFor(l).id, at: at }, prev.email ? { email: prev.email } : {}, was && o !== 'interested' && !CLOSED[o] ? { wasInterested: true } : {}, extra || {});
+    S.calls.push({ id: l.id, o: o, at: at }); if (S.calls.length > 500) S.calls.shift(); save();
   }
   function commit(l, o, extra) {
     var before = S.log[l.id] ? JSON.parse(JSON.stringify(S.log[l.id])) : null;
@@ -699,13 +718,31 @@
     buzz();
     var card = cardEl(l.id); if (!card) return;
     var fresh = renderCard(card), adv = null;
-    var s = S.log[l.id], msg = o === 'callback' ? 'Call back ' + dayLabel(s.due) : OUT[o];
+    var s = S.log[l.id], msg = statusText(s);
+    showUndo(l.name + ': ' + msg + (o === 'won' ? '. Now send them your link.' : o === 'interested' ? '. Send them your link.' : ''), l.id, before, null);
     if (o === 'won' || o === 'interested') {
-      feedShow(fresh, true, true); var f = fresh.querySelector('[data-email]'); if (f) { feedShow(f, false, true); f.focus({ preventScroll: true }); }
+      feedShow(fresh, true, true); var f = fresh.querySelector('[data-email]');
+      if (f) { f.focus({ preventScroll: true }); keepAboveUndo(fresh.querySelector('.won-btns') || f); }
     } else {
-      adv = setTimeout(function () { var c = cardEl(l.id); if (c) goTo(c.nextElementSibling); }, 900);
+      var nx = fresh.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
+      if (!S.big) U.adv = armAdvance(function () { var c = cardEl(l.id); if (c) goTo(c.nextElementSibling); }, 1500);
     }
-    showUndo('Saved: ' + msg + (o === 'won' ? '. Now send them your link.' : o === 'interested' ? '. Send them your link.' : ''), l.id, before, adv);
+  }
+
+  /* the automatic move to the next business is cancelled by anything the partner does first */
+  function armAdvance(fn, ms) {
+    var t = setTimeout(done, ms), evs = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+    function cancel() { clearTimeout(t); off(); }
+    function done() { off(); fn(); }
+    function off() { evs.forEach(function (e) { document.removeEventListener(e, cancel, true); }); var f = feedEl(); if (f) f.removeEventListener('scroll', cancel); }
+    evs.forEach(function (e) { document.addEventListener(e, cancel, true); });
+    setTimeout(function () { var f = feedEl(); if (f) f.addEventListener('scroll', cancel); }, 50);
+    return { cancel: cancel };
+  }
+  function keepAboveUndo(el) {
+    var f = feedEl(); if (!f || !el || undoEl.hidden) return;
+    var u = undoEl.getBoundingClientRect(), r = el.getBoundingClientRect(), z = zoom();
+    if (r.bottom > u.top - 12) f.scrollTo({ top: f.scrollTop + (r.bottom - u.top + 20) / z, behavior: 'instant' });
   }
 
   /* ---------- undo: every save can be taken back for a few seconds ---------- */
@@ -714,14 +751,15 @@
     clearTimeout(U && U.t);
     U = { id: id, before: before, adv: adv };
     document.getElementById('undoText').textContent = text;
-    undoEl.hidden = false; undoEl.classList.add('on');
-    U.t = setTimeout(hideUndo, 6000);
+    undoEl.hidden = false; undoEl.classList.add('on'); document.body.classList.add('has-undo');
+    U.t = setTimeout(hideUndo, 7000);
   }
-  function hideUndo() { if (U) clearTimeout(U.t); U = null; undoEl.hidden = true; undoEl.classList.remove('on'); }
+  function hideUndo() { if (U) clearTimeout(U.t); U = null; undoEl.hidden = true; undoEl.classList.remove('on'); document.body.classList.remove('has-undo'); }
   document.getElementById('undoBtn').addEventListener('click', function () {
     if (!U) return;
-    var u = U; hideUndo(); clearTimeout(u.adv);
+    var u = U; hideUndo(); if (u.adv) u.adv.cancel();
     if (u.before) S.log[u.id] = u.before; else delete S.log[u.id];
+    for (var i = S.calls.length - 1; i >= 0; i--) { if (S.calls[i].id === u.id) { S.calls.splice(i, 1); break; } }
     save();
     var card = cardEl(u.id); if (card) { var fresh = renderCard(card); goTo(fresh); }
     toast('Undone.');
@@ -759,19 +797,23 @@
   function showStep() {
     var s = TOUR.steps[TOUR.i], el = s[0], ring = document.getElementById('coachRing'), bub = document.getElementById('coachBubble');
     feedShow(el, false, true);
-    var r = el.getBoundingClientRect();
+    var z = zoom(), b0 = el.getBoundingClientRect(), r = { top: b0.top / z, left: b0.left / z, width: b0.width / z, height: b0.height / z, bottom: b0.bottom / z };
     ring.style.cssText = 'top:' + (r.top - 8) + 'px;left:' + (r.left - 8) + 'px;width:' + (r.width + 16) + 'px;height:' + (r.height + 16) + 'px';
     document.getElementById('coachStep').textContent = (TOUR.i + 1) + ' of ' + TOUR.steps.length;
     document.getElementById('coachText').textContent = s[1];
     document.getElementById('coachNext').textContent = TOUR.i === TOUR.steps.length - 1 ? 'Got it' : 'Next';
-    var below = r.bottom + 16, h = bub.offsetHeight || 150;
-    bub.style.top = (below + h < window.innerHeight - 8 ? below : Math.max(8, r.top - h - 16)) + 'px';
+    var below = r.bottom + 16, h = bub.offsetHeight || 150, vh = window.innerHeight / z;
+    bub.style.top = (below + h < vh - 8 ? below : Math.max(8, r.top - h - 16)) + 'px';
     document.getElementById('coachNext').focus();
   }
   function endTour() { if (!TOUR) return; TOUR = null; document.getElementById('coach').hidden = true; S.toured = true; save(); }
   document.getElementById('coachNext').addEventListener('click', function () { if (!TOUR) return; if (TOUR.i < TOUR.steps.length - 1) { TOUR.i++; showStep(); } else { endTour(); var c = feedEl() && feedEl().querySelector('.call-btn'); if (c) c.focus(); } });
   document.getElementById('coachSkip').addEventListener('click', endTour);
-  document.addEventListener('keydown', function (e) { if (TOUR && e.key === 'Escape') endTour(); });
+  document.addEventListener('keydown', function (e) {
+    if (!TOUR) return;
+    if (e.key === 'Escape') { endTour(); return; }
+    if (e.key === 'Tab') { e.preventDefault(); var a = document.getElementById('coachSkip'), n = document.getElementById('coachNext'); (document.activeElement === n ? a : n).focus(); }
+  });
 
   /* ---------- sheets; focus stays inside while open ---------- */
   var lastFocus = null, sheet = document.getElementById('sheet');

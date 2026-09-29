@@ -446,3 +446,17 @@ html.calls-lock{overflow:hidden;height:100%}
 html.big body.calls-mode{height:calc(100dvh / 1.15)}
 .lead-card.done{opacity:1;background:#EEF0F3;box-shadow:none}
 .lead-card.done h2{color:var(--ink-2)}
+
+/* 09-29 UX review fixes */
+.toast{top:auto!important;bottom:calc(var(--tabh) + env(safe-area-inset-bottom,0px) + 80px)!important}
+@media (min-width:761px){.toast{bottom:88px!important}}
+body.has-undo .lead{padding-bottom:84px}
+html.big .coach-bubble{width:min(380px,calc(100vw / 1.15 - 32px))}
+.fit-btn{min-height:28px;font-size:14px;display:inline;text-align:left}
+.pitch-head{flex-wrap:wrap}
+.next-go .btn + .btn{background:var(--card)}
+.bal-chip .lbl{font-size:11px}
+@media (max-width:560px){.cheat{padding:18px 16px;gap:10px}.cheat-row p{font-size:18px}.prod-top h1{font-size:34px}}
+.bal-chip .lbl{white-space:nowrap}.lbl-short{display:none}
+@media (max-width:560px){.lbl-long{display:none}.lbl-short{display:inline}}
+.logo{white-space:nowrap}
