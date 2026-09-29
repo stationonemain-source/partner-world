@@ -530,7 +530,12 @@
     feedEl().querySelectorAll('.lead[data-id]').forEach(function (card) {
       var l = LEAD[card.getAttribute('data-id')], rk = String(rank(l));
       if (rk === card.getAttribute('data-rank') || card.contains(document.activeElement)) return;
-      renderCard(card); if (rk === '0') toast('Call-back due now: ' + l.name + '.');
+      var fresh = renderCard(card);
+      if (rk === '0') {
+        toast('Call-back due now: ' + l.name + '.');
+        var f = feedEl(), busy = f.contains(document.activeElement) && document.activeElement !== f || !sheet.hidden;
+        if (!busy) { f.insertBefore(fresh, f.querySelector('.lead[data-id]')); f.querySelectorAll('.lead[data-id]').forEach(function (c) { renderCard(c); }); }
+      }
     });
   }
   function applyHours(card, l, t) {
@@ -592,7 +597,8 @@
   function leadCard(l, k, n) {
     var t = localTime(l.st), s = S.log[l.id], rk = rank(l), closed = s && CLOSED[s.o], b = pitchFor(l);
     var pill = s ? '<span class="pill ' + (closed ? 'status' : rk === 0 ? 'due' : 'again') + '">' + esc(statusText(s)) + '</span>' : '<span class="pill">New</span>';
-    var fitNote = b.id !== l.fits && sellable(BOX[l.fits]) ? ' <button class="link-btn fit-btn" type="button" data-fit>Pitch ' + esc(BOX[l.fits].name) + ' instead (best fit)</button>' : '';
+    var talked = s && (TALKED[s.o] || s.wasInterested);
+    var fitNote = !talked && b.id !== l.fits && sellable(BOX[l.fits]) ? ' <button class="link-btn fit-btn" type="button" data-fit>Pitch ' + esc(BOX[l.fits].name) + ' instead (best fit)</button>' : '';
     return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '" data-rank="' + rk + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
       '<div class="lead-meta">' + (closed ? '' : '<span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ ' + daysLeft(l) + ' days to work it</span>') + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
       '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ')</span></div></div>' +
@@ -714,8 +720,8 @@
         if (o === 'callback') { reveal(rd); return; }
         commit(l, o, null, changing);
       } else if (db) {
-        var lt = localTime(l.st), n = +db.getAttribute('data-day'); if (n === 0 && !lt.laterOk) n = 1;
-        commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) }, changing);
+        var lt = localTime(l.st), n = +db.getAttribute('data-day'), late = n === 0 && !lt.laterOk; if (late) n = 1;
+        commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) }, changing, late);
       }
     });
   }
@@ -727,17 +733,17 @@
     if (last >= 0) S.calls[last].o = o; else S.calls.push({ id: l.id, o: o, at: at });
     if (S.calls.length > 500) S.calls.shift(); save();
   }
-  function commit(l, o, extra, changing) {
-    var before = S.log[l.id] ? JSON.parse(JSON.stringify(S.log[l.id])) : null;
+  function commit(l, o, extra, changing, late) {
+    var before = S.log[l.id] ? JSON.parse(JSON.stringify(S.log[l.id])) : null, callsBefore = JSON.parse(JSON.stringify(S.calls));
     record(l, o, extra, changing);
     sheet.hidden = true; pending = null; tapGuard = performance.now() + 450; // 7: a quick second tap must not land on the card underneath
     buzz();
     var card = cardEl(l.id); if (!card) return;
     var fresh = renderCard(card), adv = null;
     var s = S.log[l.id], msg = statusText(s);
-    showUndo(l.name + ': ' + msg + (o === 'won' ? '. Now send them your link.' : o === 'interested' ? '. Send them your link.' : ''), l.id, before, null);
+    showUndo(l.name + ': ' + msg + (late ? ' (too late for today)' : '') + (o === 'won' ? '. Now send them your link.' : o === 'interested' ? '. Send them your link.' : ''), l.id, before, null, callsBefore);
     if (o === 'won' || o === 'interested') {
-      feedShow(fresh, true, true); var f = fresh.querySelector('[data-email]');
+      feedShow(fresh, true, true); var f = fresh.querySelector('[data-mail]');
       if (f) { f.focus({ preventScroll: true }); keepAboveUndo(fresh.querySelector('.won-btns') || f); }
     } else {
       var nx = fresh.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
@@ -763,9 +769,9 @@
 
   /* ---------- undo: every save can be taken back for a few seconds ---------- */
   var U = null, undoEl = document.getElementById('undo');
-  function showUndo(text, id, before, adv) {
+  function showUndo(text, id, before, adv, calls) {
     clearTimeout(U && U.t);
-    U = { id: id, before: before, adv: adv };
+    U = { id: id, before: before, adv: adv, calls: calls };
     document.getElementById('undoText').textContent = text;
     undoEl.hidden = false; undoEl.classList.add('on'); document.body.classList.add('has-undo');
     document.getElementById('undoKey').hidden = touch;
@@ -774,14 +780,14 @@
   function hideUndo() { if (U) clearTimeout(U.t); var was = !undoEl.hidden; U = null; undoEl.hidden = true; undoEl.classList.remove('on'); document.body.classList.remove('has-undo'); if (was) sizeFeed(); }
   // 6: keyboard users can undo with U or Ctrl/Cmd+Z without tabbing all the way to the bar
   document.addEventListener('keydown', function (e) {
-    if (!U || /input|textarea|select/i.test(e.target.tagName) || !sheet.hidden) return;
+    if (!U || !sheet.hidden || (/input|textarea|select/i.test(e.target.tagName) && !(e.target.hasAttribute('data-email') && !e.target.value))) return;
     if ((e.key === 'u' || e.key === 'U') && !e.ctrlKey && !e.metaKey && !e.altKey || (e.key === 'z' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); document.getElementById('undoBtn').click(); }
   });
-  document.getElementById('undoBtn').addEventListener('click', function () {
-    if (!U) return;
+  document.getElementById('undoBtn').addEventListener('click', function (e) {
+    if (!U || (e && e.isTrusted !== false && e.detail && performance.now() < tapGuard)) return;
     var u = U; hideUndo(); if (u.adv) u.adv.cancel();
     if (u.before) S.log[u.id] = u.before; else delete S.log[u.id];
-    for (var i = S.calls.length - 1; i >= 0; i--) { if (S.calls[i].id === u.id) { S.calls.splice(i, 1); break; } }
+    S.calls = u.calls; // 4: put today's call list back exactly as it was, whether the save added a call or corrected one
     save();
     var card = cardEl(u.id); if (card) { var fresh = renderCard(card); goTo(fresh); }
     toast('Undone.');
@@ -798,7 +804,9 @@
     openSheet('What to pitch ' + l.name, '<p class="sheet-sub">' + esc(l.gap) + '</p><div class="picks">' + singles.map(item).join('') + '</div><h3 class="sheet-h">Bundles</h3><div class="picks">' + list.filter(function (x) { return x.bundle; }).map(item).join('') + '</div>');
     document.getElementById('sheetBody').addEventListener('click', function (e) {
       var p = e.target.closest('[data-pick]'); if (!p) return;
-      S.pitch[l.id] = p.getAttribute('data-pick'); save(); sheet.hidden = true;
+      S.pitch[l.id] = p.getAttribute('data-pick');
+      if (S.log[l.id] && !CLOSED[S.log[l.id].o]) S.log[l.id].box = S.pitch[l.id];
+      save(); sheet.hidden = true;
       var card = cardEl(l.id); if (card) { var fresh = renderCard(card); var ch = fresh.querySelector('[data-pitch]'); if (ch) ch.focus(); }
       toast('Pitching ' + BOX[S.pitch[l.id]].name + ' here.');
     });

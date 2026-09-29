@@ -470,3 +470,8 @@ html.big .tabbar{grid-template-columns:repeat(5,minmax(0,1fr))}
 html.big .tabbar a{font-size:11.5px}
 html.big .undo{max-width:calc(100vw / 1.15 - 24px)}
 @media (max-width:560px){html.big .logo span:last-child{display:none}html.big .bar{gap:10px}}
+
+/* 09-29 third UX review: nothing inside the folded sections can push the page wider than the phone */
+.more-list{grid-template-columns:minmax(0,1fr)}
+details.more,details.acc,.cheat,.cheat-row,.steps{min-width:0}
+.say,details.acc,.cheat-row p,.dont,ul.ticks li,.more-list p{overflow-wrap:anywhere}
