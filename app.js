@@ -67,6 +67,7 @@
   function dayLabel(s) {
     if (s === today()) return 'today';
     if (s === ymd(new Date(Date.now() + 864e5))) return 'tomorrow';
+    if (s === ymd(new Date(Date.now() - 864e5))) return 'yesterday';
     return new Date(s + 'T12:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
@@ -108,13 +109,16 @@
     if (sun) { why = 'No calls on Sundays'; opens = 'Monday at 9 am'; }
     else if (h < 9) { why = 'Too early to call'; opens = 'today at 9 am'; }
     else if (h >= 20) { why = 'Too late to call'; opens = p.weekday === 'Sat' ? 'Monday at 9 am' : 'tomorrow at 9 am'; }
-    return { text: p.hour + ':' + p.minute + ' ' + p.dayPeriod.toLowerCase(), ok: ok, why: why, opens: opens, sun: sun, early: !sun && h < 9 };
+    return { text: p.hour + ':' + p.minute + ' ' + p.dayPeriod.toLowerCase(), ok: ok, why: why, opens: opens, sun: sun, early: !sun && h < 9, hour: h,
+      laterOk: !sun && h + 3 < 20 }; // a "later today" call-back (in 3 hours) must still land inside calling hours
   }
 
   /* ---------- what each business gets pitched: your pick for that card, else the product you chose to focus on, else its best fit ---------- */
   function sellable(b) { return b && !b.soon; }
   function pitchFor(l) {
     if (sellable(BOX[S.pitch[l.id]])) return BOX[S.pitch[l.id]];
+    var s = S.log[l.id];
+    if (s && (TALKED[s.o] || s.wasInterested) && sellable(BOX[s.box])) return BOX[s.box];
     if (sellable(BOX[S.focus]) && S.focusDay === today()) return BOX[S.focus];
     return BOX[l.fits];
   }
@@ -191,7 +195,8 @@
   /* ---------- router ---------- */
   var VIEWS = {}, tick = null;
   function route() {
-    clearInterval(tick); tick = null; hideUndo(); endTour();
+    clearInterval(tick); tick = null; hideUndo(); endTour(); pending = null;
+    document.getElementById('toast').classList.remove('on');
     if (!sheet.hidden) { sheet.hidden = true; }
     var parts = (location.hash || '').replace(/^#/, '').split('/');
     if (!S.entered && parts[0] !== 'check') { renderWelcome(); return; }
@@ -219,7 +224,7 @@
       '<span class="tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>' +
       '<h1>Welcome to Partner World</h1>' +
       '<p class="intro">Pick something to sell, call the businesses Station gives you, and get paid every month your clients stay.</p>' +
-      '<ol class="steps3"><li><b>1</b><span><strong>Pick a product.</strong> Each product has a one-screen cheat sheet: who to call, what to say, what you earn.</span></li>' +
+      '<ol class="steps3"><li><b>1</b><span><strong>Pick a product.</strong> Each product opens on a short cheat sheet: who to call, what to say, what you earn.</span></li>' +
       '<li><b>2</b><span><strong>Call your list.</strong> One business per screen, with the words to say right on it. After each call, tap how it went.</span></li>' +
       '<li><b>3</b><span><strong>Get paid.</strong> 40% of what your clients pay Station, every month they stay.</span></li></ol>' +
       '<form id="hello" novalidate>' +
@@ -411,7 +416,7 @@
     return 'Check the live product page before you quote. It starts with a 7-day free trial on its standard plan, with no contract.';
   }
 
-  /* ---------- one product: a one-screen cheat sheet first, everything else folded below ---------- */
+  /* ---------- one product: a short cheat sheet first, everything else folded below ---------- */
   VIEWS.box = function (id) {
     var b = BOX[id]; if (!b) { location.hash = '#products'; return; }
     chrome(true, 'products');
@@ -455,6 +460,7 @@
   function sizeFeed() {
     var f = feedEl(); if (!f) return;
     var tb = document.getElementById('tabbar'), under = getComputedStyle(tb).display === 'none' ? 0 : tb.getBoundingClientRect().height;
+    var ub = document.getElementById('undo'); if (ub && !ub.hidden) under = window.innerHeight - ub.getBoundingClientRect().top + 8;
     f.style.height = Math.max(320, (window.innerHeight - f.getBoundingClientRect().top - under) / zoom()) + 'px';
   }
   window.addEventListener('resize', sizeFeed);
@@ -521,6 +527,11 @@
       line.className = t.ok ? 'okc' : 'late'; line.textContent = (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there';
       if (String(t.ok) !== card.getAttribute('data-ok')) applyHours(card, l, t);
     });
+    feedEl().querySelectorAll('.lead[data-id]').forEach(function (card) {
+      var l = LEAD[card.getAttribute('data-id')], rk = String(rank(l));
+      if (rk === card.getAttribute('data-rank') || card.contains(document.activeElement)) return;
+      renderCard(card); if (rk === '0') toast('Call-back due now: ' + l.name + '.');
+    });
   }
   function applyHours(card, l, t) {
     card.setAttribute('data-ok', String(t.ok));
@@ -582,11 +593,11 @@
     var t = localTime(l.st), s = S.log[l.id], rk = rank(l), closed = s && CLOSED[s.o], b = pitchFor(l);
     var pill = s ? '<span class="pill ' + (closed ? 'status' : rk === 0 ? 'due' : 'again') + '">' + esc(statusText(s)) + '</span>' : '<span class="pill">New</span>';
     var fitNote = b.id !== l.fits && sellable(BOX[l.fits]) ? ' <button class="link-btn fit-btn" type="button" data-fit>Pitch ' + esc(BOX[l.fits].name) + ' instead (best fit)</button>' : '';
-    return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
-      '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ ' + daysLeft(l) + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
+    return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '" data-rank="' + rk + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
+      '<div class="lead-meta">' + (closed ? '' : '<span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ ' + daysLeft(l) + ' days to work it</span>') + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
       '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ')</span></div></div>' +
       (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there</span></div>') +
-      '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(closed && BOX[s.box] ? BOX[s.box].name : b.name) + '</b>' + (closed ? '' : fitNote) + '</span>' + (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' +
+      '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(closed && BOX[s.box] ? BOX[s.box].name : b.name) + '</b></span>' + (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' + (closed || !fitNote ? '' : '<div class="fit-row">' + fitNote + '</div>') +
       '<p class="opener"><span class="sr">Open with: </span>“' + esc(openerOf(b)) + '”</p><p class="gap"><b>Why them:</b> ' + esc(l.gap) + '</p></div>' +
       (closed ? doneBlock(l, s) : callBtnHtml(l, t)) + (s && !closed && (s.o === 'interested' || s.wasInterested) ? sendBox(l, s) : '') +
       (closed ? '' : '<div class="card-actions"><button class="btn" type="button" data-log>How did it go?</button><button class="btn btn-next" type="button" data-next>Next business ↓</button></div>') +
@@ -604,6 +615,7 @@
   function wireCard(card) {
     var id = card.getAttribute('data-id'), l = LEAD[id];
     card.addEventListener('click', function (e) {
+      if (performance.now() < tapGuard) { e.preventDefault(); return; }
       var t = e.target;
       if (t.closest('[data-next]')) { goTo(card.nextElementSibling); return; }
       if (t.closest('[data-log]')) { openCallSheet(l, 'after'); return; }
@@ -636,14 +648,16 @@
   }
 
   /* ---------- during a call: "Ready to call", then "How did it go?" when they come back from the phone ---------- */
-  var pending = null;
+  var pending = null, tapGuard = 0;
   function startCall(l) { pending = { id: l.id, left: false, at: Date.now() }; }
   document.addEventListener('visibilitychange', function () {
     if (!pending) return;
     if (document.visibilityState === 'hidden') { pending.left = true; return; }
+    if (Date.now() - pending.at > 30 * 60e3) { pending = null; return; }
     if (pending.left && location.hash.indexOf('#calls') === 0) { var l = LEAD[pending.id]; pending = null; openCallSheet(l, 'during'); }
   });
   function openCallSheet(l, mode, changing) {
+    if (mode === 'after') pending = null;
     var b = pitchFor(l), quick = sayBoxes(quickLines(b));
     if (mode === 'during') {
       openSheet('On the call with ' + l.name,
@@ -674,14 +688,14 @@
     openSheet('How did it go?',
       '<p class="sheet-sub">' + esc(l.name) + ' · pitching ' + esc(b.name) + '</p>' +
       (changing ? '' : '<details class="script-peek"><summary>Show my lines</summary>' + quick + '</details>') +
+      '<label class="field slim note-in" for="sheetNote">Anything to remember? Type it first (optional)<input class="text" id="sheetNote" value="' + esc(S.notes[l.id] || '') + '" placeholder="For example: ask for Maria after 2"></label>' +
       '<div class="outcomes big" data-row="1"><button type="button" data-o="noanswer">No answer</button><button type="button" data-o="voicemail">Voicemail</button>' +
       '<button type="button" data-o="bad">Bad lead</button><button type="button" data-o="talked">Talked to them</button></div>' +
       '<div class="outcomes big" data-row="2" hidden><p class="small wide row-h" tabindex="-1">How did the conversation go?</p>' +
       '<button type="button" data-o="interested">Interested</button><button type="button" data-o="callback">Call back</button>' +
       '<button type="button" data-o="notint">Not interested</button><button type="button" data-o="dnc">Do not call</button>' +
       '<button type="button" class="wide won" data-o="won">Won: they’re buying</button></div>' +
-      '<div class="outcomes big" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(t.ok || t.early) + '</div>' +
-      '<label class="field slim note-in" for="sheetNote">Anything to remember? (optional)<input class="text" id="sheetNote" value="' + esc(S.notes[l.id] || '') + '" placeholder="For example: ask for Maria after 2"></label>' +
+      '<div class="outcomes big" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(t.laterOk) + '</div>' +
       '<details class="script-peek"><summary>What do these buttons mean?</summary>' + glossaryHtml() + '</details>');
     var body = document.getElementById('sheetBody'), r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]');
     function reveal(el) { el.hidden = false; el.scrollIntoView({ block: 'nearest' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
@@ -698,23 +712,25 @@
         if (o !== 'callback') rd.hidden = true;
         if (o === 'talked') { reveal(r2); return; }
         if (o === 'callback') { reveal(rd); return; }
-        commit(l, o);
+        commit(l, o, null, changing);
       } else if (db) {
-        var lt = localTime(l.st), n = +db.getAttribute('data-day'); if (n === 0 && !lt.ok && !lt.early) n = 1;
-        commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) });
+        var lt = localTime(l.st), n = +db.getAttribute('data-day'); if (n === 0 && !lt.laterOk) n = 1;
+        commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) }, changing);
       }
     });
   }
-  function record(l, o, extra) {
+  function record(l, o, extra, changing) {
     var prev = S.log[l.id] || {}, was = prev.o === 'interested' || prev.wasInterested;
     var at = Date.now();
     S.log[l.id] = Object.assign({ o: o, box: pitchFor(l).id, at: at }, prev.email ? { email: prev.email } : {}, was && o !== 'interested' && !CLOSED[o] ? { wasInterested: true } : {}, extra || {});
-    S.calls.push({ id: l.id, o: o, at: at }); if (S.calls.length > 500) S.calls.shift(); save();
+    var last = -1; if (changing) for (var i = S.calls.length - 1; i >= 0; i--) { if (S.calls[i].id === l.id) { last = i; break; } }
+    if (last >= 0) S.calls[last].o = o; else S.calls.push({ id: l.id, o: o, at: at });
+    if (S.calls.length > 500) S.calls.shift(); save();
   }
-  function commit(l, o, extra) {
+  function commit(l, o, extra, changing) {
     var before = S.log[l.id] ? JSON.parse(JSON.stringify(S.log[l.id])) : null;
-    record(l, o, extra);
-    sheet.hidden = true;
+    record(l, o, extra, changing);
+    sheet.hidden = true; pending = null; tapGuard = performance.now() + 450; // 7: a quick second tap must not land on the card underneath
     buzz();
     var card = cardEl(l.id); if (!card) return;
     var fresh = renderCard(card), adv = null;
@@ -752,9 +768,15 @@
     U = { id: id, before: before, adv: adv };
     document.getElementById('undoText').textContent = text;
     undoEl.hidden = false; undoEl.classList.add('on'); document.body.classList.add('has-undo');
-    U.t = setTimeout(hideUndo, 7000);
+    document.getElementById('undoKey').hidden = touch;
+    U.t = setTimeout(hideUndo, 8000); sizeFeed();
   }
-  function hideUndo() { if (U) clearTimeout(U.t); U = null; undoEl.hidden = true; undoEl.classList.remove('on'); document.body.classList.remove('has-undo'); }
+  function hideUndo() { if (U) clearTimeout(U.t); var was = !undoEl.hidden; U = null; undoEl.hidden = true; undoEl.classList.remove('on'); document.body.classList.remove('has-undo'); if (was) sizeFeed(); }
+  // 6: keyboard users can undo with U or Ctrl/Cmd+Z without tabbing all the way to the bar
+  document.addEventListener('keydown', function (e) {
+    if (!U || /input|textarea|select/i.test(e.target.tagName) || !sheet.hidden) return;
+    if ((e.key === 'u' || e.key === 'U') && !e.ctrlKey && !e.metaKey && !e.altKey || (e.key === 'z' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); document.getElementById('undoBtn').click(); }
+  });
   document.getElementById('undoBtn').addEventListener('click', function () {
     if (!U) return;
     var u = U; hideUndo(); if (u.adv) u.adv.cancel();
@@ -806,7 +828,7 @@
     bub.style.top = (below + h < vh - 8 ? below : Math.max(8, r.top - h - 16)) + 'px';
     document.getElementById('coachNext').focus();
   }
-  function endTour() { if (!TOUR) return; TOUR = null; document.getElementById('coach').hidden = true; S.toured = true; save(); }
+  function endTour() { if (!TOUR) return; TOUR = null; document.getElementById('coach').hidden = true; S.toured = true; save(); var f = feedEl(); if (f) f.scrollTo({ top: 0, behavior: 'instant' }); }
   document.getElementById('coachNext').addEventListener('click', function () { if (!TOUR) return; if (TOUR.i < TOUR.steps.length - 1) { TOUR.i++; showStep(); } else { endTour(); var c = feedEl() && feedEl().querySelector('.call-btn'); if (c) c.focus(); } });
   document.getElementById('coachSkip').addEventListener('click', endTour);
   document.addEventListener('keydown', function (e) {
@@ -841,7 +863,7 @@
       '<dt>Undo</dt><dd>Tapped the wrong one? Press Undo at the bottom of the screen right after you save.</dd>' +
       '<dt>Days to work it</dt><dd>How long this business stays on your list before Station gives it to someone else.</dd></dl>');
   }
-  function closeSheet() { sheet.hidden = true; if (lastFocus && document.contains(lastFocus)) lastFocus.focus(); }
+  function closeSheet() { sheet.hidden = true; pending = null; tapGuard = performance.now() + 450; if (lastFocus && document.contains(lastFocus)) lastFocus.focus(); }
   document.getElementById('sheetClose').addEventListener('click', closeSheet);
   sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
   document.addEventListener('keydown', function (e) {
@@ -893,7 +915,7 @@
       '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. If someone says stop, stop, and mark them Do not call.</li>' +
       '<li>Your link is what credits a sale to you, so send it every time. Log every call too, so Station knows who’s been called and can send you more.</li>' +
       '<li>Don’t copy leads or client details into your own spreadsheet or CRM, and never ask a business to send you their customer list.</li></ul>' +
-      '<h2>How a call works</h2><p>Tap <b>Call now</b>, put it on speaker, read your lines. When you hang up, the app asks how it went. Pressed the wrong button? Tap <b>Undo</b>.</p>' +
+      '<h2>How a call works</h2><p>Tap <b>Call now</b>, put it on speaker, read your lines. When you come back to the app, tap <b>I’ve hung up</b> and pick how it went. Pressed the wrong button? Tap <b>Undo</b>.</p>' +
       '<div class="help-btns"><button class="btn" type="button" id="tourBtn">Show me the tour again</button><button class="btn" type="button" id="glossBtn">What the buttons mean</button>' +
       (S.skipPrep ? '<button class="btn" type="button" id="prepBtn">Show the “Ready to call” card again</button>' : '') + '</div>' +
       '<h2>Your 30-second pitch for Station</h2><div class="say">' + esc(PW.pitch) + '</div>' +

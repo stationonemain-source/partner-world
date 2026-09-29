@@ -450,7 +450,6 @@ html.big body.calls-mode{height:calc(100dvh / 1.15)}
 /* 09-29 UX review fixes */
 .toast{top:auto!important;bottom:calc(var(--tabh) + env(safe-area-inset-bottom,0px) + 80px)!important}
 @media (min-width:761px){.toast{bottom:88px!important}}
-body.has-undo .lead{padding-bottom:84px}
 html.big .coach-bubble{width:min(380px,calc(100vw / 1.15 - 32px))}
 .fit-btn{min-height:28px;font-size:14px;display:inline;text-align:left}
 .pitch-head{flex-wrap:wrap}
@@ -460,3 +459,14 @@ html.big .coach-bubble{width:min(380px,calc(100vw / 1.15 - 32px))}
 .bal-chip .lbl{white-space:nowrap}.lbl-short{display:none}
 @media (max-width:560px){.lbl-long{display:none}.lbl-short{display:inline}}
 .logo{white-space:nowrap}
+
+/* 09-29 second UX review */
+.toast{top:calc(env(safe-area-inset-top,0px) + 4px)!important;bottom:auto!important;font-size:15px;padding:9px 16px}
+@media (min-width:761px){.toast{top:auto!important;bottom:24px!important}}
+.undo-key{font-size:13px;color:#B9BFCA;font-weight:600}
+.fit-row{margin-top:-2px}
+.lead-meta .pill{font-size:13px;padding:4px 10px}
+html.big .tabbar{grid-template-columns:repeat(5,minmax(0,1fr))}
+html.big .tabbar a{font-size:11.5px}
+html.big .undo{max-width:calc(100vw / 1.15 - 24px)}
+@media (max-width:560px){html.big .logo span:last-child{display:none}html.big .bar{gap:10px}}
