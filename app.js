@@ -316,7 +316,7 @@
     function fill(t) {
       t = t.replace('station.solutions/[product]/?ref=[yourcode]', mine).replace(/\[link\]/g, mine).replace(/\[yourcode\]/g, code()).replace(/\[your name\]/g, S.name).replace(/on \[day\]/g, 'later this week');
       t = smaller ? t.replace(/\[smaller option\]/g, smaller) : t.replace(/ ?If \[product\] is more than you need, \[smaller option\] may do the job\./, '');
-      if (!b.trial) t = t.replace(/ ?Single products start with a 7-day free trial and there[’']s no contract, so you can try it\./, ' There’s no contract.').replace('and single products start with a 7-day free trial', 'and most single products start with a 7-day free trial');
+      if (!b.trial) t = t.replace(/ ?Single products start with a 7-day free trial and there[’']s no contract, so you can try it\./, ' There’s no contract.');
       return t.replace(/\[product\]/g, named);
     }
     if (b.brand === 'station') PW.replies.forEach(function (r) {
@@ -342,9 +342,9 @@
     var earnNote = b.soon ? 'Station sets partner pay for ' + b.name + ' before it opens to partners. Learn it now; calling opens when it does.'
       : b.bundle ? 'That’s 40% of the bundle price, starting with their first monthly payment once it clears. Bundles have no free trial.'
       : b.id === 'website' ? 'Station quotes each client’s monthly hosting & care. You earn 40% of whatever they pay for it, every month. The build fee earns nothing.'
-      : b.trial ? 'That’s 40% of what each client pays, starting after their 7-day free trial, once the payment clears. No limit on clients.'
-      : b.id === 'revive' ? 'That’s 40% of the $497 each client pays per quarter, once the payment clears. No limit on clients.'
-      : b.id === 'echo' ? 'That’s 40% of the $247 each client pays per month, once the payment clears. The one-time $297 setup fee earns nothing.'
+      : b.id === 'revive' ? 'That\u2019s 40% of the $497 each client pays per quarter, starting after their 7-day free trial, once the payment clears. No limit on clients.'
+      : b.id === 'echo' ? 'That\u2019s 40% of the $247 each client pays per month, starting after their 7-day free trial, once the payment clears. The one-time $297 setup fee earns nothing.'
+      : b.trial ? 'That\u2019s 40% of what each client pays, starting after their 7-day free trial, once the payment clears. No limit on clients.'
       : 'That’s 40% of what each client pays, starting with their first payment once it clears (after any free trial). One-time setup fees earn nothing.';
     var steps = [
       ['Who to call', '<p>' + esc(b.who) + '</p>' + (st ? '<p class="small">Station sends you these businesses, a set number at a time.</p>' : '')],
@@ -409,7 +409,7 @@
     document.getElementById('sayBtn').addEventListener('click', function () { openScript(b); });
     feedEl().querySelectorAll('.lead[data-id]').forEach(function (card) { wireCard(card, b); });
     wireKeys(); updateEnd(b); sizeFeed();
-    tick = setInterval(function () { refreshTimes(b); }, 60000); // times go stale and calling hours open or close while the page sits there
+    tick = setInterval(function () { refreshTimes(b); }, 15000); // times go stale and calling hours open or close while the page sits there
   };
   function updateEnd(b) {
     var c = counts(), end = document.querySelector('#endCard .lead-card');
@@ -450,10 +450,11 @@
     if (!t.ok && cn) cn.parentNode.removeChild(cn);
     if (t.ok && !cn && btn) card.querySelector('[data-next]').insertAdjacentHTML('beforebegin', '<button class="link-btn" type="button" data-copynum>Copy number</button>');
     var rd = card.querySelector('[data-row="day"]');
-    if (rd) { [].slice.call(rd.querySelectorAll('[data-day]')).forEach(function (x) { x.parentNode.removeChild(x); }); rd.insertAdjacentHTML('beforeend', dayButtons(t.ok)); }
+    if (rd) { [].slice.call(rd.querySelectorAll('[data-day]')).forEach(function (x) { x.parentNode.removeChild(x); }); rd.insertAdjacentHTML('beforeend', dayButtons(t.ok || t.early)); }
   }
   function callBtnHtml(l, t) {
-    return t.ok ? '<a class="btn btn-green call-btn" href="tel:' + l.dial + '">' + (touch ? 'Call now' : 'Call from your phone') + '<small>' + l.phone + '</small></a>'
+    if (t.ok && !touch) return '<button class="btn btn-green call-btn" type="button" data-copycall>Copy number, then dial it on your phone<small>' + l.phone + '</small></button>';
+    return t.ok ? '<a class="btn btn-green call-btn" href="tel:' + l.dial + '">Call now<small>' + l.phone + '</small></a>'
       : '<button class="btn call-btn closed" type="button" disabled>Calls open ' + t.opens + '<small>' + l.phone + '</small></button>';
   }
   /* 9: call-back choices, without two buttons that land on the same day (Saturday: tomorrow and in 2 days are both Monday) */
@@ -462,7 +463,7 @@
     if (ok) { o.push([0, 'Later today']); seen[today()] = 1; }
     [[1, 'Tomorrow'], [2, 'In 2 days'], [7, 'Next week']].forEach(function (x) {
       var d = addDays(x[0]); if (seen[d]) return; seen[d] = 1;
-      var lab = x[0] === 1 && d !== ymd(new Date(Date.now() + 864e5)) ? new Date(d + 'T12:00').toLocaleDateString('en-US', { weekday: 'long' }) : x[1];
+      var lab = x[0] < 7 && d !== ymd(new Date(Date.now() + x[0] * 864e5)) ? new Date(d + 'T12:00').toLocaleDateString('en-US', { weekday: 'long' }) : x[1];
       o.push([x[0], lab]);
     });
     return o.map(function (x, i) { return '<button type="button"' + (o.length % 2 && i === o.length - 1 ? ' class="wide"' : '') + ' data-day="' + x[0] + '">' + x[1] + '</button>'; }).join('');
@@ -484,13 +485,14 @@
   function cleanEmail(e) { return String(e || '').replace(/[\s?&#<>"']/g, ''); }
   function sendBox(l, b, s) {
     var bx = BOX[s.box] || b, link = linkFor(bx), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    var what = bx.id === 'website' ? 'the questions for your custom website' : 'the page for ' + (bx.bundle ? 'the ' + bx.name : bx.name);
-    var body = 'Hi, it was good to talk today. Here\u2019s ' + what + ' I mentioned: ' + link + '\n\n' + S.name + ', independent partner with Station';
-    var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> Send them your link so the sale is credited to you. Station checks the sale and sets them up.'
-      : '<strong>Interested.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
+    var web = bx.id === 'website', named = bx.bundle ? 'the ' + bx.name : bx.name;
+    var body = 'Hi, it was good to talk today. ' + (web ? 'Here are the questions for your custom website I mentioned: ' : 'Here\u2019s the page for ' + named + ' I mentioned: ') + link + '\n\n' + S.name + ', independent partner with Station';
+    var subject = web ? 'Your custom website questions' : 'The page for ' + named;
+    var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> Send them your ' + esc(bx.name) + ' link so the sale is credited to you. Station checks the sale and sets them up.'
+      : '<strong>Interested in ' + esc(bx.name) + '.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
     return '<div class="won-next' + (s.o === 'won' ? '' : ' warm') + '"><p>' + head + '</p>' +
       '<label class="field slim" for="em-' + l.id + '">Their email<input class="text" type="email" id="em-' + l.id + '" data-email autocomplete="off" value="' + esc(s.email || '') + '" placeholder="owner@business.com"></label>' +
-      '<div class="won-btns"><a class="btn btn-green" data-mail href="mailto:' + cleanEmail(s.email) + '?subject=' + encodeURIComponent('The page I mentioned') + '&body=' + encodeURIComponent(body) + '">Email them the link</a><button class="btn" type="button" data-copy-won>Copy link</button></div>' +
+      '<div class="won-btns"><a class="btn btn-green" data-mail href="mailto:' + cleanEmail(s.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body) + '">Email them the link</a><button class="btn" type="button" data-copy-won>Copy link</button></div>' +
       (s.o === 'won' ? '<button class="link-btn" type="button" data-change>Marked Won by mistake? Change it</button>' : '') + '</div>';
   }
   function doneBlock(l, b, s) {
@@ -512,13 +514,13 @@
       '<button type="button" data-o="notint">Not interested</button><button type="button" data-o="dnc">Do not call</button>' +
       '<button type="button" class="wide won" data-o="won">Won: they’re buying</button></div>' +
       '<div class="outcomes" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' +
-      dayButtons(t.ok) + '</div></div>';
+      dayButtons(t.ok || t.early) + '</div></div>';
     return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + '">' +
       '<div class="lead-meta"><span class="pill from" title="How long this business stays on your list before Station gives it to someone else.">◆ From Station · ' + l.days + ' days to work it</span>' + pill + '<span class="pill">' + (k + 1) + ' of ' + n + '</span></div>' +
       '<div><h2>' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ' reviews)</span></div></div>' +
       (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + (t.ok ? 'OK to call now' : t.why) + ' · it’s ' + t.text + ' there</span></div>') +
       '<div class="fit"><b>Talking point</b>' + esc(l.gap) + suggest + '</div>' +
-      (closed ? doneBlock(l, b, s) : callBtn) + (s && !closed && (s.o === 'interested' || s.wasInterested || s.email) ? sendBox(l, b, s) : '') + outcomes +
+      (closed ? doneBlock(l, b, s) : callBtn) + (s && !closed && (s.o === 'interested' || s.wasInterested) ? sendBox(l, b, s) : '') + outcomes +
       '<div class="note-box"' + (S.notes[l.id] ? '' : ' hidden') + '><label class="sr" for="note-' + l.id + '">Note about ' + esc(l.name) + '</label><input class="text" id="note-' + l.id + '" placeholder="One-line note, saved as you type" value="' + esc(S.notes[l.id] || '') + '"></div>' +
       '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button>' + (t.ok && !closed ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') + '<button class="link-btn" type="button" data-next>Next ↓</button></div></div></article>';
   }
@@ -547,6 +549,12 @@
     card.querySelector('[data-note]').addEventListener('click', function () { var nb = card.querySelector('.note-box'); nb.hidden = false; feedShow(nb); nb.querySelector('input').focus({ preventScroll: true }); });
     card.querySelector('.note-box input').addEventListener('input', function () { var v = this.value.slice(0, 200); if (v.trim()) S.notes[id] = v; else delete S.notes[id]; save(); });
     card.querySelector('.card-links').addEventListener('click', function (e) { var cn = e.target.closest('[data-copynum]'); if (cn) copy(l.phone, cn); });
+    card.addEventListener('click', function (e) {
+      var cb = e.target.closest('.call-btn'); if (!cb || cb.disabled) return;
+      var now = localTime(l.st);
+      if (!now.ok) { e.preventDefault(); applyHours(card, l, now); toast('Calls just closed for this business.'); return; }
+      if (cb.hasAttribute('data-copycall')) { try { navigator.clipboard.writeText(l.phone); toast('Number copied. Dial it on your phone.'); } catch (x) { toast('Dial ' + l.phone + ' on your phone.'); } }
+    });
     card.querySelector('[data-glossary]').addEventListener('click', openGlossary);
     var ch = card.querySelector('[data-change]');
     if (ch) ch.addEventListener('click', function () {
@@ -580,7 +588,7 @@
     rd.addEventListener('click', function (e) {
       var btn = e.target.closest('[data-day]'); if (!btn) return;
       (function () {
-        var n = +btn.getAttribute('data-day'); if (n === 0 && !localTime(l.st).ok) n = 1;
+        var lt = localTime(l.st), n = +btn.getAttribute('data-day'); if (n === 0 && !lt.ok && !lt.early) n = 1;
         var due = n === 0 ? today() : addDays(n);
         record('callback', { due: due });
         var fresh = rerender();
@@ -636,7 +644,7 @@
       var bx = BOX[S.log[k].box]; return { client: LEAD[k].name, on: bx ? bx.name : '', earn: bx && bx.earn, per: bx ? period(bx) : 'month' };
     });
     var rows = BOOK.map(function (r) { return '<tr><td data-l="Client"><b>' + esc(r.client) + '</b></td><td data-l="On">' + esc(r.on) + '</td><td data-l="They pay" class="r num">' + money(r.pays) + ' a month</td><td data-l="You get" class="r num">' + money(r.pays * PW.rate) + ' a month</td><td data-l="Where it stands">' + esc(r.state) + '</td></tr>'; }).join('');
-    rows += won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="They pay" class="r">Not yet</td><td data-l="You’ll get" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' a quarter' : ' a month') : 'Set by their plan') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('');
+    rows += won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="They pay" class="r">Not yet</td><td data-l="You’ll get" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' a quarter' : ' a month') : '40% of their care plan') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('');
     mount('<div class="wrap money"><h1>Your money</h1><p class="sub">Sample figures for this preview. In the real thing these come straight from Stripe.</p>' +
       '<div class="setup"><h2 class="setup-h">Waiting on you: 2 steps before your first payout</h2>' +
       '<div class="setup-row"><span><b>1. Your tax form (W-9).</b> Nothing can be paid until it’s on file. Your commission keeps building up meanwhile.</span><button class="btn" type="button" data-demo="tax">Upload W-9</button></div>' +
@@ -647,7 +655,7 @@
       '<h2>Your clients</h2><div class="table-wrap"><table><thead><tr><th scope="col">Client</th><th scope="col">On</th><th scope="col" class="r">They pay</th><th scope="col" class="r">You get</th><th scope="col">Where it stands</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<h2 class="gap-h">How you get paid</h2><div class="howpay">' +
       '<div><b>40% every month</b>Of what each client pays Station, for as long as they stay a client.</div>' +
-      '<div><b>After any free trial</b>Most single products start with a 7-day trial. You earn from their first real payment. Bundles have no trial.</div>' +
+      '<div><b>After the free trial</b>Every single product starts with a 7-day trial. You earn from their first real payment. Bundles and custom websites have no trial.</div>' +
       '<div><b>Every two weeks</b>Paid to your Stripe account once $50 or more is ready. Smaller amounts roll forward and never expire.</div>' +
       '<div><b>Monthly fees only</b>Setup fees and website build fees earn nothing; the monthly plan behind them does.</div></div></div>', 'Money');
     main.querySelectorAll('[data-demo]').forEach(function (x) { x.addEventListener('click', function () { toast(x.getAttribute('data-demo') === 'tax' ? 'In the real portal this opens a secure upload.' : 'In the real portal this opens your own Stripe setup.'); }); });

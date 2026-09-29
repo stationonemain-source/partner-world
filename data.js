@@ -48,7 +48,7 @@ window.PW={
 "opener": "Is your website bringing in the kind of customers you want, or is it something you’ve been meaning to fix?",
 "discovery": "If you could change one thing about how your business looks online, what would it be?",
 "pitch": "Station builds custom websites from scratch around your brand, not from a template. You answer about five minutes of questions, and Station builds a free demo of your own site, usually within 2 to 3 business days. It’s priced to the project, and nothing’s charged unless you like it and say yes.",
-"objection": "“What does it cost?” — It depends on the project, so there’s no set price and you can’t quote one. That’s why Station builds the free demo first: they see their own site before anything’s charged.",
+"objection": "“What does it cost?” — It depends on the project, so there’s no set price I can quote. That’s why Station builds a free demo of your own site first, and nothing’s charged unless you say yes.",
 "close": "Want me to send you the link to the questions? It takes about five minutes, and the demo is free. What’s the best email?"
 },
 "link": "https://station.solutions/custom/?ref={code}",
@@ -58,6 +58,7 @@ window.PW={
 "Is this a scam? / Who are you?": "Fair question. I’m [your name], an independent partner with Station. Station is Station Automations Group LLC, based in Houston, Texas, and you can see its work at station.solutions. I earn a commission if you go ahead. The demo of your site is free, and nothing’s charged unless you say yes. You can email Station directly at main@station.solutions. If you’d rather I didn’t contact you again, just say so.",
 "What’s the contract? / Can I cancel?": "The website itself is a one-time project, and Station quotes it after you’ve seen the free demo. After it’s built, you can run the site yourself, or Station can host and look after it for a monthly fee it quotes for your business. The domain and the site stay yours.",
 "Can you do it cheaper?": "I can’t set or change prices; Station quotes each website for the project. The free demo is the best way to see what you’d get before any number comes up.",
+"I need to think about it": "Of course, take your time. Would it help if I sent you the link to the questions for your custom website, so everything’s in one place? The demo is free, and nothing’s charged unless you say yes. If it’s OK, I’ll check back later this week.",
 "How long does setup take?": "You answer about five minutes of questions, and Station builds a free demo of your own site, usually within 2 to 3 business days. If you go ahead, Station agrees the page list with you and gives you the timeline. I can’t give you a launch date myself.",
 "Do I need to be techy?": "No. Station designs and builds the whole site. You’ll share things like your logo and photos, and say what you like. After it’s built, Station can host and look after it, or you can run it yourself."
 },
@@ -258,7 +259,7 @@ window.PW={
 ],
 "about": [
 "It asks every customer for a review after the job, catches every review on their Google profile, and drafts replies in their voice. Low-star replies can always be held for approval, and auto-reply can be turned off.",
-"It costs <b>$197 a month</b>, and multi-location is quoted on request. It’s live the same day with Google Business Profile access and a\u0001“job done” signal."
+"It costs <b>$197 a month</b>, and multi-location is quoted on request. It’s live the same day with Google Business Profile access and a “job done” signal."
 ],
 "call": {
 "opener": "How many Google reviews do you have, compared with the competitor you lose the most work to?",
@@ -339,7 +340,7 @@ window.PW={
 },
 "link": "https://station.solutions/dispatch/?ref={code}",
 "replyFix": {
-"How much is it?": "Good question. Dispatch is $94 a month if you send the emails yourself, or $397 a month if Station writes and sends them for you. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+"How much is it?": "Good question. Dispatch is $94 a month if you send the emails yourself, or $397 a month if Station writes and sends them for you. The self-serve plan starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
 },
 "trial": true
 },
@@ -511,11 +512,11 @@ window.PW={
 "discovery": "If someone looks you up there before they call, what do they find?",
 "pitch": "Marquee keeps your social media posting regularly, on Facebook, Instagram, your Google profile and more. It’s $197 a month, and you can still post your own jobs whenever you like. For $597 a month plus ad spend, Station makes the posts and runs your ads for you.",
 "objection": "“Social media doesn’t bring me work.” — Often not directly. But people check it after your reviews, and a page that stopped posting two years ago makes them wonder if you’re still open.",
-"close": "Want me to send you the page so you can see what’s included? It starts with a 7-day free trial and there’s no contract. What’s the best email?"
+"close": "Want me to send you the page so you can see what’s included? The self-serve plan starts with a 7-day free trial, and there’s no contract. What’s the best email?"
 },
 "link": "https://station.solutions/marquee/?ref={code}",
 "replyFix": {
-"How much is it?": "Good question. Marquee is $197 a month if you post yourself, or $597 a month plus ad spend if Station does it for you. It starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
+"How much is it?": "Good question. Marquee is $197 a month if you post yourself, or $597 a month plus ad spend if Station does it for you. The self-serve plan starts with a 7-day free trial, and there’s no contract. Every price is published on station.solutions."
 },
 "trial": true
 },
@@ -748,7 +749,7 @@ window.PW={
 "dont": "“you won’t have to do anything.” Some products need a little from them, like business facts, Google profile access or a customer list."
 }
 ],
-"pitch": "Most local businesses lose work in the gaps: the call they miss on a job, the lead they only follow up once, the review they never ask for. Station fills those gaps with simple tools Station sets up for you, like a missed-call text-back, a receptionist that answers around the clock, automatic follow-up, review requests and online booking. You pick the one thing that’s hurting most. Most single products start with a 7-day free trial, and there’s no contract. What part of your week costs you the most work?",
+"pitch": "Most local businesses lose work in the gaps: the call they miss on a job, the lead they only follow up once, the review they never ask for. Station fills those gaps with simple tools Station sets up for you, like a missed-call text-back, a receptionist that answers around the clock, automatic follow-up, review requests and online booking. You pick the one thing that’s hurting most. Every single product starts with a 7-day free trial, and there’s no contract. What part of your week costs you the most work?",
 "qualify": [
 "What kind of work do you do, and where?",
 "When the phone rings and you can’t answer, what happens to that caller?",
