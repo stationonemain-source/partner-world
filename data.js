@@ -6,18 +6,6 @@ window.PW={
 "name": "Station",
 "sells": "Tools that answer calls, follow up and win reviews for local service businesses.",
 "to": "Plumbers, roofers, HVAC, cleaners, salons, gyms, clinics, contractors"
-},
-{
-"id": "ribbon",
-"name": "Ribbon Leads",
-"sells": "A morning list of restaurants about to open.",
-"to": "Vendors who sell to new restaurants"
-},
-{
-"id": "quorum",
-"name": "Quorum",
-"sells": "ADA accessibility compliance for local government websites.",
-"to": "Cities, counties and school districts"
 }
 ],
 "boxes": [
@@ -629,76 +617,6 @@ window.PW={
 "How much is it?": "Good question. The Custom bundle is $2,800 a month with no setup fee. That’s $482 a month less than buying everything one by one. There’s no free trial on bundles, and no long-term contract. Every price is published on station.solutions.",
 "Can you do it cheaper?": "I can’t change prices. Station sets them, and they’re the same for everyone. What I can do is make sure you’re on the right thing. If [product] is more than you need, [smaller option] may do the job. A bundle already costs less than buying the same products one by one."
 },
-"trial": false
-},
-{
-"id": "ribbon",
-"brand": "ribbon",
-"name": "Ribbon Leads",
-"what": "A morning list of restaurants, bars and cafes that just filed to open, before they open.",
-"price": "Free Monday list · Market $49 a month (Florida or New York, every morning) · National $129 a month (all 8 states + API)",
-"soon": true,
-"mrr": 49,
-"setup": 0,
-"earn": null,
-"earnLabel": "Your rate on Ribbon Leads is set by Station before launch.",
-"who": "People who sell to new restaurants: POS systems, beverages, insurance, kitchen equipment and build-outs, signs, linens, hood cleaning, pest control and payroll.",
-"easy": false,
-"ask": "When a new restaurant opens near you, how early do you usually find out?",
-"why": [
-"By opening day a restaurant has already picked its POS, distributors, insurance, contractor and signs. The vendor who calls first usually wins.",
-"The list comes from public state and city filings, read every morning, weeks before the doors open.",
-"Florida filings came with a phone number 77% of the time last month (New York 30%).",
-"There is a free Monday list to try with no card, and a 7-day free trial on both paid plans."
-],
-"about": [
-"Ribbon Leads reads public alcohol-board, health-department and city licensing filings in 8 states every morning (Texas, Florida, California, Oklahoma, Oregon, New York, Missouri and Illinois, where it covers Chicago only) and sends subscribers the new venues, with the phone and website when the name and address match a public listing.",
-"<b>Plans:</b> the free Monday list is last week&rsquo;s filings, 7 days behind, with no contact details. <b>Market, $49 a month:</b> Florida or New York every morning, with phones and websites where matched, stage filters and CSV. <b>National, $129 a month:</b> all 8 states plus an API and webhooks. Both paid plans start with a 7-day free trial and cancel in one click.",
-"Send people to ribbonleads.com to see a sample and sign up for the free list. Buying for a sales team is quoted on request."
-],
-"call": {
-"opener": "You sell to restaurants, right? When a new one opens near you, how early do you usually find out?",
-"discovery": "By the time the doors open, have they usually already picked who they buy from?",
-"pitch": "Ribbon Leads sends you every restaurant and bar that files to open, the morning it files, weeks before it opens, with the phone number when it can be matched. Florida or New York is $49 a month, and there’s a free Monday list to try first.",
-"objection": "“I already hear about openings.” — Usually on opening day, after they’ve chosen. This is the filing, weeks earlier."
-},
-"link": "https://ribbonleads.com/",
-"replyFix": {},
-"trial": false
-},
-{
-"id": "quorum",
-"brand": "quorum",
-"name": "Quorum",
-"what": "Keeps a local government’s website and documents readable for disabled residents, as federal ADA Title II law now requires.",
-"price": "From $2,400 a year (the usual quote elsewhere is about $26,000). Larger plans quoted by Quorum.",
-"soon": true,
-"mrr": 200,
-"setup": 0,
-"earn": null,
-"earnLabel": "Your rate on Quorum is set by Station before launch.",
-"who": "Cities, towns, counties, school districts and special districts. Ask for the city clerk, the IT lead or the ADA coordinator.",
-"easy": false,
-"ask": "Has anyone looked at whether your agendas and minutes meet the new ADA Title II rule?",
-"why": [
-"Federal law now requires state and local government websites and published documents to meet WCAG 2.1 AA. Deadlines: April 26, 2027 for places serving 50,000+, April 26, 2028 for everyone else.",
-"In a September 2026 scan of 676 local governments, 97.8% failed on their home page and 94% of 213 published agendas and minutes failed at least one check.",
-"Quorum reviews every page and document, repairs the documents, and keeps a dated record the government’s counsel can use.",
-"The first step is free: a review of their own site, in plain English, within a day."
-],
-"about": [
-"Quorum measures a government&rsquo;s website and every document it publishes against the accessibility standard, repairs the documents and hands them back, catches new agendas and minutes within a day, and keeps the dated record.",
-"<b>Never say they will be &ldquo;compliant.&rdquo;</b> No automated service can promise that, and Quorum does not. Quorum does not install a widget or overlay.",
-"Send them to quorumcompliance.com for the free review. Governments often buy by purchase order; Quorum handles that."
-],
-"call": {
-"opener": "I’m calling about the new ADA Title II web rule for local governments. Who looks after your website and the agendas you post?",
-"discovery": "Have you had a chance to check your posted agendas and minutes against it? That’s the part almost everyone misses.",
-"pitch": "Quorum does a free review of your site and documents, in plain English, within a day. If you want the repairs and the ongoing record after that, it starts at $2,400 a year.",
-"objection": "“Our web vendor handles it.” — Worth checking the documents: in Quorum’s national scan, 94% of posted agendas and minutes failed, even on sites that looked fine."
-},
-"link": "https://quorumcompliance.com/",
-"replyFix": {},
 "trial": false
 }
 ],

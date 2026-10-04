@@ -1,4 +1,4 @@
-/* Partner World (UI preview). Every Station fact comes from window.PW (built from the live partner guide and product list,
+/* Station Partner World (UI preview). Every Station fact comes from window.PW (built from the live partner guide and product list,
    with Partner World's script corrections from script_fixes.py).
    Leads, clients and money here are SAMPLE data: fictional businesses with reserved 555-01xx numbers, labelled on screen.
 
@@ -39,7 +39,7 @@
   }
   function buzz() { try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} }
   function code() { return (S.code || '').toLowerCase().replace(/[^a-z0-9-]/g, ''); }
-  function brandName(id) { return ({ station: 'Station', ribbon: 'Ribbon Leads', quorum: 'Quorum' })[id]; }
+  function brandName(id) { return 'Station'; }
   function perMonth(b) { return b.id === 'revive' ? b.earn / 3 : b.earn; }
   function period(b) { return b.id === 'revive' ? 'quarter' : 'month'; }
   function linkFor(b) { return b.link.replace('{code}', code()); }
@@ -213,7 +213,7 @@
   }
   function mount(html, title) {
     main.innerHTML = html; window.scrollTo(0, 0);
-    document.title = title ? title + ' · Partner World' : 'Partner World';
+    document.title = title ? title + ' · Station Partner World' : 'Station Partner World';
     var h = main.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
   }
 
@@ -222,7 +222,7 @@
     chrome(false);
     mount('<section class="enter"><div class="enter-card">' +
       '<span class="tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>' +
-      '<h1>Welcome to Partner World</h1>' +
+      '<h1>Welcome to Station Partner World</h1>' +
       '<p class="intro">Pick something to sell, call the businesses Station gives you, and get paid every month your clients stay.</p>' +
       '<ol class="steps3"><li><b>1</b><span><strong>Pick a product.</strong> Each product opens on a short cheat sheet: who to call, what to say, what you earn.</span></li>' +
       '<li><b>2</b><span><strong>Call your list.</strong> One business per screen, with the words to say right on it. After each call, tap how it went.</span></li>' +
@@ -343,12 +343,11 @@
   VIEWS.products = function () {
     chrome(true, 'products');
     var f = S.filter;
-    if (['all', 'easy', 'pay', 'bundles', 'soon'].indexOf(f) < 0) f = 'all';
+    if (['all', 'easy', 'pay', 'bundles'].indexOf(f) < 0) f = 'all';
     var list = PW.boxes.slice(), groups = '', note = '';
     if (f === 'easy') { list = list.filter(function (b) { return b.easy; }); note = 'The simplest products to explain on a first call.'; }
     if (f === 'pay') { list = list.filter(function (b) { return b.earn && !b.bundle; }).sort(function (a, b) { return perMonth(b) - perMonth(a); }); note = 'Single products, ranked by what you earn per client each month. Revive pays $198.80 a quarter, about $66 a month. Bundles pay more: see the Bundles filter.'; }
     if (f === 'bundles') { list = list.filter(function (b) { return b.bundle; }); note = 'Several Station products together for one bigger monthly price. No free trial on bundles.'; }
-    if (f === 'soon') { list = list.filter(function (b) { return b.soon; }); note = 'Learn these now. You can’t sell them until Station opens them to partners.'; }
     if (f !== 'all') groups = '<p class="filter-note">' + note + '</p><div class="grid">' + list.map(boxCard).join('') + '</div>';
     else PW.brands.forEach(function (br) {
       var items = list.filter(function (b) { return b.brand === br.id; });
@@ -359,7 +358,7 @@
     });
     var chip = function (k, label) { return '<button class="chip" type="button" data-f="' + k + '" aria-pressed="' + (f === k) + '">' + label + '</button>'; };
     mount('<div class="wrap home"><div class="hello"><div><h1>Products</h1><p>Pick one, learn it in two minutes, start calling.</p></div></div>' +
-      '<section id="wall" aria-label="Products you can sell"><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest to start') + chip('pay', 'Biggest monthly pay') + chip('bundles', 'Bundles') + chip('soon', 'Coming soon') + '</div></div>' +
+      '<section id="wall" aria-label="Products you can sell"><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest to start') + chip('pay', 'Biggest monthly pay') + chip('bundles', 'Bundles') + '</div></div>' +
       groups + '</section></div>', 'Products');
     main.querySelectorAll('[data-f]').forEach(function (btn) {
       btn.addEventListener('click', function () {
