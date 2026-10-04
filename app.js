@@ -262,22 +262,22 @@
       '<div class="enter-top">' + MARK + '<button class="size-inline" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">Aa</span> Bigger text</button></div>' +
       '<h1>Welcome to Station Partner World</h1>' +
       '<p class="intro">Call local businesses Station gives you. When one signs up, you earn 40% of what they pay Station, every month they keep paying.</p>' +
-      '<ol class="steps3"><li><b>1</b><span><strong>Pick a product.</strong> Each one has a short cheat sheet.</span></li>' +
+      '<ol class="steps3"><li><b>1</b><span><strong>Learn one product.</strong> Lineback is the easiest; its cheat sheet takes 2 minutes.</span></li>' +
       '<li><b>2</b><span><strong>Call your list.</strong> The words to say are on every card.</span></li>' +
       '<li><b>3</b><span><strong>Get paid.</strong> 40% of every monthly payment your clients make.</span></li></ol>' +
-      '<p class="trust">No quota, no tiers, no bonuses: just the flat 40%. Station is Station Automations Group LLC, in Houston, Texas. Before any real call you’ll sign the Station Partner Agreement, and it wins over anything in this app.</p>' +
       '<form id="hello" novalidate>' +
       '<label class="field" for="w-name">Your first name<input class="text" id="w-name" autocomplete="given-name" aria-describedby="e-name" value="' + esc(S.name) + '"></label><p class="field-err" id="e-name" role="alert"></p>' +
       '<label class="field" for="w-code">Your partner code<span class="hint">It’s in your invite email, something like jsmith. Can’t find it? Email main@station.solutions.</span><input class="text" id="w-code" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="e-code w-codeuse" value="' + esc(S.code) + '"></label>' +
       '<p class="hint" id="w-codeuse"></p><p class="field-err" id="e-code" role="alert"></p>' +
       '<p class="small" style="margin:0 0 16px">Next: a 1-minute check, six questions on the rules that matter most.</p>' +
       '<button class="btn btn-dark btn-big btn-block" type="submit">Start the 1-minute check</button></form>' +
+      '<p class="trust">No quota, no tiers, no bonuses: just the flat 40%. Station is Station Automations Group LLC, in Houston, Texas. Before your first real call you’ll sign the Station Partner Agreement, and it wins over anything in this app.</p>' +
       '</div></section>', 'Welcome');
     var nameIn = document.getElementById('w-name'), codeIn = document.getElementById('w-code'), use = document.getElementById('w-codeuse');
     function codeState() {
       var raw = codeIn.value.trim().toLowerCase();
       var ok = /^[a-z0-9-]{2,30}$/.test(raw);
-      use.textContent = ok ? 'Got it. Sales from your links are credited to ' + raw + '.' : '';
+      use.textContent = ok ? 'Your links will use ' + raw + '. Station checks it when you sign in.' : '';
       return { raw: raw, ok: ok };
     }
     function err(input, id, msg) { document.getElementById(id).textContent = msg; input.setAttribute('aria-invalid', 'true'); input.focus(); }
@@ -331,12 +331,17 @@
   /* ---------- home: one clear next step ---------- */
   function closedNote(n) {
     if (n.unknown) return 'Check their local time before you call. Calls are 9 am to 8 pm, Monday to Saturday, their time.';
-    if (n.ok) return 'Calls are 9 am to 8 pm, Monday to Saturday, in their time zone.';
+    if (n.ok) return '';
     if (n.sun) return 'Calls are closed on Sundays. They open Monday at 9 am, their time.';
     if (n.early) return 'It’s too early to call. Calls open at 9 am, their time.';
     return 'It’s too late to call. Calls open ' + n.opens + ', their time.';
   }
   function openerOf(b) { return (b.call && b.call.opener) || b.ask; }
+  /* what you can actually do today: tried-today businesses come back tomorrow */
+  function todayLine(c) {
+    var later = LEADS.filter(function (l) { return rank(l) < 4 && triedToday(S.log[l.id]); }).length, now = c.toCall - later;
+    return now + ' to call today' + (later ? ' · ' + later + ' tomorrow' : '');
+  }
   function askedText() { return S.askedAt ? new Date(S.askedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() : ''; }
   VIEWS.home = function () {
     chrome(true, 'home');
@@ -348,8 +353,9 @@
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">' + (due ? 'Call-back due' : 'Your next call') + '</span>' +
         '<h2 id="nextH">' + esc(next.name) + '</h2><p class="facts"><span>' + esc(next.trade) + ' · ' + esc(next.city) + ', ' + next.st + '</span><span>★ ' + next.rating + '</span></p>' +
         '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>' + (S.pitch[next.id] ? ' (your pick)' : sellable(BOX[S.focus]) && S.focusDay === today() && nb.id === S.focus ? ' (your pick for today)' : '') + '. Say who you are, then open with: “' + esc(openerOf(nb)) + '”</p>' +
-        '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote">' + closedNote(now) + '</p>' +
-        '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">' + (now.ok ? 'Start calling' : 'See my list') + '</a><span class="small">' + c.toCall + ' to call: ' + callsSummary(c) + '</span></div></section>';
+        '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote"' + (now.ok ? ' hidden' : '') + '>' + closedNote(now) + '</p>' +
+        '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">' + (now.ok ? 'Start calling' : 'See my list') + '</a><span class="small">' + todayLine(c) + '</span></div>' +
+        (S.asked ? '<p class="asked-line">Next batch: waiting for Station’s OK (asked at ' + askedText() + ').</p>' : '') + '</section>';
     } else if (S.asked) {
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your list</span><h2 id="nextH">Waiting for Station’s OK</h2>' +
         '<p class="pitch-line">You asked for your next batch at ' + askedText() + '. Station reviews every request, then your new businesses show up in Calls.</p><div class="next-go"><a class="btn btn-big" id="callGo" href="#calls">Go to my list</a></div></section>';
@@ -359,19 +365,20 @@
     }
     var fresh = !Object.keys(S.log).length && !S.calls.length, lb = BOX.lineback;
     var side = fresh
-      ? '<a class="start-here" href="#box/lineback"><span class="lbl">New here? Learn this one first</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(lb.what) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per paying client</span><span class="go"><span>Learn it in 2 minutes</span><span aria-hidden="true">&rarr;</span></span></a>'
+      ? '<a class="start-here" href="#box/lineback"><span class="lbl">New here? Learn this one first</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(lb.what) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per paying client</span><span class="go">Read the Lineback cheat sheet <span aria-hidden="true">&rarr;</span></span></a>'
       : '<div class="start-here today"><span class="lbl">Today</span><div class="stats"><div><b>' + st.calls + '</b><span>calls logged</span></div><div><b>' + st.talked + '</b><span>conversations</span></div><div><b>' + st.warm + '</b><span>interested or won</span></div></div>' +
         '<span class="small">Every call you log keeps your list moving and your credit safe.</span></div>';
-    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1><p>Here’s your next step.</p></div></div>' + nextHtml +
-      '<div class="top-row"><a class="money-box" href="#money"><span class="lbl">Earned so far</span><span class="big num">' + money(t.ready) + '</span>' +
+    var moneyBox = '<a class="money-box' + (t.ready ? '' : ' zero') + '" href="#money"><span class="lbl">Earned so far</span><span class="big num">' + money(t.ready) + '</span>' +
       '<span class="row">No commission yet. It shows here once a client’s first payment clears.</span>' +
       '<span class="row warnline">2 setup steps before Station can pay you</span>' +
-      '<span class="go"><span>See my money</span><span aria-hidden="true">&rarr;</span></span></a>' + side + '</div>' +
+      '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
+    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml +
+      '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' +
       '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a></div>', 'Home');
     tick = setInterval(function () {
       if (!/^#?(home)?$/.test(location.hash)) return;
       var n2 = localTime(where), el = document.getElementById('callNote'); if (!el) return;
-      el.textContent = closedNote(n2); el.classList.toggle('closed-note', !n2.ok);
+      el.textContent = closedNote(n2); el.classList.toggle('closed-note', !n2.ok); el.hidden = n2.ok;
       document.getElementById('callGo').textContent = n2.ok ? 'Start calling' : 'See my list';
     }, 60000);
   };
@@ -438,7 +445,9 @@
     lines.push(['Close', closeLineOf(b)]);
     return lines;
   }
-  function sayBoxes(lines, numbered) { return lines.map(function (l, k) { return '<div class="say"><small>' + (numbered ? (k + 1) + ' · ' : '') + l[0] + '</small>' + esc(l[1]) + '</div>'; }).join(''); }
+  function sayBoxes(lines, numbered) {
+    return '<ol class="route">' + lines.map(function (l, k) { return '<li class="say"><small>' + (numbered ? ('0' + (k + 1)).slice(-2) + ' ' : '') + l[0] + '</small>' + esc(l[1]) + '</li>'; }).join('') + '</ol>';
+  }
   function quickLines(b) { return [['Say who you are', introLine(b)], ['Open with', openerOf(b)], ['If they ask the price', priceLine(b)], ['Close', closeLineOf(b)]]; }
   function scriptText(b) { return script(b).map(function (l) { return l[1]; }).join('\n\n'); }
   function repliesBlock(b) {
@@ -496,7 +505,7 @@
       '<p class="earn-line">' + (b.earn ? 'You earn <b class="num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client' : 'You earn 40% of their monthly care plan') + '</p></div>' + cheat +
       '<div class="earn-card"><span class="lbl">What you earn per paying client</span>' +
       (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they keep paying</div>' : '<div class="big">40% of their monthly care</div>') +
-      '<p>' + earnNote + ' The math, not a forecast or a promise.</p></div>' +
+      '<p>' + earnNote + '</p></div>' +
       '<h2 class="more-h">Everything else</h2><div class="more-list">' + more + '</div></div>' +
       '<div class="cta-bar"><a class="btn btn-dark btn-big" href="#calls/' + b.id + '">Start calling for ' + esc(b.name) + '</a></div>', b.name);
     var cl = main.querySelector('[data-copy-link]'); cl.addEventListener('click', function () { copy(link, cl); });
@@ -549,31 +558,39 @@
     tick = setInterval(refreshTimes, 15000); // times go stale and calling hours open or close while the page sits there
     if (!S.toured) setTimeout(startTour, 450);
   };
-  var sideObs = null;
-  function wireSide() {
-    if (sideObs) sideObs.disconnect();
-    if (!window.IntersectionObserver || !matchMedia('(min-width: 1100px)').matches) return;
-    sideObs = new IntersectionObserver(function (ents) {
-      ents.forEach(function (en) { if (en.isIntersecting) drawSide(en.target.getAttribute('data-id')); });
-    }, { root: feedEl(), threshold: 0.6 });
-    feedEl().querySelectorAll('.lead[data-id]').forEach(function (c) { sideObs.observe(c); });
-    var first = feedEl().querySelector('.lead[data-id]'); if (first) drawSide(first.getAttribute('data-id'));
+  var sideObs = null, sideRaf = 0, SIDE_MQ = window.matchMedia ? matchMedia('(min-width: 1100px)') : null;
+  function currentCard() {
+    var f = feedEl(); if (!f) return null;
+    var ft = f.getBoundingClientRect().top, best = null, d = 1e9;
+    f.querySelectorAll('.lead[data-id]').forEach(function (c) { var x = Math.abs(c.getBoundingClientRect().top - ft); if (x < d) { d = x; best = c; } });
+    return best;
   }
+  function wireSide() {
+    var f = feedEl(); if (!f) return;
+    if (!f.hasAttribute('data-side')) {
+      f.setAttribute('data-side', '1');
+      f.addEventListener('scroll', function () { cancelAnimationFrame(sideRaf); sideRaf = requestAnimationFrame(function () { var c = currentCard(); if (c && SIDE_MQ && SIDE_MQ.matches) drawSide(c.getAttribute('data-id')); }); }, { passive: true });
+    }
+    var c = currentCard(); if (c && SIDE_MQ && SIDE_MQ.matches) drawSide(c.getAttribute('data-id'));
+  }
+  if (SIDE_MQ && SIDE_MQ.addEventListener) SIDE_MQ.addEventListener('change', function () { var sd = document.getElementById('side'); if (sd) sd.removeAttribute('data-for'); wireSide(); sizeFeed(); });
   function drawSide(id) {
     var side = document.getElementById('side'), l = LEAD[id]; if (!side || !l || side.getAttribute('data-for') === id) return;
     var b = pitchFor(l); side.setAttribute('data-for', id);
-    side.innerHTML = '<h2 class="side-h">Your lines for ' + esc(l.name) + '</h2><p class="small">Pitching ' + esc(b.name) + '. Suggested words: say it your way, keep the facts.</p>' +
-      sayBoxes(script(b), true) + extrasHtml(l) + '<button class="link-btn" type="button" data-side-script>Every push-back answer</button>';
+    side.innerHTML = '<h2 class="side-h">Your lines for ' + esc(l.name) + '</h2><p class="small">Pitching ' + esc(b.name) + '.</p>' +
+      sayBoxes(script(b), true) + extrasHtml(l) + '<button class="link-btn" type="button" data-side-script>Every push-back answer</button>' +
+      '<p class="keys small"><b>Keys:</b> J next · K back · C call · L how did it go · 1–4 pick an outcome · U undo</p>';
     side.querySelector('[data-side-script]').addEventListener('click', function () { openScript(b); });
   }
   function updateEnd() {
     var c = counts(), end = document.querySelector('#endCard .lead-card'); if (!end) return;
     document.getElementById('leftCount').textContent = c.tried + ' called';
-    document.getElementById('triedCount').textContent = c.fresh + ' new · ' + c.toCall + ' to call';
+    document.getElementById('triedCount').textContent = c.fresh + ' new left';
     document.getElementById('progBar').style.width = Math.round(100 * c.tried / LEADS.length) + '%';
     var due = c.due ? c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due' : '';
-    var more = (due ? ' You have ' + due + '.' : '') + (c.again ? ' Your ' + c.again + ' to try again stay on your list.' : '');
-    var h, p, btn, lim = c.fresh ? 3 : c.due ? 1 : 4;
+    var later = LEADS.filter(function (l) { return rank(l) < 4 && triedToday(S.log[l.id]); }).length, todayN = c.toCall - c.fresh - later;
+    var more = (todayN ? ' ' + todayN + (todayN === 1 ? ' business is' : ' businesses are') + ' still open for today.' : '') + (later ? ' ' + later + ' you tried today come back tomorrow.' : '');
+    var h, p, btn = '';
     if (c.fresh) {
       h = c.fresh + (c.fresh === 1 ? ' business is' : ' businesses are') + ' still new.';
       p = 'When every new business has an outcome, you can ask Station for your next batch, up to 50.' + (due ? ' You also have ' + due + '.' : '');
@@ -581,21 +598,22 @@
     } else if (!S.asked) {
       h = 'Every business has an outcome.';
       p = 'Ask Station for your next batch, up to 50 businesses. Station reviews each request.' + more;
-      btn = '<button class="btn btn-dark btn-big" type="button" id="askMore">Ask for my next batch</button>' + (c.due ? '<button class="btn" type="button" id="toFirst">Go to your call-backs</button>' : '');
+      btn = '<button class="btn btn-dark btn-big" type="button" id="askMore">Ask for my next batch</button>' + (todayN ? '<button class="btn" type="button" id="toFirst">Go to the ones still open</button>' : '');
     } else {
-      h = 'Waiting for Station’s OK';
-      p = 'You asked at ' + askedText() + '. Station reviews every request, then your new businesses show up here. (This preview doesn’t send anything.)' + more;
-      btn = '<button class="btn btn-big" type="button" id="askMore" disabled>Asked · waiting for Station</button>' +
-        (c.due || c.again ? '<button class="btn" type="button" id="toFirst">' + (c.due ? 'Go to your call-backs' : 'Go back to my list') + '</button>' : '');
+      h = 'Next batch: waiting for Station’s OK';
+      p = '<span class="asked-line">✓ Asked at ' + askedText() + '. Station reviews every request, then your new businesses show up here.</span> (This preview doesn’t send anything.)' + more;
+      btn = todayN ? '<button class="btn" type="button" id="toFirst">Go to the ones still open</button>' : '';
     }
     end.innerHTML = '<h2>' + h + '</h2><p>' + p + '</p>' + btn;
     var tf = document.getElementById('toFirst');
     if (tf) tf.addEventListener('click', function () {
-      var first = [].filter.call(feedEl().querySelectorAll('.lead[data-id]'), function (el) { return rank(LEAD[el.getAttribute('data-id')]) < lim; })[0];
-      goTo(first);
+      var first = [].filter.call(feedEl().querySelectorAll('.lead[data-id]'), function (el) {
+        var l = LEAD[el.getAttribute('data-id')]; return c.fresh ? rank(l) < 3 : rank(l) < 4 && !triedToday(S.log[l.id]);
+      })[0];
+      goTo(first, true);
     });
     var am = document.getElementById('askMore');
-    if (am && !am.disabled) am.addEventListener('click', function () { S.asked = true; S.askedAt = Date.now(); save(); updateEnd(); toast('Asked. Station reviews every request.'); });
+    if (am) am.addEventListener('click', function () { S.asked = true; S.askedAt = Date.now(); save(); updateEnd(); var e2 = document.querySelector('#endCard .lead-card'); if (e2) e2.classList.add('pop'); });
   }
   function refreshTimes() {
     if (location.hash.indexOf('#calls') !== 0 || !feedEl()) { clearInterval(tick); tick = null; return; }
@@ -622,12 +640,13 @@
     if (btn) { var tmp = document.createElement('div'); tmp.innerHTML = callBtnHtml(l, t); btn.parentNode.replaceChild(tmp.firstChild, btn); }
     var cn = card.querySelector('[data-copynum]');
     if (!t.ok && cn) cn.parentNode.removeChild(cn);
-    if (t.ok && !cn && btn && !triedToday(S.log[l.id])) card.querySelector('[data-script]').insertAdjacentHTML('afterend', '<button class="link-btn" type="button" data-copynum>Copy number</button>');
+    if (t.ok && !cn && btn && !touch && !triedToday(S.log[l.id])) card.querySelector('[data-script]').insertAdjacentHTML('afterend', '<button class="link-btn" type="button" data-copynum>Copy number</button>');
   }
   function callBtnHtml(l, t) {
-    if (triedToday(S.log[l.id])) return '<button class="btn call-btn closed" type="button" disabled>Tried today<small>Call again tomorrow</small></button>';
+    if (triedToday(S.log[l.id])) return '<button class="btn call-btn closed" type="button" disabled>✓ Tried today<small>Back on your list tomorrow</small></button>';
     if (!t.ok) return '<button class="btn call-btn closed" type="button" disabled>' + (t.unknown ? 'Check their local time' : 'Calls open ' + t.opens) + '<small>The number shows when calls open</small></button>';
-    return '<a class="btn btn-green call-btn" href="tel:' + l.dial + '" data-call>' + (touch ? 'Call now' : 'Call') + '<small>' + l.phone + '</small></a>';
+    var s = S.log[l.id], again = s && (s.o === 'interested' || s.wasInterested);
+    return '<a class="btn ' + (again ? 'call-again' : 'btn-green') + ' call-btn" href="tel:' + l.dial + '" data-call>' + (again ? 'Call again' : touch ? 'Call now' : 'Call') + '<small>' + l.phone + '</small></a>';
   }
   /* call-back choices, without two buttons that land on the same day (Saturday: tomorrow and in 2 days are both Monday) */
   function dayButtons(ok) {
@@ -640,10 +659,11 @@
     });
     return o.map(function (x, i) { return '<button type="button"' + (o.length % 2 && i === o.length - 1 ? ' class="wide"' : '') + ' data-day="' + x[0] + '">' + x[1] + '</button>'; }).join('');
   }
-  function goTo(el) {
+  function goTo(el, instant) {
     if (!el) return;
     if (pending && el.getAttribute('data-id') !== pending.id) setPending(null); // a call you moved away from is never logged against the next business
-    feedShow(el, true);
+    feedShow(el, true, instant);
+    if (instant && !reduced) { el.classList.remove('arrive'); void el.offsetWidth; el.classList.add('arrive'); }
     var f = el.querySelector('.call-btn:not([disabled])') || el.querySelector('[data-log]') || el.querySelector('.btn:not([disabled])') || el.querySelector('button');
     if (f) setTimeout(function () { f.focus({ preventScroll: true }); }, 350);
   }
@@ -683,34 +703,42 @@
     var shown = closed && BOX[s.box] ? BOX[s.box] : b, es = earnShort(shown);
     var fitNote = !talked && b.id !== l.fits && sellable(BOX[l.fits]) ? ' <button class="link-btn fit-btn" type="button" data-fit>Pitch ' + esc(BOX[l.fits].name) + ' instead (best fit)</button>' : '';
     return '<article class="lead" id="lead-' + l.id + '" data-id="' + l.id + '" data-ok="' + t.ok + '" data-rank="' + rk + '" aria-labelledby="h-' + l.id + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + (warm ? ' warm' : '') + '">' +
-      '<div class="lead-meta">' + (closed ? '' : '<button class="pill from" type="button" data-until>Yours until ' + untilText(l) + '</button>') + pill + '</div>' +
+      '<div class="lead-meta">' + (closed ? '' : '<button class="pill from" type="button" data-until>Yours till ' + new Date(Date.now() + daysLeft(l) * 864e5).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</button>') + pill + (es ? '<span class="earn-pill">' + es + '</span>' : '') + '</div>' +
       '<div><h2 id="h-' + l.id + '">' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(l.city) + ', ' + l.st + '</span><span>★ ' + l.rating + ' (' + l.reviews + ')</span></div></div>' +
       (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + timeLine(t) + '</span></div>') +
-      '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(shown.name) + '</b></span>' + (es ? '<span class="earn-pill">' + es + '</span>' : '') +
+      '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(shown.name) + '</b></span>' +
       (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' + (closed || !fitNote ? '' : '<div class="fit-row">' + fitNote + '</div>') +
       '<p class="opener"><span class="first">Say who you are, then:</span> “' + esc(openerOf(b)) + '”</p><p class="gap"><b>Why them:</b> ' + esc(l.gap) + '</p></div>' +
-      (closed ? doneBlock(l, s) : callBtnHtml(l, t)) + (s && !closed && (s.o === 'interested' || s.wasInterested) ? sendBox(l, s) : '') +
-      (closed ? '' : '<div class="card-actions"><button class="btn" type="button" data-log>How did it go?</button><button class="btn btn-next" type="button" data-next>Next business <span aria-hidden="true">↓</span></button></div>') +
+      (closed ? doneBlock(l, s) : (s && (s.o === 'interested' || s.wasInterested) ? sendBox(l, s) : '') + callBtnHtml(l, t)) +
+      (closed ? '' : '<div class="card-lines">' + sayBoxes(quickLines(b)) + '</div>') +
+      (closed ? '' : '<div class="card-actions"><button class="btn" type="button" data-log>How did it go?</button><button class="btn btn-next" type="button" data-next>Next business</button></div>') +
       '<div class="note-box"' + (S.notes[l.id] ? '' : ' hidden') + '><label class="sr" for="note-' + l.id + '">Note about ' + esc(l.name) + '</label><input class="text" id="note-' + l.id + '" placeholder="Business facts only, like: ask for Maria after 2" value="' + esc(S.notes[l.id] || '') + '"></div>' +
       '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button><button class="link-btn" type="button" data-script>Full script</button>' +
-      (t.ok && !closed && !tt ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') + (closed ? '<button class="link-btn" type="button" data-next>Next <span aria-hidden="true">↓</span></button>' : '') + '</div></div></article>';
+      (closed ? '' : '<button class="link-btn" type="button" data-vm>Voicemail?</button>') +
+      (t.ok && !closed && !tt && !touch ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') /* on a phone, Call dials */ + (closed ? '<button class="link-btn" type="button" data-next>Next business</button>' : '') + '</div></div></article>';
   }
   function renderCard(card) {
     var l = LEAD[card.getAttribute('data-id')], list = [].slice.call(feedEl().querySelectorAll('.lead[data-id]')), k = list.indexOf(card);
     var tmp = document.createElement('div'); tmp.innerHTML = leadCard(l, k, list.length);
     var fresh = tmp.firstChild; card.parentNode.replaceChild(fresh, card); wireCard(fresh);
+    var side = document.getElementById('side'); if (side && side.getAttribute('data-for') === l.id) { side.removeAttribute('data-for'); drawSide(l.id); }
     updateEnd();
     return fresh;
   }
   function wireCard(card) {
     var id = card.getAttribute('data-id'), l = LEAD[id];
     card.addEventListener('click', function (e) {
-      if (performance.now() < tapGuard) { e.preventDefault(); return; }
+      if (performance.now() < tapGuard) {
+        e.preventDefault();
+        if (e.target.closest('[data-next]')) setTimeout(function () { var c = cardEl(id); if (c) goTo(c.nextElementSibling); }, tapGuard - performance.now() + 10);
+        return;
+      }
       var t = e.target;
       if (t.closest('[data-next]')) { goTo(card.nextElementSibling); return; }
       if (t.closest('[data-log]')) { openCallSheet(l, 'after'); return; }
       if (t.closest('[data-script]')) { openScript(pitchFor(l)); return; }
       if (t.closest('[data-pitch]')) { openPitchPicker(l); return; }
+      if (t.closest('[data-vm]')) { openSheet('If you get voicemail', '<div class="say"><small>Say</small>' + esc(vmLine(l)) + '</div><p class="small">Then tap Voicemail when you log the call. They come back on your list tomorrow.</p>'); return; }
       if (t.closest('[data-until]')) {
         openSheet('Yours until ' + untilText(l), '<p>' + esc(l.name) + ' stays on your list until ' + untilText(l) + '. Every business is yours for ' + HOLD_DAYS + ' days from the day Station gives it to you.</p><p>If you haven’t finished with it by then, it goes back to Station’s shared list, so another partner can call it.</p>');
         return;
@@ -761,15 +789,12 @@
     var b = pitchFor(l), quick = sayBoxes(quickLines(b));
     if (mode === 'during') {
       openSheet('On the call with ' + l.name,
-        '<p class="sheet-sub">When you hang up, tap how it went:</p><div class="outcomes big" data-row="1">' + ROW1 + '</div>' +
-        '<button class="link-btn" type="button" data-hungup>Something else? See every option</button>' +
-        '<h3 class="sheet-h">Still talking? Your lines</h3>' + quick + extrasHtml(l));
-      document.getElementById('sheetBody').addEventListener('click', function (e) {
-        if (e.target.closest('[data-hungup]')) { openCallSheet(l, 'after'); return; }
-        var ob = e.target.closest('[data-o]'); if (!ob) return;
-        var o = ob.getAttribute('data-o');
-        if (o === 'talked') openCallSheet(l, 'after', false, 'talked'); else commit(l, o);
-      });
+        '<p class="sheet-sub">When you hang up, tap how it went:</p>' + outcomeRows(l) +
+        '<button class="link-btn" type="button" data-hungup>Add a note or see every option</button>' +
+        '<h3 class="sheet-h">Still talking? Your lines</h3>' + quick + '<p class="small">If they’re interested, get their email before you hang up.</p>' + extrasHtml(l));
+      var bd = document.getElementById('sheetBody');
+      bd.querySelector('[data-hungup]').addEventListener('click', function () { openCallSheet(l, 'after'); });
+      wireOutcomes(bd, l, false);
       return;
     }
     if (mode === 'before') {
@@ -790,32 +815,38 @@
       var sk = body.querySelector('[data-skip]'); if (sk) sk.addEventListener('change', function () { S.skipPrep = sk.checked; save(); });
       return;
     }
-    var t = localTime(l.st);
     openSheet('How did it go?',
       '<p class="sheet-sub">' + esc(l.name) + ' · pitching ' + esc(b.name) + '</p>' +
       (changing ? '' : '<details class="script-peek"><summary>Show my lines</summary>' + quick + '</details>') +
       '<label class="field slim note-in" for="sheetNote">Anything to remember? (optional)<input class="text" id="sheetNote" value="' + esc(S.notes[l.id] || '') + '" placeholder="Business facts only, like: ask for Maria after 2"></label>' +
-      '<div class="outcomes big" data-row="1">' + ROW1 + '</div>' +
-      '<div class="outcomes big" data-row="2" id="row2" hidden><p class="small wide row-h" tabindex="-1">How did the conversation go?</p>' +
-      '<button type="button" data-o="interested" aria-pressed="false">Interested<small>Wants to see more</small></button><button type="button" data-o="callback" aria-pressed="false" aria-expanded="false">Call back<small>You pick the day</small></button>' +
-      '<button type="button" data-o="notint" aria-pressed="false">Not interested<small>They said no</small></button><button type="button" data-o="dnc" aria-pressed="false">Do not call<small>They asked you to stop</small></button>' +
-      '<button type="button" class="wide won" data-o="won" aria-pressed="false">Won: they’re buying<small>Send them your link next</small></button></div>' +
-      '<div class="outcomes big" data-row="day" id="rowDay" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(t.laterOk) + '</div>' +
-      '<details class="script-peek"><summary>What do these buttons mean?</summary>' + glossaryHtml() + '</details>');
-    var body = document.getElementById('sheetBody'), r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]');
-    function reveal(el) { el.hidden = false; el.scrollIntoView({ block: 'nearest' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
-    function pick(ob) {
-      body.querySelectorAll('[data-o]').forEach(function (x) {
-        var on = x === ob || (r2.contains(ob) && x.getAttribute('data-o') === 'talked');
-        x.classList.toggle('sel', on); x.setAttribute('aria-pressed', String(on));
-      });
-      var tk = body.querySelector('[data-o="talked"]'); tk.setAttribute('aria-expanded', String(!r2.hidden || ob === tk));
-    }
+      outcomeRows(l) + '<details class="script-peek"><summary>What do these buttons mean?</summary>' + glossaryHtml() + '</details>');
+    var body = document.getElementById('sheetBody');
     body.querySelector('#sheetNote').addEventListener('input', function () {
       var v = this.value.slice(0, 200); if (v.trim()) S.notes[l.id] = v; else delete S.notes[l.id]; save();
       var c = cardEl(l.id); if (!c) return; var nb = c.querySelector('.note-box'), ni = nb.querySelector('input'), nl = c.querySelector('[data-note]');
       ni.value = S.notes[l.id] || ''; nb.hidden = !S.notes[l.id]; if (nl) nl.textContent = S.notes[l.id] ? 'Edit note' : 'Add a note';
     });
+    wireOutcomes(body, l, changing);
+    if (preset === 'talked') body.querySelector('[data-o="talked"]').click();
+  }
+  function outcomeRows(l) {
+    return '<div class="outcomes big" data-row="1">' + ROW1 + '</div>' +
+      '<div class="outcomes big" data-row="2" hidden><p class="small wide row-h" tabindex="-1">How did the conversation go?</p>' +
+      '<button type="button" data-o="interested" aria-pressed="false">Interested<small>Wants to see more</small></button><button type="button" data-o="callback" aria-pressed="false" aria-expanded="false">Call back<small>You pick the day</small></button>' +
+      '<button type="button" data-o="notint" aria-pressed="false">Not interested<small>They said no</small></button><button type="button" data-o="dnc" aria-pressed="false">Do not call<small>They asked you to stop</small></button>' +
+      '<button type="button" class="wide won" data-o="won" aria-pressed="false">Won: they’re buying<small>Send them your link next</small></button></div>' +
+      '<div class="outcomes big" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(localTime(l.st).laterOk) + '</div>';
+  }
+  function wireOutcomes(body, l, changing) {
+    var r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]');
+    function reveal(el) { el.hidden = false; el.classList.add('open-in'); el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
+    function pick(ob) {
+      body.querySelectorAll('[data-o]').forEach(function (x) {
+        var on = x === ob || (r2.contains(ob) && x.getAttribute('data-o') === 'talked');
+        x.classList.toggle('sel', on); x.setAttribute('aria-pressed', String(on));
+      });
+      body.querySelector('[data-o="talked"]').setAttribute('aria-expanded', String(!r2.hidden || ob.getAttribute('data-o') === 'talked'));
+    }
     body.addEventListener('click', function (e) {
       var ob = e.target.closest('[data-o]'), db = e.target.closest('[data-day]');
       if (ob) {
@@ -830,7 +861,6 @@
         commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) }, changing, late);
       }
     });
-    if (preset === 'talked') { var tb = body.querySelector('[data-o="talked"]'); pick(tb); reveal(r2); }
   }
   function record(l, o, extra, changing) {
     var prev = S.log[l.id] || {}, was = prev.o === 'interested' || prev.wasInterested;
@@ -851,23 +881,28 @@
     var card = cardEl(l.id); if (!card) return;
     var fresh = renderCard(card), adv = null;
     var s = S.log[l.id], msg = statusText(s);
-    var wb = o === 'won' && BOX[s.box] && BOX[s.box].earn ? BOX[s.box] : null;
-    showUndo(l.name + ': ' + msg + (late ? ' (too late for today)' : '') + (o === 'won' ? (wb ? '. +' + money(wb.earn) + ' a ' + period(wb) + ' once they pay. Send your link.' : '. Now send them your link.') : o === 'interested' ? '. Send them your link.' : ''), l.id, before, null, callsBefore);
-    if (!changing && S.calls.length === 1) toast('First call logged. That’s the hardest one.');
+    var wb = o === 'won' && BOX[s.box] && BOX[s.box].earn ? BOX[s.box] : null, first = !changing && S.calls.length === 1;
+    var nextEl = fresh.nextElementSibling, nextName = nextEl && nextEl.getAttribute('data-id') ? LEAD[nextEl.getAttribute('data-id')].name : '';
+    var tail = late ? ' (too late for today)' : o === 'won' ? (wb ? ' · +' + money(wb.earn) + (period(wb) === 'quarter' ? '/qtr' : '/mo') + ' once they pay' : ' · send your link') : o === 'interested' ? ' · send your link' : first ? ' · first call done!' : '';
+    showUndo(l.name + ': ' + msg + tail, l.id, before, null, callsBefore);
+    var pp = fresh.querySelector('.lead-meta .pill:not(.from)'); if (pp && !reduced) pp.classList.add('pop');
     if (o === 'won' || o === 'interested') {
       feedShow(fresh, true, true); var f = fresh.querySelector('[data-mail]');
       if (f) { f.focus({ preventScroll: true }); keepAboveUndo(fresh.querySelector('.won-btns') || f); }
     } else {
       var nx = fresh.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
-      if (!S.big) U.adv = armAdvance(function () { var c = cardEl(l.id); if (c) goTo(c.nextElementSibling); }, 1500);
+      if (!S.big) {
+        U.adv = armAdvance(function () { var c = cardEl(l.id); if (c) goTo(c.nextElementSibling); }, 1500);
+        if (nextName && !reduced) { undoEl.classList.remove('advancing'); void undoEl.offsetWidth; undoEl.classList.add('advancing'); }
+      }
     }
   }
 
   /* the automatic move to the next business is cancelled by anything the partner does first */
   function armAdvance(fn, ms) {
     var t = setTimeout(done, ms), evs = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
-    function cancel() { clearTimeout(t); off(); }
-    function done() { off(); fn(); }
+    function cancel() { if (performance.now() < tapGuard) return; clearTimeout(t); off(); undoEl.classList.remove('advancing'); }
+    function done() { off(); undoEl.classList.remove('advancing'); fn(); }
     function off() { evs.forEach(function (e) { document.removeEventListener(e, cancel, true); }); var f = feedEl(); if (f) f.removeEventListener('scroll', cancel); }
     evs.forEach(function (e) { document.addEventListener(e, cancel, true); });
     setTimeout(function () { var f = feedEl(); if (f) f.addEventListener('scroll', cancel); }, 50);
@@ -891,6 +926,7 @@
   }
   function hideUndo() {
     if (U) { clearTimeout(U.t); if (U.adv) U.adv.cancel(); }
+    undoEl.classList.remove('advancing');
     var id = U && U.id, had = undoEl.contains(document.activeElement), was = !undoEl.hidden;
     U = null; undoEl.hidden = true; undoEl.classList.remove('on'); document.body.classList.remove('has-undo'); if (was) sizeFeed();
     if (had && id) { var c = cardEl(id), h = c && c.querySelector('h2'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
@@ -912,6 +948,16 @@
     save();
     var card = cardEl(u.id); if (card) { var fresh = renderCard(card); goTo(fresh); }
     toast('Undone.');
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (location.hash.indexOf('#calls') !== 0 || !sheet.hidden || TOUR || e.ctrlKey || e.metaKey || e.altKey || /input|textarea|select/i.test(e.target.tagName)) return;
+    var k = e.key.toLowerCase(), cur = currentCard(); if (!cur || !/^[jklc]$/.test(k)) return;
+    e.preventDefault();
+    if (k === 'j') goTo(cur.nextElementSibling);
+    else if (k === 'k') goTo(cur.previousElementSibling);
+    else if (k === 'l') { var lg = cur.querySelector('[data-log]'); if (lg) lg.click(); }
+    else { var cb = cur.querySelector('.call-btn:not([disabled])'); if (cb) cb.click(); }
   });
 
   /* ---------- pick a product for one business ---------- */
@@ -938,7 +984,7 @@
   function startTour() {
     var card = feedEl() && feedEl().querySelector('.lead[data-id]'); if (!card || location.hash.indexOf('#calls') !== 0 || !sheet.hidden) return;
     TOUR = { i: 0, steps: [
-      [card.querySelector('h2'), 'This is the business to call. Station gives you up to 50 at a time, and each one is yours for ' + HOLD_DAYS + ' days.'],
+      [card.querySelector('h2'), 'This is 1 of your ' + LEADS.length + ' businesses. Each one is yours for ' + HOLD_DAYS + ' days; the date is on the tag above it.'],
       [card.querySelector('.pitch-box'), 'What to pitch them, and what to say after you say who you are. Tap Change to pitch something else.'],
       [card.querySelector('.call-btn'), 'Tap to call. Your lines show before the phone opens.'],
       [card.querySelector('[data-log]'), 'When you hang up, tell the app how it went. You can undo any mistake.']
@@ -959,7 +1005,7 @@
   }
   function endTour() { if (!TOUR) return; TOUR = null; document.getElementById('coach').hidden = true; main.inert = false; S.toured = true; save(); var f = feedEl(); if (f) f.scrollTo({ top: 0, behavior: 'instant' }); }
   function focusFirstCard() { var h = feedEl() && feedEl().querySelector('.lead[data-id] h2'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
-  document.getElementById('coachNext').addEventListener('click', function () { if (!TOUR) return; if (TOUR.i < TOUR.steps.length - 1) { TOUR.i++; showStep(); } else { endTour(); var c = feedEl() && feedEl().querySelector('.call-btn'); if (c) c.focus(); } });
+  document.getElementById('coachNext').addEventListener('click', function () { if (!TOUR) return; if (TOUR.i < TOUR.steps.length - 1) { TOUR.i++; showStep(); } else { endTour(); focusFirstCard(); } });
   document.getElementById('coachSkip').addEventListener('click', function () { endTour(); focusFirstCard(); });
   document.addEventListener('keydown', function (e) {
     if (!TOUR) return;
@@ -973,8 +1019,8 @@
   function openSheet(title, html) {
     if (sheet.hidden) { lastFocus = document.activeElement; try { history.pushState({ pwSheet: 1 }, '', location.href); } catch (e) {} }
     var old = document.getElementById('sheetBody'), nb = old.cloneNode(false); old.parentNode.replaceChild(nb, old); // drop old listeners
-    document.getElementById('sheetTitle').textContent = title; nb.innerHTML = html;
-    sheet.hidden = false; document.getElementById('sheetClose').focus();
+    var st = document.getElementById('sheetTitle'); st.textContent = title; nb.innerHTML = html;
+    sheet.hidden = false; st.setAttribute('tabindex', '-1'); st.focus({ preventScroll: true });
   }
   function openScript(b) {
     openSheet(b.name + ': what to say', '<p class="small">Suggested words. Say it your way, and keep the facts and the rules.</p>' + sayBoxes(script(b), true) + '<h3 class="sheet-h">If they push back</h3>' + (repliesBlock(b) || '<p>Answer the question, then offer to send the link.</p>') +
@@ -997,6 +1043,11 @@
   }
   function hideSheet() {
     if (sheet.hidden) return;
+    if (!reduced) { // a copy of the sheet slides away while the real one is already gone (state stays instant)
+      var g = sheet.cloneNode(true); g.removeAttribute('id'); g.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id'); });
+      g.classList.add('ghost'); g.setAttribute('aria-hidden', 'true'); g.inert = true; document.body.appendChild(g);
+      setTimeout(function () { g.remove(); }, 220);
+    }
     sheet.hidden = true;
     if (history.state && history.state.pwSheet) { ignorePop = true; history.back(); }
   }
@@ -1010,6 +1061,9 @@
   document.addEventListener('keydown', function (e) {
     if (sheet.hidden) return;
     if (e.key === 'Escape') { closeSheet(); return; }
+    if (/^[1-4]$/.test(e.key) && !/input|textarea|select/i.test(e.target.tagName)) { // keys 1-4 pick the first row of outcomes
+      var ob = sheet.querySelectorAll('[data-row="1"] [data-o]')[+e.key - 1]; if (ob) { e.preventDefault(); ob.click(); } return;
+    }
     if (e.key !== 'Tab') return;
     var f = [].filter.call(sheet.querySelectorAll('button, summary, a[href], input'), function (x) { return x.offsetParent !== null; });
     if (!f.length) return;
@@ -1030,7 +1084,7 @@
       won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="You’ll earn" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' a quarter' : ' a month') : '40% of their care plan') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('') + '</tbody></table></div>'
       : '<p class="empty">No clients yet. When a business you called starts paying Station, it shows up here.</p>';
     var rows = BOOK.map(function (r) { return '<tr><td data-l="Client"><b>' + esc(r.client) + '</b></td><td data-l="On">' + esc(r.on) + '</td><td data-l="They pay" class="r num">' + money(r.pays) + ' a month</td><td data-l="You earn" class="r num">' + money(r.pays * PW.rate) + ' a month</td><td data-l="Where it stands">' + esc(r.state) + '</td></tr>'; }).join('');
-    mount('<div class="wrap money"><h1>Your money</h1><p class="sub">In the real portal these figures come from Station’s payment records, and those records decide what you’re paid.</p>' +
+    mount('<div class="wrap money"><h1>Your money</h1><p class="sub">Once you’re live, these numbers come from Station’s payment records, and those records decide what you’re paid.</p>' +
       '<div class="tiles3"><div class="tile hero"><span class="lbl">Earned</span><div class="v num">' + money(t.ready) + '</div><p>No commission yet. Paid in the first payout after the 2 steps below are done.</p></div>' +
       '<div class="tile"><span class="lbl">On hold</span><div class="v num">' + money(t.hold) + '</div><p>Station may hold a new client’s first payment up to 30 days after it clears (the refund window).</p></div>' +
       '<div class="tile"><span class="lbl">Paid to date</span><div class="v num">' + money(t.paid) + '</div><p>Payouts go out every two weeks once $50 or more is ready.</p></div></div>' +
@@ -1050,7 +1104,7 @@
       '<div><b>If a client cancels</b>Your commission on them stops when they stop paying. What you’ve already earned stays yours.</div>' +
       '<div><b>If the agreement ends</b>Either side can end it any time by email. You’re paid on payments that cleared up to that day, and nothing after.</div>' +
       '<div><b>Something looks wrong?</b>Tell Station in writing within 60 days. Station’s payment records decide.</div></div>' +
-      '<p class="small fine">These are the main points of the Station Partner Agreement. The agreement wins over anything in this app.</p></div>', 'Money');
+      '<p class="small fine">The main points of the Station Partner Agreement.</p></div>', 'Money');
     main.querySelectorAll('[data-demo]').forEach(function (x) { x.addEventListener('click', function () { toast(x.getAttribute('data-demo') === 'tax' ? 'In the real portal this opens a secure upload.' : 'In the real portal this opens your own Stripe setup.'); }); });
   };
 
@@ -1064,7 +1118,7 @@
       '<h2>The rules, in one breath</h2><ul class="ticks">' +
       '<li>You’re an independent partner. Say so if anyone asks.</li><li>Never change a price, offer a deal or share your commission.</li>' +
       '<li>Never promise results, a ranking or a go-live date. Anything that texts waits about 2 business days on the carriers.</li>' +
-      '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. Dial by hand, once a day at most. Leaving a voicemail is fine: use the voicemail line on the card.</li>' +
+      '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. Dial each business yourself, once a day at most. Leaving a voicemail is fine: tap Voicemail? on the card for the line.</li>' +
       '<li>Each business is yours for ' + HOLD_DAYS + ' days. Anything you haven’t finished by then goes back to Station’s shared list.</li>' +
       '<li>If anyone says “take me off your list,” say sorry, end the call and mark them Do not call.</li>' +
       '<li>Never record a call, and never text or email a business unless they ask you to.</li>' +
