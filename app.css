@@ -567,3 +567,4 @@ html.big .card-actions{position:sticky;bottom:0;background:var(--card);padding-t
 @media (prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}}
 /* phone: a new partner's three $0.00 tiles stay small; Earned leads */
 @media (max-width:720px){.tiles3{gap:8px}.tile{padding:12px 14px}.tile .v{font-size:24px;margin:2px 0}.tile p{font-size:14px}.tile.hero .v{font-size:30px}}
+.call-btn.closed small{font:600 15px/1.2 var(--font)}
