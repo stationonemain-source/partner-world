@@ -82,6 +82,7 @@
   }
 
   /* ---------- sample leads: fictional businesses, reserved 555-01xx numbers with real area codes ---------- */
+  var HOLD_DAYS = 14; // Circle, 10-03: a business you haven't finished goes back to Station's shared list after 14 days
   var LEADS = [
     ['s1', 'Bayou City Plumbing Co.', 'Plumbing', 'Houston', 'TX', '713', 4.6, 23, 'Answers their own phone; the listing says “call for same-day service.”', 'lineback'],
     ['s2', 'Red River Roofing', 'Roofing', 'Tulsa', 'OK', '918', 4.8, 61, 'Storm season. Lots of calls come in while crews are on roofs.', 'frontdesk'],
@@ -104,7 +105,7 @@
   ].map(function (r, i) {
     var last = '01' + ('0' + (i + 1)).slice(-2);
     return { id: r[0], name: r[1], trade: r[2], city: r[3], st: r[4], rating: r[6], reviews: r[7], gap: r[8], fits: r[9],
-      phone: '(' + r[5] + ') 555-' + last, dial: '+1' + r[5] + '555' + last, days: 28 - Math.floor(i * 1.4) };
+      phone: '(' + r[5] + ') 555-' + last, dial: '+1' + r[5] + '555' + last, days: HOLD_DAYS }; // one batch, all dealt the same day
   });
   var LEAD = {}; LEADS.forEach(function (l) { LEAD[l.id] = l; });
   if (!S.since) { S.since = ymd(new Date()); save(); }
@@ -711,7 +712,7 @@
       if (t.closest('[data-script]')) { openScript(pitchFor(l)); return; }
       if (t.closest('[data-pitch]')) { openPitchPicker(l); return; }
       if (t.closest('[data-until]')) {
-        openSheet('Yours until ' + untilText(l), '<p>' + esc(l.name) + ' stays on your list until ' + untilText(l) + '.</p><p>If you haven’t finished with it by then, it goes back to Station’s shared list, so another partner can call it.</p>');
+        openSheet('Yours until ' + untilText(l), '<p>' + esc(l.name) + ' stays on your list until ' + untilText(l) + '. Every business is yours for ' + HOLD_DAYS + ' days from the day Station gives it to you.</p><p>If you haven’t finished with it by then, it goes back to Station’s shared list, so another partner can call it.</p>');
         return;
       }
       if (t.closest('[data-fit]')) { S.pitch[id] = l.fits; save(); var fr = renderCard(card); var pc = fr.querySelector('[data-pitch]'); if (pc) pc.focus(); toast('Pitching ' + BOX[l.fits].name + ' here.'); return; }
@@ -937,7 +938,7 @@
   function startTour() {
     var card = feedEl() && feedEl().querySelector('.lead[data-id]'); if (!card || location.hash.indexOf('#calls') !== 0 || !sheet.hidden) return;
     TOUR = { i: 0, steps: [
-      [card.querySelector('h2'), 'This is the business to call. Station gives you up to 50 at a time.'],
+      [card.querySelector('h2'), 'This is the business to call. Station gives you up to 50 at a time, and each one is yours for ' + HOLD_DAYS + ' days.'],
       [card.querySelector('.pitch-box'), 'What to pitch them, and what to say after you say who you are. Tap Change to pitch something else.'],
       [card.querySelector('.call-btn'), 'Tap to call. Your lines show before the phone opens.'],
       [card.querySelector('[data-log]'), 'When you hang up, tell the app how it went. You can undo any mistake.']
@@ -992,7 +993,7 @@
       '<dt>Won</dt><dd>They’re buying. Send them your link; Station checks it and sets them up.</dd>' +
       '<dt>Undo</dt><dd>Tapped the wrong one? Press Undo at the bottom of the screen right after you save.</dd>' +
       '<dt>Tried today</dt><dd>After No answer or Voicemail, a business comes back tomorrow. Nobody gets called twice in one day.</dd>' +
-      '<dt>Yours until</dt><dd>The day this business leaves your list if you haven’t finished with it. It goes back to Station’s shared list.</dd></dl>');
+      '<dt>Yours until</dt><dd>Every business is yours for ' + HOLD_DAYS + ' days. If you haven’t finished with it by then, it goes back to Station’s shared list.</dd></dl>');
   }
   function hideSheet() {
     if (sheet.hidden) return;
@@ -1063,7 +1064,8 @@
       '<h2>The rules, in one breath</h2><ul class="ticks">' +
       '<li>You’re an independent partner. Say so if anyone asks.</li><li>Never change a price, offer a deal or share your commission.</li>' +
       '<li>Never promise results, a ranking or a go-live date. Anything that texts waits about 2 business days on the carriers.</li>' +
-      '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. Dial by hand, once a day at most.</li>' +
+      '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. Dial by hand, once a day at most. Leaving a voicemail is fine: use the voicemail line on the card.</li>' +
+      '<li>Each business is yours for ' + HOLD_DAYS + ' days. Anything you haven’t finished by then goes back to Station’s shared list.</li>' +
       '<li>If anyone says “take me off your list,” say sorry, end the call and mark them Do not call.</li>' +
       '<li>Never record a call, and never text or email a business unless they ask you to.</li>' +
       '<li>Your link is what credits a sale to you, so send it every time. Log every call too: Station’s records decide who gets credit.</li>' +
