@@ -234,6 +234,7 @@
     if (!sheet.hidden) { sheet.hidden = true; }
     var parts = (location.hash || '').replace(/^#/, '').split('/');
     function draw() {
+      if (parts[0] === 'admin') { VIEWS.admin(); return; } // the founder view needs no partner sign-in
       if (!S.entered && parts[0] !== 'check') { renderWelcome(); return; }
       if (parts[0] === 'check' && !S.name) { renderWelcome(); return; }
       (VIEWS[parts[0]] || VIEWS.home)(parts[1]);
@@ -245,6 +246,7 @@
     document.getElementById('bar').hidden = !on; document.getElementById('tabbar').hidden = !on;
     document.body.classList.toggle('has-tabs', on);
     document.body.classList.toggle('calls-mode', tab === 'calls');
+    document.body.classList.toggle('admin-mode', tab === 'admin');
     document.documentElement.classList.toggle('calls-lock', tab === 'calls'); // only the feed scrolls on Calls, never the page
     document.querySelectorAll('[data-tab]').forEach(function (a) { var here = a.getAttribute('data-tab') === tab; a.classList.toggle('on', here); if (here) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     document.getElementById('chipBal').textContent = money(totals().ready);
@@ -1106,6 +1108,18 @@
       '<div><b>Something looks wrong?</b>Tell Station in writing within 60 days. Station’s payment records decide.</div></div>' +
       '<p class="small fine">The main points of the Station Partner Agreement.</p></div>', 'Money');
     main.querySelectorAll('[data-demo]').forEach(function (x) { x.addEventListener('click', function () { toast(x.getAttribute('data-demo') === 'tax' ? 'In the real portal this opens a secure upload.' : 'In the real portal this opens your own Stripe setup.'); }); });
+  };
+
+  /* ---------- founder view (preview): loaded on demand from admin.js ---------- */
+  if (/[?&]embed\b/.test(location.search)) document.documentElement.classList.add('embed');
+  VIEWS.admin = function () {
+    chrome(true, 'admin');
+    function go() { window.PW_ADMIN(mount, toast); }
+    if (window.PW_ADMIN) { go(); return; }
+    main.innerHTML = '<div class="wrap admin"><p class="small">Loading the founder view…</p></div>';
+    var sc = document.createElement('script'); sc.src = 'admin.js?v=1'; sc.onload = function () { if (location.hash === '#admin') go(); };
+    sc.onerror = function () { main.innerHTML = '<div class="wrap admin"><p>The founder view couldn’t load. Check your connection and reload.</p></div>'; };
+    document.head.appendChild(sc);
   };
 
   /* ---------- help ---------- */
