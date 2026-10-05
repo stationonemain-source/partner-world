@@ -112,7 +112,7 @@ input.text:focus,select.text:focus,textarea.text:focus{outline:none;border-color
 .filters{display:flex;gap:8px;overflow-x:auto;padding:0 36px 4px 0;scrollbar-width:none;scroll-padding-inline:16px}
 #wall{scroll-margin-top:84px}
 .filters::-webkit-scrollbar{display:none}
-.chip{flex:none;min-height:46px;padding:0 18px;border-radius:999px;border:2px solid var(--line-2);background:var(--card);color:var(--ink);font:700 16px/1 var(--font);cursor:pointer;white-space:nowrap}
+.chip{flex:none;min-height:48px;padding:0 18px;border-radius:999px;border:2px solid var(--line-2);background:var(--card);color:var(--ink);font:700 16px/1 var(--font);cursor:pointer;white-space:nowrap}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .brand-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:30px 0 14px}
 .brand-head p{margin:0;color:var(--ink-3);font-size:16px}
@@ -731,3 +731,20 @@ ul.biz li .small{text-align:right}
 .amap.leaflet-container{display:block}
 .leaflet-popup-content{font:400 15px/1.45 var(--font)}
 .call-again small{opacity:1}
+
+/* ===== 10-04 Who buys + collections ===== */
+.buyers-link{display:block;margin-top:12px;padding:16px 18px;background:var(--card);border:2px solid var(--line);border-radius:var(--r);color:var(--ink);text-decoration:none;transition:border-color .15s}
+.buyers-link:hover,.buyers-link:focus-visible{border-color:var(--amber-ink)}
+.buyers-link b{display:block;font-size:20px;line-height:1.3}
+.buyers-link span{display:block;margin-top:2px;font-size:16px;color:var(--ink-2)}
+.who-buys a{display:block;margin:6px 0;color:var(--ink);text-decoration:underline;text-decoration-color:var(--amber-ink);text-decoration-thickness:2px;text-underline-offset:4px}
+.cheat-row p a{color:var(--ink);text-decoration-color:var(--amber-ink);text-decoration-thickness:2px;text-underline-offset:4px}
+
+.grid.colls{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.grid.colls{grid-template-columns:minmax(0,1fr)}}
+.grid.colls .box{min-height:0}
+.box .fitline{font-size:16px;line-height:1.4;color:var(--ink)}
+.box .trades{font-size:15px;line-height:1.4;color:var(--ink-2)}
+.buyers-link{padding:12px 16px}
+.buyers-link b{font-size:18px}
+.paid-route{margin:8px 0 6px}

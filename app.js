@@ -50,8 +50,10 @@
   function code() { return (S.code || '').toLowerCase().replace(/[^a-z0-9-]/g, ''); }
   function brandName() { return 'Station'; }
   var MARK = '<svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#stationMark"/></svg>';
-  function perMonth(b) { return b.id === 'revive' ? b.earn / 3 : b.earn; }
-  function period(b) { return b.id === 'revive' ? 'quarter' : 'month'; }
+  function perMonth(b) { return b.earn; }
+  function period(b) { return 'month'; }
+  var TD = PW.trialDays || 14;
+  function kindWord(b) { return b.kind === 'plan' ? 'plan' : 'collection'; }
   function linkFor(b) { return b.link.replace('{code}', code()); }
   var touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
   function copy(text, btn) {
@@ -208,7 +210,7 @@
       why: 'Station sets prices and they’re the same for everyone. Never offer part of your commission, a deal or a longer trial.' },
     { q: 'A client pays Station for a new website build. Do you earn 40% of the build fee?',
       a: [['Yes, 40% of everything they pay.', 0], ['No. You earn 40% of what they pay every month, never one-time fees.', 1]],
-      why: 'Your 40% is on the monthly payments that clear. Setup fees and website build fees earn nothing, but the monthly plan behind them earns you every month.' },
+      why: 'Your 40% is on the monthly payments that clear. Website build fees earn nothing, but the monthly price behind them earns you every month.' },
     { q: 'Someone asks, “Do you work for Station?”',
       a: [['Yes, I’m on Station’s sales team.', 0], ['I’m an independent partner with Station, and I earn a commission if you sign up.', 1]],
       why: 'You’re an independent partner, not an employee. Saying so honestly is what makes people trust you.' },
@@ -376,7 +378,8 @@
       '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
     mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml +
       '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' +
-      '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a></div>', 'Home');
+      '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a>' +
+      '<a class="buyers-link" href="#buyers"><b>Who buys? Ten real buyers</b><span>What each is feeling, and the words that work.</span></a></div>', 'Home');
     tick = setInterval(function () {
       if (!/^#?(home)?$/.test(location.hash)) return;
       var n2 = localTime(where), el = document.getElementById('callNote'); if (!el) return;
@@ -385,33 +388,58 @@
     }, 60000);
   };
 
+
+  /* ---------- what one paying client is worth: arithmetic from published prices, never a forecast ---------- */
+  var WORTH_IDS = ['bundle-answer', 'bundle-getfound', 'bundle-followup', 'bundle-core', 'bundle-pro', 'bundle-custom', 'lineback', 'frontdesk', 'repute'];
+  function worthTable() {
+    var rows = WORTH_IDS.map(function (id) {
+      var b = BOX[id]; if (!b || !b.earn) return '';
+      return '<tr><th scope="row">' + esc(b.short || b.name) + '</th><td class="r num">' + money(b.earn) + '</td><td class="r num">' + money(b.earn * 12) + '</td></tr>';
+    }).join('');
+    return '<div class="table-wrap"><table><thead><tr><th scope="col">One paying client on</th><th scope="col" class="r">You earn a month</th><th scope="col" class="r">12 months of payments</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="small fine">Arithmetic from published prices: 40% of what the client pays. It is not a forecast. Nothing is earned during a free trial, and refunds and cancellations reduce it. Yearly prepaid plans pay out in monthly installments, so ask Station before offering one.</p>';
+  }
+  function yesToPaid() {
+    return '<ol class="route paid-route">' +
+      '<li class="say"><small>1 They say yes</small>Send your link and mark the lead Won. Station checks it and sets them up.</li>' +
+      '<li class="say"><small>2 Free trial</small>' + TD + ' days for single products and collections. Core, Pro and Max have no trial. Nothing is earned during a trial.</li>' +
+      '<li class="say"><small>3 First payment clears</small>Your 40% starts here.</li>' +
+      '<li class="say"><small>4 Held up to 30 days</small>A new client’s first payment is held up to 30 days for refunds and chargebacks. Renewals aren’t held.</li>' +
+      '<li class="say"><small>5 You’re paid</small>Every two weeks, once $50 or more is ready and your tax form and Stripe account are set up.</li></ol>' +
+      '<p class="small fine">So a yes on a collection is weeks, not days, before money lands. Plans skip the trial, so they start sooner.</p>';
+  }
+
   /* ---------- the product catalogue ---------- */
   function boxCard(b) {
     var badges = '';
     if (b.easy) badges += '<span class="badge first">Good first pick</span>';
-    if (b.bundle) badges += '<span class="badge bundle">Bundle</span>';
+    
     var earn = b.earn ? '<span class="earn"><b class="amt num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client</span>'
       : '<span class="earn tbd">You earn 40% of their monthly care plan</span>';
-    return '<a class="box" href="#box/' + b.id + '"><div class="badges">' + badges + '</div><span class="name">' + esc(b.name) + '</span><span class="what">' + esc(b.what) + '</span>' + earn + '</a>';
+    return '<a class="box" href="#box/' + b.id + '"><div class="badges">' + badges + '</div><span class="name">' + esc(b.name) + '</span><span class="what">' + esc(b.blurb || b.what) + '</span>' + earn + '</a>';
   }
   function easyFirst(a, b) { var k = function (x) { return x.easy ? 0 : x.id === 'website' ? 2 : 1; }; return k(a) - k(b); }
   VIEWS.products = function () {
     chrome(true, 'products');
     var f = S.filter;
-    if (['all', 'easy', 'pay', 'bundles'].indexOf(f) < 0) f = 'all';
+    if (['all', 'easy', 'pay', 'collections', 'plans'].indexOf(f) < 0) f = 'all';
     var list = PW.boxes.slice(), groups = '', note = '';
-    if (f === 'easy') { list = list.filter(function (b) { return b.easy; }); note = 'The simplest products to explain on a first call.'; }
-    if (f === 'pay') { list = list.filter(function (b) { return b.earn && !b.bundle; }).sort(function (a, b) { return perMonth(b) - perMonth(a); }); note = 'Single products, ranked by what you earn per client each month. Revive pays $198.80 a quarter, about $66 a month. Bundles pay more: see the Bundles filter.'; }
-    if (f === 'bundles') { list = list.filter(function (b) { return b.bundle; }); note = 'Several Station products together for one bigger monthly price. No free trial on bundles.'; }
-    if (f !== 'all') groups = '<p class="filter-note">' + note + '</p><div class="grid">' + list.map(boxCard).join('') + '</div>';
+    var isColl = function (b) { return b.bundle && b.kind === 'collection'; }, isPlan = function (b) { return b.bundle && b.kind === 'plan'; };
+    if (f === 'easy') { list = list.filter(function (b) { return b.easy; }); note = 'The simplest ones to explain on a first call.'; }
+    if (f === 'pay') { list = list.filter(function (b) { return b.earn && !b.bundle; }).sort(function (a, b) { return perMonth(b) - perMonth(a); }); note = 'Single products, ranked by what you earn per client each month. Collections and plans pay more: see those filters. Pitch what fits first. A small sale that stays beats a big one that gets refunded.'; }
+    if (f === 'collections') { list = list.filter(isColl); note = 'Three ways to fix one problem. Each has a ' + TD + '-day free trial and a free Station-built website.'; }
+    if (f === 'plans') { list = list.filter(isPlan); note = 'The whole lineup at three sizes. No free trial; there’s a 30-day money-back guarantee on the first paid month.'; }
+    if (f !== 'all') groups = '<p class="filter-note">' + note + '</p><div class="grid' + (f === 'collections' || f === 'plans' ? ' colls' : '') + '">' + list.map(boxCard).join('') + '</div>';
     else {
-      var singles = list.filter(function (b) { return !b.bundle; }).sort(easyFirst), bundles = list.filter(function (b) { return b.bundle; });
-      groups = '<div class="grid">' + singles.map(boxCard).join('') + '</div>' +
-        (bundles.length ? '<h2 class="sub-h">Bundles: several products for one bigger monthly price</h2><div class="grid">' + bundles.map(boxCard).join('') + '</div>' : '');
+      var singles = list.filter(function (b) { return !b.bundle; }).sort(easyFirst), colls = list.filter(isColl), plans = list.filter(isPlan);
+      groups = '<h2 class="sub-h">Start here: three collections, one problem each</h2><p class="filter-note">Not sure which? Start with Answer. It’s the easiest to explain: it fixes missed calls and messages.</p><div class="grid colls">' + colls.map(boxCard).join('') + '</div>' +
+        '<h2 class="sub-h">Single products</h2><div class="grid">' + singles.map(boxCard).join('') + '</div>' +
+        (plans.length ? '<h2 class="sub-h">The whole lineup: three plans</h2><div class="grid colls">' + plans.map(boxCard).join('') + '</div>' : '');
     }
     var chip = function (k, label) { return '<button class="chip" type="button" data-f="' + k + '" aria-pressed="' + (f === k) + '">' + label + '</button>'; };
     mount('<div class="wrap home"><div class="hello"><div><h1>Products</h1><p>Pick one, learn it in 2 minutes, start calling.</p><p class="small fine">What you earn is shown per paying client. It’s the math, not a forecast or a promise.</p></div></div>' +
-      '<section id="wall" aria-label="Products you can sell"><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest to start') + chip('pay', 'Biggest monthly pay') + chip('bundles', 'Bundles') + '</div></div>' +
+      '<a class="buyers-link" href="#buyers"><b>Not sure what to pitch? See who buys</b></a>' +
+      '<section id="wall" aria-label="Products you can sell"><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest') + chip('pay', 'Top pay') + chip('collections', 'Collections') + chip('plans', 'Plans') + '</div></div>' +
       groups + '</section></div>', 'Products');
     main.querySelectorAll('[data-f]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -456,12 +484,15 @@
     var h = '';
     if (b.call && b.call.objection) h += '<details class="acc" open><summary>The push-back you’ll hear most on ' + esc(b.name) + '</summary><div><p>' + esc(b.call.objection) + '</p></div></details>';
     var mine = linkFor(b).replace(/^https?:\/\//, '');
-    var smaller = { frontdesk: 'Lineback', 'bundle-pro': 'the Core bundle', 'bundle-custom': 'the Pro bundle' }[b.id];
+    var smaller = { frontdesk: 'Lineback', 'bundle-core': 'a collection such as Answer', 'bundle-pro': 'the Core plan', 'bundle-custom': 'the Pro plan' }[b.id];
     var named = b.bundle ? 'the ' + b.name : b.name;
     function fill(t) {
       t = t.replace('station.solutions/[product]/?ref=[yourcode]', mine).replace(/\[link\]/g, mine).replace(/\[yourcode\]/g, code()).replace(/\[your name\]/g, S.name).replace(/on \[day\]/g, 'later this week');
       t = smaller ? t.replace(/\[smaller option\]/g, smaller) : t.replace(/ ?If \[product\] is more than you need, \[smaller option\] may do the job\./, '');
-      if (!b.trial) t = t.replace(/ ?Single products start with a 7-day free trial and there[’']s no contract, so you can try it\./, ' There’s no contract.');
+      if (b.kind === 'plan') t = t.replace(/ ?Single products start with a 14-day free trial and there[’']s no contract, so you can try it\./, ' There’s no contract, and the first paid month has a 30-day money-back guarantee.');
+      else if (b.kind === 'collection') t = t.replace('Single products start with a 14-day free trial', 'It starts with a 14-day free trial').replace(', and single products start with a 14-day free trial', ', and it starts with a 14-day free trial');
+      if (b.kind === 'plan') t = t.replace(', and single products start with a 14-day free trial', ', and the first paid month has a 30-day money-back guarantee');
+      else if (!b.trial) t = t.replace(/ ?Single products start with a 14-day free trial and there[’']s no contract, so you can try it\./, ' There’s no contract.');
       return t.replace(/\[product\]/g, named);
     }
     if (b.brand === 'station') PW.replies.forEach(function (r) {
@@ -473,8 +504,9 @@
   function priceNote(b) {
     if (b.brand !== 'station') return '';
     if (b.id === 'website') return 'There’s no published price, so never quote one. Station quotes after the free demo.';
-    if (b.bundle) return 'Check the live page before you quote. Bundles have no free trial.';
-    return 'Check the live product page before you quote. It starts with a 7-day free trial on its standard plan, with no contract.';
+    if (b.kind === 'plan') return 'Check the live page before you quote. Plans have no free trial; there’s a 30-day money-back guarantee on the first paid month, and a free Station-built website comes with it.';
+    if (b.bundle) return 'Check the live page before you quote. It starts with a ' + TD + '-day free trial, and a free Station-built website comes with it.';
+    return 'Check the live product page before you quote. It starts with a ' + TD + '-day free trial, with no contract.';
   }
 
   /* ---------- one product: a short cheat sheet first, everything else folded below ---------- */
@@ -482,14 +514,17 @@
     var b = BOX[id]; if (!b) { location.replace('#products'); return; }
     chrome(true, 'products');
     var link = linkFor(b);
-    var earnNote = b.bundle ? 'That’s 40% of the bundle price, starting with their first monthly payment once it clears. Bundles have no free trial.'
+    var earnNote = b.kind === 'plan' ? 'That’s 40% of the plan price, starting with their first monthly payment once it clears. Plans have no free trial, so there’s nothing to wait for.'
+      : b.bundle ? 'That’s 40% of the collection price, starting after their ' + TD + '-day free trial, once the payment clears. The free Station-built website earns nothing; the monthly price does.'
       : b.id === 'website' ? 'Station quotes each client’s monthly hosting & care. You earn 40% of whatever they pay for it, every month. The build fee earns nothing.'
-      : b.id === 'revive' ? 'That’s 40% of the $497 each client pays per quarter, starting after their 7-day free trial, once the payment clears.'
-      : b.id === 'echo' ? 'That’s 40% of the $247 each client pays per month, starting after their 7-day free trial. The one-time $297 setup fee earns nothing.'
-      : 'That’s 40% of what each client pays, starting after their 7-day free trial, once the payment clears.';
+      : b.id === 'revive' ? 'That’s 40% of the $197 each client pays per month, starting after their ' + TD + '-day free trial, once the payment clears.'
+      : b.id === 'echo' ? 'That’s 40% of the $247 each client pays per month, starting after their ' + TD + '-day free trial. There’s no setup fee.'
+      : 'That’s 40% of what each client pays, starting after their ' + TD + '-day free trial, once the payment clears.';
+    var buys = (PW.buyers || []).filter(function (y) { return y.fit === b.id; });
+    function whoBuysRow(list) { return list.length ? '<div class="cheat-row"><span class="cheat-lbl">Who buys it</span><p class="who-buys">' + list.map(function (y) { return '<a href="#buyers/' + y.id + '">' + esc(y.name) + ': ' + esc(y.line) + '</a>'; }).join('') + '</p></div>' : ''; }
     function row(label, body, say) { return '<div class="cheat-row' + (say ? ' is-say' : '') + '"><span class="cheat-lbl">' + label + '</span><p>' + esc(body) + '</p></div>'; }
     var cheat = '<section class="cheat" aria-labelledby="cheatH"><h2 id="cheatH">' + esc(b.name) + ' cheat sheet</h2>' +
-      row('Who it’s for', b.who) + row('Open with', openerOf(b), 1) + row('If they ask the price', priceLine(b), 1) + row('Close', closeLineOf(b), 1) +
+      row('Who it’s for', b.who) + whoBuysRow(buys) + row('Open with', openerOf(b), 1) + row('If they ask the price', priceLine(b), 1) + row('Close', closeLineOf(b), 1) +
       (b.call && b.call.objection ? row('The push-back you’ll hear', b.call.objection) : '') +
       '<div class="cheat-row"><span class="cheat-lbl">Your link</span><div class="copyrow"><code>' + esc(link) + '</code><button class="btn" type="button" data-copy-link>Copy</button></div></div>' +
       '<p class="small fine">Suggested words. Say it your way, and keep the facts and the rules.</p></section>';
@@ -506,8 +541,8 @@
       '<div class="prod-top"><h1>' + esc(b.name) + '</h1><p class="what">' + esc(b.what) + '</p>' +
       '<p class="earn-line">' + (b.earn ? 'You earn <b class="num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client' : 'You earn 40% of their monthly care plan') + '</p></div>' + cheat +
       '<div class="earn-card"><span class="lbl">What you earn per paying client</span>' +
-      (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they keep paying</div>' : '<div class="big">40% of their monthly care</div>') +
-      '<p>' + earnNote + '</p></div>' +
+      (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they keep paying &middot; ' + money(b.earn * 12) + ' over 12 months of payments</div>' : '<div class="big">40% of their monthly care</div>') +
+      '<p>' + earnNote + ' Nothing is earned during a trial, and it’s arithmetic, not a forecast.</p></div>' +
       '<h2 class="more-h">Everything else</h2><div class="more-list">' + more + '</div></div>' +
       '<div class="cta-bar"><a class="btn btn-dark btn-big" href="#calls/' + b.id + '">Start calling for ' + esc(b.name) + '</a></div>', b.name);
     var cl = main.querySelector('[data-copy-link]'); cl.addEventListener('click', function () { copy(link, cl); });
@@ -684,7 +719,7 @@
     var body = 'Hi, thanks for talking with me. ' + (web ? 'Here are the questions for your custom website I mentioned: ' : 'Here’s the ' + named + ' page I mentioned. It shows the price and how it works: ') + link +
       '\n\nQuestions? Just reply to this email.\n\n' + S.name + ', independent partner with Station (Station Automations Group LLC, Houston, Texas)\nIf you’d rather not get emails from me, reply and say so, and I won’t send more.';
     var subject = web ? 'Your custom website questions' : 'The ' + named + ' page I mentioned';
-    var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> ' + (bx.earn ? '<b class="plus">+' + money(bx.earn) + ' a ' + period(bx) + '</b> to you once they start paying' + (bx.trial ? ' (after their 7-day trial)' : '') + '. ' : '') + 'Send them your link so the sale is credited to you. Station checks it and sets them up.'
+    var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> ' + (bx.earn ? '<b class="plus">+' + money(bx.earn) + ' a ' + period(bx) + '</b> to you once they start paying' + (bx.trial ? ' (after their ' + TD + '-day trial)' : '') + '. ' : '') + 'Send them your link so the sale is credited to you. Station checks it and sets them up.'
       : '<strong>Interested in ' + esc(bx.name) + '.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
     return '<div class="won-next' + (s.o === 'won' ? '' : ' warm') + '"><p>' + head + '</p>' +
       '<label class="field slim" for="em-' + l.id + '">Their email <span class="ask">Ask: “What’s the best email to send it to?”</span><input class="text" type="email" id="em-' + l.id + '" data-email autocomplete="off" value="' + esc(s.email || '') + '" placeholder="owner@business.com"></label>' +
@@ -970,7 +1005,7 @@
       return '<button type="button" class="pick' + (x.id === cur.id ? ' on' : '') + '" data-pick="' + x.id + '"><span class="pick-name">' + esc(x.name) + ' ' + tags + '</span><span class="pick-what">' + esc(x.what) + '</span></button>';
     }
     var singles = list.filter(function (x) { return !x.bundle; }).sort(function (a, b) { return (a.id === l.fits ? -1 : 0) - (b.id === l.fits ? -1 : 0) || easyFirst(a, b); });
-    openSheet('What to pitch ' + l.name, '<p class="sheet-sub">' + esc(l.gap) + '</p><div class="picks">' + singles.map(item).join('') + '</div><h3 class="sheet-h">Bundles</h3><div class="picks">' + list.filter(function (x) { return x.bundle; }).map(item).join('') + '</div>');
+    openSheet('What to pitch ' + l.name, '<p class="sheet-sub">' + esc(l.gap) + '</p><p class="sheet-sub"><a href="#buyers">Not sure? See who buys and what works on each.</a></p><div class="picks">' + singles.map(item).join('') + '</div><h3 class="sheet-h">Collections and plans</h3><div class="picks">' + list.filter(function (x) { return x.bundle; }).map(item).join('') + '</div>');
     document.getElementById('sheetBody').addEventListener('click', function (e) {
       var p = e.target.closest('[data-pick]'); if (!p) return;
       S.pitch[l.id] = p.getAttribute('data-pick');
@@ -1097,11 +1132,13 @@
       '<section class="example" aria-labelledby="exH"><h2 id="exH">Example: this page with two paying clients</h2><p class="small">Sample figures to show how it works. Not your money, and not a forecast.</p>' +
       '<div class="ex-sum"><span>Earned <b class="num">' + money(ex.ready) + '</b></span><span>On hold <b class="num">' + money(ex.hold) + '</b></span></div>' +
       '<div class="table-wrap"><table><thead><tr><th scope="col">Client</th><th scope="col">On</th><th scope="col" class="r">They pay</th><th scope="col" class="r">You earn</th><th scope="col">Where it stands</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>' +
+      '<h2 class="gap-h">From a yes to your first payout</h2>' + yesToPaid() +
+      '<h2 class="gap-h">What one paying client is worth</h2>' + worthTable() +
       '<h2 class="gap-h">How you get paid</h2><div class="howpay">' +
       '<div><b>40% of every monthly payment</b>For as long as the client keeps paying and your agreement is in effect.</div>' +
-      '<div><b>After the free trial</b>Every single product starts with a 7-day trial. You earn from their first real payment. Bundles and custom websites have no trial.</div>' +
+      '<div><b>After the free trial</b>Every single product and every collection starts with a ' + TD + '-day trial. You earn from their first real payment. Core, Pro, Max and custom websites have no trial.</div>' +
       '<div><b>Every two weeks</b>Paid to your Stripe account once $50 or more is ready. Smaller amounts roll forward and never expire.</div>' +
-      '<div><b>Monthly fees only</b>Setup fees and website build fees earn nothing; the monthly plan behind them does.</div>' +
+      '<div><b>Monthly fees only</b>Website build fees and the one-time $500 to keep a built site earn nothing, and neither does a free website. The monthly price behind them does.</div>' +
       '<div><b>Refunds and chargebacks</b>If a client’s payment is refunded or reversed, that commission comes off your balance or next payout. If there’s no balance left, Station may invoice you for it.</div>' +
       '<div><b>If a client cancels</b>Your commission on them stops when they stop paying. What you’ve already earned stays yours.</div>' +
       '<div><b>If the agreement ends</b>Either side can end it any time by email. You’re paid on payments that cleared up to that day, and nothing after.</div>' +
@@ -1122,11 +1159,43 @@
     document.head.appendChild(sc);
   };
 
+
+  /* ---------- who buys: ten real buyers and the habits that win them (words live in buyers.py) ---------- */
+  var BUYER = {}; (PW.buyers || []).forEach(function (y) { BUYER[y.id] = y; });
+  function buyerRow(label, body, say) { return '<div class="cheat-row' + (say ? ' is-say' : '') + '"><span class="cheat-lbl">' + label + '</span><p>' + esc(body) + '</p></div>'; }
+  VIEWS.buyers = function (id) {
+    chrome(true, 'products');
+    var y = BUYER[id];
+    if (id && !y) { location.replace('#buyers'); return; }
+    if (y) {
+      var fit = BOX[y.fit];
+      mount('<div class="wrap prod"><a class="back" href="#buyers">&larr; All buyers</a>' +
+        '<div class="prod-top"><h1>' + esc(y.name) + ', ' + y.age + '</h1><p class="what">' + esc(y.line) + '</p></div>' +
+        '<section class="cheat" aria-labelledby="cheatH"><h2 id="cheatH">How to talk to ' + esc(y.name) + '</h2>' +
+        buyerRow('Probably feeling (for you, not to say out loud)', y.feels) + buyerRow('Ask first', y.ask, 1) + buyerRow('Then say', y.say, 1) +
+        buyerRow('The push-back: ' + y.worry, y.reply, 1) + buyerRow('Don’t', y.avoid) +
+        '<div class="cheat-row"><span class="cheat-lbl">Best fit</span><p><a href="#box/' + y.fit + '"><b>' + esc(y.fitNote) + '</b></a></p></div>' +
+        (fit && fit.earn ? '<div class="cheat-row"><span class="cheat-lbl">What you earn</span><p>' + esc(fit.short || fit.name) + ' pays you ' + money(fit.earn) + ' a month per paying client. You earn 40% of whatever they pay Station.</p></div>' : '') +
+        '<div class="cheat-row"><span class="cheat-lbl">Sounds like these businesses</span><p>' + esc(y.trades) + '</p></div>' +
+        '<p class="small fine">Suggested words. Say it your way, and keep the facts and the rules.</p></section></div>' +
+        '<div class="cta-bar"><a class="btn btn-dark btn-big" href="#box/' + y.fit + '">See the ' + esc(fit ? fit.short || fit.name : 'product') + ' cheat sheet</a></div>', y.name);
+      return;
+    }
+    mount('<div class="wrap prod"><a class="back" href="#products">&larr; All products</a>' +
+      '<div class="prod-top"><h1>Who buys</h1><p class="what">Ten kinds of owner, what each one is probably feeling when you call, and words that work. People buy a fix for a problem they already feel, not a product.</p></div>' +
+      '<h2 class="sub-h">Ten buyers</h2><div class="grid">' + (PW.buyers || []).map(function (b) {
+        return '<a class="box" href="#buyers/' + b.id + '"><span class="name">' + esc(b.name) + ', ' + b.age + '</span><span class="what">' + esc(b.line) + '</span><span class="fitline"><b>Best fit:</b> ' + esc(b.fitNote) + '</span><span class="trades">Like: ' + esc(b.trades) + '</span></a>';
+      }).join('') + '</div>' +
+      '<h2 class="sub-h">' + (PW.playbook || []).length + ' habits that win the call</h2><div class="more-list">' + (PW.playbook || []).map(function (h, i) {
+        return '<details class="acc"><summary>' + (i + 1) + '. ' + esc(h.t) + '</summary><div><p>' + esc(h.why) + '</p><div class="say"><small>Say</small>' + esc(h.say.replace(/\[your name\]/g, S.name)) + '</div><div class="dont"><b>Don’t</b> ' + esc(h.never) + '</div></div></details>';
+      }).join('') + '</div></div>', 'Who buys');
+  };
+
   /* ---------- help ---------- */
   VIEWS.help = function () {
     chrome(true, 'help');
     mount('<div class="wrap help"><h1>Help</h1>' +
-      '<h2>Stuck on something?</h2><p>Email Station at <a href="mailto:main@station.solutions">main@station.solutions</a>. People answer, usually the same day. Station doesn’t have a phone line, so never give out a number for Station.</p>' +
+      '<h2>Stuck on something?</h2><p>Email Station at <a href="mailto:main@station.solutions">main@station.solutions</a>. Station replies by email. Station doesn’t have a phone line, so never give out a number for Station.</p>' +
       '<h2>Who Station is</h2><p>Station Automations Group LLC, based in Houston, Texas. Every product and price is published at station.solutions. You’re an independent partner: you choose when and how you work, there’s no quota, and you earn a flat 40% with no tiers or bonuses. The Station Partner Agreement wins over anything in this app.</p>' +
       '<h2>Easier to read</h2><p>Make all the text bigger on this device.</p><button class="btn" type="button" data-size aria-pressed="' + !!S.big + '">Bigger text on or off</button>' +
       '<h2>The rules, in one breath</h2><ul class="ticks">' +
@@ -1142,6 +1211,7 @@
       '<div class="help-btns"><button class="btn" type="button" id="tourBtn">Show me the tour again</button><button class="btn" type="button" id="glossBtn">What the buttons mean</button>' +
       (S.skipPrep ? '<button class="btn" type="button" id="prepBtn">Show the “Ready to call” card again</button>' : '') + '</div>' +
       '<h2>Your 30-second pitch for Station</h2><div class="say">' + esc(PW.pitch) + '</div>' +
+      '<h2>How people decide</h2><p>Ten kinds of buyer and the habits that win the call.</p><a class="btn" href="#buyers">See who buys</a>' +
       '<h2>Take the check again</h2><p>Six questions, one minute.</p><a class="btn" href="#check">Retake the check</a>' +
       '<h2>Start over</h2><p>Clears your name and the calls you logged in this preview, on this device only.</p><button class="btn" type="button" id="reset">Reset the preview</button></div>', 'Help');
     document.getElementById('glossBtn').addEventListener('click', openGlossary);
