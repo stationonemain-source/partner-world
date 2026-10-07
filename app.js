@@ -794,24 +794,26 @@
     if (/wrong email or password/.test(e)) return 'That email and password don’t match. Check the spelling. First time here? Use “Activate your invite” below.';
     return sentence(err, 'That didn’t work. Check your email and password.');
   }
+  /* engine v4.61 (2026-10-07): a partner Station hasn't dealt to yet can ask for a FIRST batch; Station still sends by hand */
+  function askLabel() { return dealtTotal() ? 'Ask for my next batch' : 'Ask for my first businesses'; }
   function askForMore(btn) {
     hideUndo(); flushNotes();
     if (S.outbox.length) { // the engine counts what it has: the last results must land first
       btn.disabled = true; btn.textContent = 'Sending your last results…'; pump();
       var t0 = Date.now(), iv = setInterval(function () {
-        if (!S.outbox.length) { clearInterval(iv); btn.disabled = false; btn.textContent = 'Ask for my next batch'; askForMore(btn); }
-        else if (Date.now() - t0 > 15000) { clearInterval(iv); btn.disabled = false; btn.textContent = 'Ask for my next batch'; toast('Some results haven’t reached Station yet. Try again in a moment.', 5000); }
+        if (!S.outbox.length) { clearInterval(iv); btn.disabled = false; btn.textContent = askLabel(); askForMore(btn); }
+        else if (Date.now() - t0 > 15000) { clearInterval(iv); btn.disabled = false; btn.textContent = askLabel(); toast('Some results haven’t reached Station yet. Try again in a moment.', 5000); }
       }, 300);
       return;
     }
     btn.disabled = true; btn.textContent = 'Asking Station…';
     api('cc_more', {}).then(function (d) {
       if (d.signedOut) return;
-      if (d.ok === false) { btn.disabled = false; btn.textContent = 'Ask for my next batch'; toast(sentence(d.error, 'Station couldn’t take that just now.'), 6000); return; }
+      if (d.ok === false) { btn.disabled = false; btn.textContent = askLabel(); toast(sentence(d.error, 'Station couldn’t take that just now.'), 6000); return; }
       S.asked = true; S.askedAt = Date.parse(d.more_at) || Date.now(); if (LL && LL.cc) LL.cc.more_at = d.more_at; save();
       updateEnd(); var e2 = document.querySelector('#endCard .lead-card'); if (e2 && !reduced) e2.classList.add('pop');
-      toast('Asked. Station will send your next batch.'); if (!document.getElementById('endCard')) route();
-    }, function () { btn.disabled = false; btn.textContent = 'Ask for my next batch'; toast('No connection to Station. Try again in a moment.', 5000); });
+      toast(dealtTotal() ? 'Asked. Station will send your next batch.' : 'Asked. Station will send your first businesses.'); if (!document.getElementById('endCard')) route();
+    }, function () { btn.disabled = false; btn.textContent = askLabel(); toast('No connection to Station. Try again in a moment.', 5000); });
   }
 
   /* ---------- router ---------- */
@@ -957,7 +959,9 @@
     if (!DEMO && !LEADS.length && !dealtTotal()) {
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your list</span><h2 id="nextH">Station hasn’t sent you businesses yet.</h2>' +
         '<p class="pitch-line">Station sends businesses in batches; they show up here and in Calls, with the words to say on every card. Until then, learn one product: it takes 2 minutes. Found a business yourself? You can add it below. Questions: main@station.solutions.</p>' +
-        '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#box/bundle-answer">Learn the Answer collection</a></div></section>';
+        '<div class="next-go">' + (S.asked ? '' : '<button class="btn btn-dark btn-big" type="button" id="askHome">Ask for my first businesses</button>') +
+        '<a class="btn' + (S.asked ? ' btn-dark btn-big' : '') + '" id="callGo" href="#box/bundle-answer">Learn the Answer collection</a></div>' +
+        (S.asked ? '<p class="asked-line">✓ Asked for your first businesses ' + askedText() + '. Station reviews every request, then they show up here.</p>' : '') + '</section>';
     } else if (next) {
       var nb = pitchFor(next), due = rank(next) === 0;
       var ns0 = S.log[next.id];
@@ -1275,15 +1279,17 @@
     var h, p, btn = '', upTo = batchWords();
     if (!DEMO && !LEADS.length && !dealtTotal()) {
       h = 'Station hasn’t sent you businesses yet.';
-      p = 'When it does, they show up here, one per screen, with the words to say on each.';
+      p = 'When it does, they show up here, one per screen, with the words to say on each.' + (S.asked ? ' <span class="asked-line">✓ Asked ' + askedText() + '. Station reviews every request.</span>' : ' Ask for your first batch, ' + upTo + '.');
+      if (!S.asked) btn = '<button class="btn btn-dark btn-big" type="button" id="askMore">Ask for my first businesses</button>';
     } else if (c.stFresh) {
       h = c.stFresh + (c.stFresh === 1 ? ' business from Station is' : ' businesses from Station are') + ' still new.';
       p = 'When every business Station sent you has an outcome, you can ask for your next batch, ' + upTo + '.' + (due ? ' You also have ' + due + '.' : '') + (c.ownFresh ? ' (Your own ' + c.ownFresh + ' new don’t count toward that.)' : '');
       btn = '<button class="btn btn-dark btn-big" type="button" id="toFirst">Go to the first one</button>';
     } else if (!DEMO && !dealtTotal()) {
       h = c.fresh ? c.fresh + ' of your own still new.' : 'Every business has an outcome.';
-      p = 'Station hasn’t sent you businesses yet. When it does, they show up here too.' + more;
-      btn = c.fresh || todayN ? '<button class="btn btn-dark btn-big" type="button" id="toFirst">Go to the ones still open</button>' : '';
+      p = 'Station hasn’t sent you businesses yet. When it does, they show up here too.' + (S.asked ? ' <span class="asked-line">✓ Asked ' + askedText() + '.</span>' : '') + more;
+      btn = (c.fresh || todayN ? '<button class="btn btn-dark btn-big" type="button" id="toFirst">Go to the ones still open</button>' : '') +
+        (S.asked ? '' : '<button class="btn' + (c.fresh || todayN ? '' : ' btn-dark btn-big') + '" type="button" id="askMore">Ask for my first businesses</button>');
     } else if (!S.asked) {
       h = 'Every business from Station has an outcome.';
       p = 'Ask Station for your next batch, ' + upTo + '. Station reviews each request.' + more;
@@ -2388,7 +2394,7 @@
       '<h2>How people decide</h2><p>Ten kinds of buyer and the habits that win the call.</p><a class="btn" href="#buyers">See who buys</a>' +
       '<h2>Take the check again</h2><p>Six questions, one minute.</p><a class="btn" href="#check">Retake the check</a>' +
       (DEMO ? '<h2>Start over</h2><p>Clears your name and the calls you logged in this preview, on this device only.</p><button class="btn" type="button" id="reset">Reset the preview</button>'
-        : '<h2>Your account</h2><p>Signed in as <b>' + esc((ME && ME.name) || S.name) + '</b>, partner code <b>' + esc(S.code) + '</b>. Same account as the Station partner portal.</p><button class="btn" type="button" id="signOut">Sign out</button>') + '</div>', 'Help');
+        : '<h2>Your account</h2><p>Signed in as <b>' + esc((ME && ME.name) || S.name) + '</b>, partner code <b>' + esc(S.code) + '</b>. Partner World is where Station partners work now; the old partner portal is retired.</p><button class="btn" type="button" id="signOut">Sign out</button>') + '</div>', 'Help');
     document.getElementById('glossBtn').addEventListener('click', openGlossary);
     document.getElementById('tourBtn').addEventListener('click', function () { S.toured = false; save(); location.hash = '#calls'; });
     var pb = document.getElementById('prepBtn'); if (pb) pb.addEventListener('click', function () { S.skipPrep = false; save(); pb.remove(); toast('You’ll see the card before each call.'); });
