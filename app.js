@@ -298,9 +298,10 @@
     return p;
   }
   /* a call that never answers would block the one lane, so every call has a time limit; an HTTP error carries its status */
+  var PUBLIC_ACTIONS = { login: 1, claim: 1, partner_request: 1 }; // the only calls made without a sign-in (never carry a token)
   function send(action, body) {
     var payload = Object.assign({ action: action }, body || {});
-    if (action !== 'login' && action !== 'claim') { if (!TOKEN) return Promise.resolve({ ok: false, signedOut: true }); payload.token = TOKEN; } // signed out while it waited in the lane: keep it
+    if (!PUBLIC_ACTIONS[action]) { if (!TOKEN) return Promise.resolve({ ok: false, signedOut: true }); payload.token = TOKEN; } // signed out while it waited in the lane: keep it
     var ctl = window.AbortController ? new AbortController() : null, lim = action === 'taxform_submit' ? 90000 : /^(cc_call|cc_more|note_add|note_del|payout_link)$/.test(action) ? 30000 : 20000;
     var tm = ctl ? setTimeout(function () { ctl.abort(); }, lim) : 0;
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), cache: 'no-store', signal: ctl ? ctl.signal : undefined })
@@ -588,7 +589,73 @@
     document.getElementById('bootRetry').addEventListener('click', startLive);
     document.getElementById('bootOut').addEventListener('click', function () { var done = function () { signedOut('You’re signed out.', true); }; api('logout').then(done, done); });
   }
+  /* ---------- request an account (engine v4.53 partner_request): anyone can ASK; nobody gets in until Station approves ----------
+     The engine answers the same "received" for a new email, an email that already has an account, and a bot, so this screen
+     never says which. Nothing is emailed to the person until Station approves them. */
+  var REQUESTED = '';
+  function renderRequest() {
+    chrome(false);
+    if (REQUESTED) {
+      mount('<section class="enter"><div class="enter-card"><div class="enter-top">' + MARK + '</div><h1>Request sent</h1>' +
+        '<p class="intro">Thanks, ' + esc(REQUESTED) + '. Station looks at every request by hand. When you’re approved, you’ll get an email, and then you sign in here with the email and password you just chose.</p>' +
+        '<div class="explain good">Already have a partner account? Just sign in; you don’t need to ask again.</div>' +
+        '<p class="small">Questions: <a href="mailto:main@station.solutions">main@station.solutions</a></p>' +
+        '<button class="btn btn-dark btn-big btn-block" type="button" id="reqDone">Back to sign in</button></div></section>', 'Request sent');
+      document.getElementById('reqDone').addEventListener('click', function () { REQUESTED = ''; signMode = 'login'; renderSignIn(); });
+      return;
+    }
+    var states = Object.keys(TZ).sort().map(function (s) { return '<option>' + s + '</option>'; }).join('');
+    mount('<section class="enter"><div class="enter-card">' +
+      '<div class="enter-top">' + MARK + '<button class="size-inline" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">Aa</span> Bigger text</button></div>' +
+      '<h1>Request a partner account</h1>' +
+      '<p class="intro">Partners call local businesses Station gives them, and earn 40% of the monthly fees each new client pays Station, for as long as they keep paying and the partner agreement is in effect. No quota. Calls on their own pay nothing.</p>' +
+      '<ol class="steps3"><li><b>1</b><span><strong>Ask here.</strong> It takes a minute.</span></li><li><b>2</b><span><strong>Station reviews it</strong> and emails you when you’re approved.</span></li><li><b>3</b><span><strong>Sign in</strong> with the email and password you choose now.</span></li></ol>' +
+      '<form id="reqForm" novalidate>' +
+      '<label class="field" for="r-name">Your full name<input class="text" id="r-name" autocomplete="name" maxlength="80"></label>' +
+      '<label class="field" for="r-email">Email<input class="text" id="r-email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="160" value="' + esc(lastEmail) + '"></label>' +
+      '<label class="field" for="r-phone">Phone<span class="hint">So Station can reach you about your request.</span><input class="text" id="r-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="24"></label>' +
+      '<label class="field" for="r-state">State you live in<select class="text" id="r-state"><option value="">Pick a state</option>' + states + '</select></label>' +
+      '<label class="field" for="r-about">Anything Station should know? (optional)<span class="hint">Sales experience, businesses you know, how much time you have.</span><input class="text" id="r-about" maxlength="300"></label>' +
+      '<label class="field" for="r-pw">Choose a password<span class="hint">10 or more characters. A short sentence is easiest to remember.</span><input class="text" id="r-pw" type="password" autocomplete="new-password"></label>' +
+      '<div class="hp" aria-hidden="true"><label for="r-web">Leave this empty</label><input id="r-web" tabindex="-1" autocomplete="off"></div>' +
+      '<label class="check"><input type="checkbox" id="r-a1"> I’m 18 or older, and I understand I’d be an independent partner, not a Station employee.</label>' +
+      '<label class="check"><input type="checkbox" id="r-a2"> I’ll follow Station’s calling rules (9 am to 8 pm their time, Monday to Saturday; stop when asked; never record a call), and I’ll sign the Station Partner Agreement before I’m paid.</label>' +
+      '<p class="field-err" id="r-err" role="alert"></p>' +
+      '<button class="btn btn-dark btn-big btn-block" type="submit" id="r-go">Send my request</button></form>' +
+      '<button class="btn btn-big btn-block swap-btn" type="button" id="reqBack">I already have an account: sign in</button>' +
+      '</div></section>', 'Request an account');
+    document.getElementById('reqBack').addEventListener('click', function () { signMode = 'login'; renderSignIn(); });
+    document.getElementById('r-name').focus({ preventScroll: true });
+    var form = document.getElementById('reqForm'), go = document.getElementById('r-go'), err = document.getElementById('r-err');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      function v(id) { return document.getElementById(id).value.trim(); }
+      function bad(id, msg) {
+        err.textContent = msg; var el = id && document.getElementById(id);
+        if (el) { var lab = el.closest('label'); if (lab) lab.insertAdjacentElement('afterend', err); el.setAttribute('aria-invalid', 'true'); el.focus(); }
+      }
+      form.querySelectorAll('[aria-invalid]').forEach(function (x) { x.removeAttribute('aria-invalid'); });
+      var name = v('r-name'), email = v('r-email').toLowerCase(), phone = v('r-phone'), digits = phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, ''), pw = document.getElementById('r-pw').value;
+      lastEmail = email;
+      if (!name) { bad('r-name', 'Please add your name.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { bad('r-email', 'Please add an email you check. Station writes to you there.'); return; }
+      if (digits.length !== 10) { bad('r-phone', 'Please add your 10-digit phone number.'); return; }
+      if (!v('r-state')) { bad('r-state', 'Please pick the state you live in.'); return; }
+      if (pw.length < 10) { bad('r-pw', 'Your password needs 10 or more characters.'); return; }
+      if (!document.getElementById('r-a1').checked) { bad('r-a1', 'Please tick this to send your request.'); return; }
+      if (!document.getElementById('r-a2').checked) { bad('r-a2', 'Please tick this to send your request.'); return; }
+      go.disabled = true; go.textContent = 'Sending…'; err.textContent = '';
+      api('partner_request', { name: name, email: email, phone: '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6), state: v('r-state'),
+        about: v('r-about'), password: pw, agree: true, website: v('r-web') }).then(function (d) {
+        go.disabled = false; go.textContent = 'Send my request';
+        if (d.ok) { REQUESTED = name.split(/\s+/)[0]; renderRequest(); return; }
+        bad(null, sentence(d.error, 'Station couldn’t take your request just now. Try again in a minute.'));
+      }, function () { go.disabled = false; go.textContent = 'Send my request'; bad(null, 'No connection to Station. Your details are still here; try again.'); });
+    });
+  }
+
   function renderSignIn() {
+    if (signMode === 'request') { renderRequest(); return; }
     chrome(false);
     var claim = signMode === 'claim';
     mount('<section class="enter"><div class="enter-card">' +
@@ -608,9 +675,11 @@
       '<button class="btn btn-big btn-block swap-btn" type="button" id="swapMode">' + (claim ? 'Already set your password? Sign in' : 'First time here? Activate your invite') + '</button>' +
       '<p class="small center">Forgot your password? Email <a href="mailto:main@station.solutions">main@station.solutions</a>. Once Station resets it, use “First time here?” to set a new one.</p>' +
       '<p class="small center">You stay signed in on this device for 30 days, unless you tick “shared computer”. Sign out any time in Help.</p>' +
+      (claim ? '' : '<button class="btn btn-big btn-block swap-btn" type="button" id="toRequest">New to Station? Request an account</button>') +
       '<p class="small center"><a href="?preview">Just looking? Open the preview with sample businesses</a></p>' +
       '<p class="trust">Used the old Station partner portal? Same email and password. No quota: a flat 40% of monthly fees. Station sends you the Station Partner Agreement to sign; ask main@station.solutions for a copy any time. Station is Station Automations Group LLC, in Houston, Texas. The Station Partner Agreement wins over anything in this app.</p>' +
       '</div></section>', claim ? 'Set your password' : 'Sign in');
+    var tr = document.getElementById('toRequest'); if (tr) tr.addEventListener('click', function () { signMode = 'request'; SIGNIN_MSG = ''; SIGNIN_GOOD = false; renderSignIn(); });
     document.getElementById('swapMode').addEventListener('click', function () { signMode = claim ? 'login' : 'claim'; SIGNIN_MSG = ''; SIGNIN_GOOD = false; renderSignIn(); });
     var first = document.getElementById(claim ? 's-code' : 's-email'); if (first) first.focus({ preventScroll: true });
     var form = document.getElementById('signin'), go = document.getElementById('s-go'), ef = document.getElementById('e-form');

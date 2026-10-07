@@ -767,3 +767,7 @@ ul.biz li .small{text-align:right}
 /* round 2 (10-07) */
 .text[aria-invalid="true"]{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
 body:not(.has-tabs) .toast{top:auto!important;bottom:24px!important}
+/* request an account (10-07) */
+.hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.enter-card .check{align-items:flex-start}
+.enter-card .check input{flex:none;margin-top:2px}
