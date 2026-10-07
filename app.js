@@ -2374,7 +2374,11 @@
   VIEWS.help = function () {
     chrome(true, 'help');
     mount('<div class="wrap help"><h1>Help</h1>' +
-      '<h2>Stuck on something?</h2><p>Email Station at <a href="mailto:main@station.solutions">main@station.solutions</a>. Station works by email and replies by email. Station doesn’t have a phone line, so never give out a number for Station.</p>' +
+      (DEMO ? '<h2>Stuck on something?</h2><p>Email Station at <a href="mailto:main@station.solutions">main@station.solutions</a>. Station works by email and replies by email. Station doesn’t have a phone line, so never give out a number for Station.</p>'
+        : '<h2 id="msgH">Message Station</h2><p>Write to the Station team here. Your message reaches the team by email, and replies show up here. You can also email <a href="mailto:main@station.solutions">main@station.solutions</a>. Station doesn’t have a phone line, so never give out a number for Station.</p>' +
+          '<div class="msg-thread" id="msgThread" aria-live="polite"><p class="small">Loading your messages…</p></div>' +
+          '<label class="sr" for="msgText">Your message to Station</label><textarea class="text msg-text" id="msgText" rows="3" maxlength="2000" placeholder="A question about a business, a client or your money"></textarea>' +
+          '<div class="msg-go"><button class="btn btn-dark" type="button" id="msgSend">Send to Station</button><span class="small" id="msgNote" role="status"></span></div>') +
       '<h2>Who Station is</h2><p>Station Automations Group LLC, based in Houston, Texas. Every product and price is published at station.solutions. You’re an independent partner: you choose when and how you work, there’s no quota, and you earn a flat 40% with no tiers or bonuses. The Station Partner Agreement wins over anything in this app.</p>' +
       '<h2>Easier to read</h2><p>Make all the text bigger on this device.</p><button class="btn" type="button" data-size aria-pressed="' + !!S.big + '">Bigger text on or off</button>' +
       '<h2>The rules, in one breath</h2><ul class="ticks">' +
@@ -2395,6 +2399,7 @@
       '<h2>Take the check again</h2><p>Six questions, one minute.</p><a class="btn" href="#check">Retake the check</a>' +
       (DEMO ? '<h2>Start over</h2><p>Clears your name and the calls you logged in this preview, on this device only.</p><button class="btn" type="button" id="reset">Reset the preview</button>'
         : '<h2>Your account</h2><p>Signed in as <b>' + esc((ME && ME.name) || S.name) + '</b>, partner code <b>' + esc(S.code) + '</b>. Partner World is where Station partners work now; the old partner portal is retired.</p><button class="btn" type="button" id="signOut">Sign out</button>') + '</div>', 'Help');
+    if (!DEMO) wireMessages();
     document.getElementById('glossBtn').addEventListener('click', openGlossary);
     document.getElementById('tourBtn').addEventListener('click', function () { S.toured = false; save(); location.hash = '#calls'; });
     var pb = document.getElementById('prepBtn'); if (pb) pb.addEventListener('click', function () { S.skipPrep = false; save(); pb.remove(); toast('You’ll see the card before each call.'); });
@@ -2411,6 +2416,37 @@
       clearTimeout(armed); try { localStorage.removeItem(KEY); } catch (e) {} S = fresh(); applySize(); if (location.hash) location.hash = ''; else route();
     });
   };
+
+  /* ---------- Message Station (moved from the retired partner portal, 2026-10-07): the thread lives in Station's CRM ---------- */
+  var MSG_WORD = { chat: 'here', email: 'email', sms: 'text' };
+  function drawMsgs(list) {
+    var box = document.getElementById('msgThread'); if (!box) return;
+    if (!list.length) { box.innerHTML = '<p class="small">No messages yet. Write to the Station team below.</p>'; return; }
+    box.innerHTML = list.map(function (m) {
+      var me = m.direction === 'in', t = Date.parse(m.at || ''), when = t ? dayLabel(ymd(new Date(t))) + ' at ' + clock(t) : '';
+      return '<div class="mm ' + (me ? 'me' : 'st') + '"><p>' + esc(m.body || '') + '</p><span class="mt">' + (me ? 'You' : 'Station') + (MSG_WORD[m.channel] ? ' · ' + MSG_WORD[m.channel] : '') + (when ? ' · ' + esc(when) : '') + '</span></div>';
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+  function wireMessages() {
+    var list = [], box = document.getElementById('msgThread'), ta = document.getElementById('msgText'), btn = document.getElementById('msgSend'), note = document.getElementById('msgNote');
+    if (!box || !ta || !btn) return;
+    api('msg_thread').then(function (d) {
+      if (d.signedOut) return;
+      if (d.ok === false) { box.innerHTML = '<p class="small">' + esc(sentence(d.error, 'Your messages couldn’t load just now.')) + '</p>'; return; }
+      list = (d.messages || []).slice(); drawMsgs(list);
+    }, function () { box.innerHTML = '<p class="small">No connection to Station. Your messages will load when you’re back online.</p>'; });
+    btn.addEventListener('click', function () {
+      var text = ta.value.trim(); if (!text) { note.textContent = 'Type a message first.'; ta.focus(); return; }
+      btn.disabled = true; note.textContent = 'Sending…';
+      api('msg_send', { text: text }).then(function (d) {
+        btn.disabled = false; if (d.signedOut) return;
+        if (d.ok === false) { note.textContent = sentence(d.error, 'Your message didn’t reach Station. Try again, or email main@station.solutions.'); return; }
+        ta.value = ''; list = list.concat([d.message || { direction: 'in', channel: 'email', body: text, at: new Date().toISOString() }]); drawMsgs(list);
+        note.textContent = 'Sent to the Station team.';
+      }, function () { btn.disabled = false; note.textContent = 'No connection. Your message wasn’t sent; try again.'; });
+    });
+  }
 
   window.addEventListener('hashchange', route);
   if (!DEMO && TOKEN) startLive(); else route();

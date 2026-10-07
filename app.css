@@ -1100,3 +1100,13 @@ input[type=checkbox]{accent-color:var(--acc);width:22px;height:22px}
 .slot.sel{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
 .bk-ok{margin:6px 0 10px;padding:12px 14px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg-2)}
 .bk-ok p{margin:0 0 10px;font-size:16px}
+
+/* Message Station on Help (2026-10-07, from the retired partner portal) */
+.msg-thread{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;max-height:420px;overflow-y:auto;margin:10px 0 12px;display:flex;flex-direction:column;gap:10px}
+.msg-thread .mm{max-width:85%;border-radius:var(--r-sm);padding:10px 12px}
+.msg-thread .mm p{margin:0;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg-thread .mm.me{align-self:flex-end;background:var(--blue-bg)}
+.msg-thread .mm.st{align-self:flex-start;background:var(--bg-2)}
+.msg-thread .mt{display:block;margin-top:4px;font-size:12.5px;color:var(--ink-3)}
+.msg-text{min-height:96px;resize:vertical}
+.msg-go{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
