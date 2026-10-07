@@ -198,10 +198,12 @@
     return 3;
   }
   /* within a rank: businesses you can call right now first, ones already tried today last */
+  /* due, then interested, then Station's new and retries (they're on a 14-day clock), then your own new and retries, then finished */
+  function sortGroup(l) { var r = rank(l); return r < 2 ? r : r === 4 ? 6 : r + (l.own ? 2 : 0); }
   function sortedLeads() {
     return LEADS.slice().sort(function (x, y) {
       var sx = S.log[x.id], sy = S.log[y.id];
-      return (rank(x) - rank(y)) || ((x.own ? 1 : 0) - (y.own ? 1 : 0)) || ((triedToday(sx) ? 1 : 0) - (triedToday(sy) ? 1 : 0)) ||
+      return (sortGroup(x) - sortGroup(y)) || ((triedToday(sx) ? 1 : 0) - (triedToday(sy) ? 1 : 0)) ||
         ((localTime(x.st).ok ? 0 : 1) - (localTime(y.st).ok ? 0 : 1)) || String((sx || {}).due || '').localeCompare(String((sy || {}).due || ''));
     });
   }
@@ -535,7 +537,7 @@
   /* ---------- sign in, load, sign out ---------- */
   /* wipe = the partner chose to sign out: nothing of theirs stays in this browser (a shared computer). An expired sign-in keeps
      the unsent queue for the same partner's next sign-in (boot drops it for anyone else). */
-  var resumeCall = null;
+  var resumeCall = null, lastEmail = '';
   function forgetPartner() { S.outbox = []; S.entered = false; S.toured = false; S.pitch = {}; S.mine = {}; S.focus = ''; S.log = {}; S.notes = {}; S.calls = []; noteT = {}; noteAgain = {}; }
   function signedOut(msg, wipe) {
     TOKEN = ''; try { localStorage.removeItem(TKEY); sessionStorage.removeItem(TKEY); } catch (e) {}
@@ -597,7 +599,7 @@
       (SIGNIN_MSG ? '<div class="explain ' + (SIGNIN_GOOD ? 'good' : 'bad') + '" role="status">' + esc(SIGNIN_MSG) + '</div>' : '') +
       '<form id="signin" novalidate>' +
       (claim ? '<label class="field" for="s-code">Your partner code<span class="hint">It’s in your invite email, something like jsmith.</span><input class="text" id="s-code" autocomplete="off" autocapitalize="none" spellcheck="false"></label>' : '') +
-      '<label class="field" for="s-email">Email<input class="text" id="s-email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false"></label>' +
+      '<label class="field" for="s-email">Email<input class="text" id="s-email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" value="' + esc(lastEmail) + '"></label>' +
       '<label class="field" for="s-pw">' + (claim ? 'Choose a password' : 'Password') + (claim ? '<span class="hint">10 or more characters. A short sentence is easiest to remember.</span>' : '') +
       '<input class="text" id="s-pw" type="password" autocomplete="' + (claim ? 'new-password' : 'current-password') + '"></label>' +
       '<label class="check"><input type="checkbox" id="s-shared"> This is a shared computer: don’t keep me signed in</label>' +
@@ -614,7 +616,7 @@
     var form = document.getElementById('signin'), go = document.getElementById('s-go'), ef = document.getElementById('e-form');
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var email = document.getElementById('s-email').value.trim().toLowerCase(), pw = document.getElementById('s-pw').value;
+      var email = document.getElementById('s-email').value.trim().toLowerCase(), pw = document.getElementById('s-pw').value; lastEmail = email;
       var codeIn = document.getElementById('s-code'), c = codeIn ? codeIn.value.trim().toLowerCase() : '';
       function bad(el, msg) { ef.textContent = msg; if (el) { el.setAttribute('aria-invalid', 'true'); el.focus(); } }
       form.querySelectorAll('[aria-invalid]').forEach(function (x) { x.removeAttribute('aria-invalid'); });
@@ -640,7 +642,8 @@
           signMode = 'login'; SIGNIN_GOOD = true; SIGNIN_MSG = (claim ? 'Your password is saved. ' : '') + 'Station still has to approve your account. You’ll get an email when it’s ready; then sign in here with this email and password. Questions: main@station.solutions.'; renderSignIn(); return;
         }
         if (d.status && d.status !== 'active') { bad(null, 'Your partner account isn’t active. Email main@station.solutions and Station will tell you why.'); return; }
-        bad(null, friendly(d.error));
+        var fm = friendly(d.error);
+        bad(/partner code/.test(fm) ? document.getElementById('s-code') : /email/i.test(fm) && !/password/i.test(fm) ? document.getElementById('s-email') : null, fm);
       }, function () {
         go.disabled = false; go.textContent = claim ? 'Set my password' : 'Sign in';
         bad(null, 'No connection to Station. Check your internet and try again.');
@@ -652,6 +655,8 @@
     if (/code and email do not match/.test(e)) return 'That partner code and email don’t go together. Check your invite email, or email main@station.solutions.';
     if (/password already set/.test(e)) return 'You’ve already set a password. Sign in instead, or email main@station.solutions to reset it.';
     if (/unknown code/.test(e)) return 'Station doesn’t know that partner code. Check the email Station sent you: the code is all small letters, no spaces.';
+    if (/sheet is full/.test(e)) return 'Your list is full (200 businesses). Remove a few you’re done with, then add this one.';
+    if (/maximum of/.test(e)) return 'Your account holds the most businesses you can add. Email main@station.solutions and Station will clear old ones.';
     if (/too many attempts/.test(e)) return 'Too many tries with that email. Check it’s spelled right, or wait 15 minutes. Forgot your password? Email main@station.solutions.';
     if (/wrong email or password/.test(e)) return 'That email and password don’t match. Check the spelling. First time here? Use “Activate your invite” below.';
     return sentence(err, 'That didn’t work. Check your email and password.');
@@ -672,7 +677,7 @@
       if (d.ok === false) { btn.disabled = false; btn.textContent = 'Ask for my next batch'; toast(sentence(d.error, 'Station couldn’t take that just now.'), 6000); return; }
       S.asked = true; S.askedAt = Date.parse(d.more_at) || Date.now(); if (LL && LL.cc) LL.cc.more_at = d.more_at; save();
       updateEnd(); var e2 = document.querySelector('#endCard .lead-card'); if (e2 && !reduced) e2.classList.add('pop');
-      toast('Asked. Station will send your next batch.');
+      toast('Asked. Station will send your next batch.'); if (!document.getElementById('endCard')) route();
     }, function () { btn.disabled = false; btn.textContent = 'Ask for my next batch'; toast('No connection to Station. Try again in a moment.', 5000); });
   }
 
@@ -707,7 +712,7 @@
     document.body.classList.toggle('admin-mode', tab === 'admin');
     document.documentElement.classList.toggle('calls-lock', tab === 'calls'); // only the feed scrolls on Calls, never the page
     document.querySelectorAll('[data-tab]').forEach(function (a) { var here = a.getAttribute('data-tab') === tab; a.classList.toggle('on', here); if (here) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-    var tt = totals(); document.getElementById('chipBal').textContent = tt.unknown ? '—' : money(tt.ready);
+    var tt = totals(); document.getElementById('chipBal').textContent = tt.unknown ? '—' : money(tt.ready + tt.hold); // same figure as Home's Earned so far
   }
   function mount(html, title) {
     main.innerHTML = html; window.scrollTo(0, 0);
@@ -800,8 +805,10 @@
   }
   function openerOf(b) { return (b.call && b.call.opener) || b.ask; }
   /* what you can actually do today: tried-today businesses come back tomorrow */
+  function callableNow(l) { var s = S.log[l.id]; return rank(l) < 4 && !triedToday(s) && !(s && s.due && s.due > today()) && String(l.dial || '').replace(/\D/g, '').length >= 10 && !!TZ[l.st]; }
+  function canAskHome() { return !DEMO && dealtTotal() > 0 && !S.asked && counts().stFresh === 0; } // your own new businesses never block asking
   function todayLine(c) {
-    var later = LEADS.filter(function (l) { return rank(l) < 4 && triedToday(S.log[l.id]); }).length, now = c.toCall - later;
+    var later = LEADS.filter(function (l) { return rank(l) < 4 && triedToday(S.log[l.id]); }).length, now = LEADS.filter(callableNow).length;
     return now + ' to call today' + (later ? ' · ' + later + ' tomorrow' : '');
   }
   function askedText() {
@@ -822,10 +829,11 @@
       var nb = pitchFor(next), due = rank(next) === 0;
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">' + (due ? 'Call-back due' : 'Your next call') + '</span>' +
         '<h2 id="nextH">' + esc(next.name) + '</h2><p class="facts"><span>' + esc(next.trade) + ' · ' + esc(placeOf(next)) + '</span>' + (next.rating ? '<span>★ ' + next.rating + '</span>' : '') + '</p>' +
-        '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>' + (S.pitch[next.id] ? ' (your pick)' : sellable(BOX[S.focus]) && S.focusDay === today() && nb.id === S.focus ? ' (your pick for today)' : '') + '. Say who you are, then open with: “' + esc(openerOf(nb)) + '”</p>' +
+        ((function () { var ns = S.log[next.id]; return ns && !CLOSED[ns.o] && (ns.o === 'interested' || ns.o === 'callback' || ns.wasInterested); })() ? '<p class="pitch-line">Following up on <strong>' + esc(nb.name) + '</strong>: “' + esc(followLine(nb)) + '”</p>' :
+        '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>' + (S.pitch[next.id] ? ' (your pick)' : sellable(BOX[S.focus]) && S.focusDay === today() && nb.id === S.focus ? ' (your pick for today)' : '') + '. Say who you are, then open with: “' + esc(openerOf(nb)) + '”</p>') +
         '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote"' + (now.ok ? ' hidden' : '') + '>' + closedNote(now) + '</p>' +
         '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#calls">' + (now.ok ? 'Start calling' : 'See my list') + '</a><span class="small">' + todayLine(c) + '</span></div>' +
-        (S.asked ? '<p class="asked-line">Next batch: waiting for Station’s OK (asked ' + askedText() + ').</p>' : '') + '</section>';
+        (S.asked ? '<p class="asked-line">Next batch: waiting for Station’s OK (asked ' + askedText() + ').</p>' : canAskHome() ? '<p class="asked-line">Every business from Station has an outcome. <button class="link-btn" type="button" id="askHome">Ask for my next batch</button></p>' : '') + '</section>';
     } else if (S.asked) {
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your list</span><h2 id="nextH">Waiting for Station’s OK</h2>' +
         '<p class="pitch-line">You asked for your next batch ' + askedText() + '. Station reviews every request, then your new businesses show up in Calls.</p><div class="next-go"><a class="btn btn-big" id="callGo" href="#calls">Go to my list</a></div></section>';
@@ -835,7 +843,7 @@
     }
     var fresh = !Object.keys(S.log).length && !S.calls.length, lb = BOX['bundle-answer'] || BOX.lineback; // one first product everywhere: the Answer collection
     var side = fresh
-      ? '<a class="start-here" href="#box/' + lb.id + '"><span class="lbl">New here? Learn this one first</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(lb.what) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per paying client</span><span class="go">Read the Lineback cheat sheet <span aria-hidden="true">&rarr;</span></span></a>'
+      ? '<a class="start-here" href="#box/' + lb.id + '"><span class="lbl">New here? Learn this one first</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(String(lb.what || '').replace(/\.+$/, '')) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per paying client</span><span class="go">Read the ' + esc(lb.short || lb.name) + ' cheat sheet <span aria-hidden="true">&rarr;</span></span></a>'
       : '<div class="start-here today"><span class="lbl">Today</span><div class="stats"><div><b>' + st.calls + '</b><span>' + (st.calls === 1 ? 'call logged' : 'calls logged') + '</span></div><div><b>' + st.talked + '</b><span>' + (st.talked === 1 ? 'conversation' : 'conversations') + '</span></div><div><b>' + st.warm + '</b><span>interested or won</span></div></div>' +
         '<span class="small">Every call you log keeps these businesses yours a little longer.</span></div>';
     var moneyBox = '<a class="money-box' + (t.ready || t.hold ? '' : ' zero') + '" href="#money"><span class="lbl">Earned so far</span><span class="big num">' + (t.unknown ? '—' : money(t.ready + t.hold)) + '</span>' +
@@ -847,6 +855,7 @@
       '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a>' +
       '<button class="btn btn-block add-own" type="button" data-addlead>Found a business yourself? Add it to your list</button>' +
       '<a class="buyers-link" href="#buyers"><b>Who buys? Ten real buyers</b><span>What each is feeling, and the words that work.</span></a></div>', 'Home');
+    var ah = document.getElementById('askHome'); if (ah) ah.addEventListener('click', function () { askForMore(ah); });
     tick = setInterval(function () {
       if (!/^#?(home)?$/.test(location.hash)) return;
       var n2 = localTime(where), el = document.getElementById('callNote'); if (!el) return;
@@ -858,7 +867,7 @@
 
   function moneyLine(t) {
     if (t.unknown) return 'Your money couldn’t load just now. It’s safe at Station.';
-    if (!t.ready && t.hold) { var nr = MONEY && MONEY.totals && MONEY.totals.next_release; return money(t.hold) + ' on hold' + (nr ? ' until ' + new Date(nr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + ', then it’s ready to pay.'; }
+    if (!t.ready && t.hold) { var nr = MONEY && MONEY.totals && MONEY.totals.next_release; return money(t.hold) + ' on hold' + (nr ? ' until ' + new Date(nr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '') + ', then it’s ready to pay.'; }
     if (!t.ready) return 'No commission yet. It shows here once a client’s first payment clears. Calls on their own pay nothing.';
     var b = (MONEY && MONEY.totals && MONEY.totals.blockers) || [], min = ((MONEY && MONEY.min_cents) || 5000) / 100;
     if (b.length) return 'Ready, and paid once the setup steps are done.';
@@ -935,7 +944,7 @@
   };
 
   /* ---------- the call script ---------- */
-  function followLine(b) { return 'Hi, it’s ' + S.name + ' with Station again, following up on ' + b.name + '. Did you get a chance to look at the page I sent?'; }
+  function followLine(b) { return 'Hi, it’s ' + S.name + ' with Station again, following up on ' + (b.bundle ? 'the ' + b.name : b.name) + '. Did you get a chance to look at the page I mentioned?'; }
   function introLine() { return 'Hi, is this the owner? My name is ' + S.name + ', and I’m an independent partner with Station. I’ll be quick.'; }
   function gateLine() { return 'It’s ' + S.name + ', an independent partner with Station. Is the owner around, or when’s a good time to catch them?'; }
   function vmLine(l) { return 'Hi, this is ' + S.name + ', an independent partner with Station, calling for the owner of ' + l.name + '. I’ll try you again another day. Thanks!'; }
@@ -1076,7 +1085,8 @@
     feedEl().querySelectorAll('.lead[data-id]').forEach(wireCard);
     wireKeys(); updateEnd(); sizeFeed(); wireSide();
     tick = setInterval(refreshTimes, 15000); // times go stale and calling hours open or close while the page sits there
-    if (!S.toured) setTimeout(startTour, 450);
+    if (showAfter) { var sa = cardEl(showAfter); showAfter = ''; if (sa) setTimeout(function () { goTo(sa, true); }, 60); }
+    else if (!S.toured) setTimeout(startTour, 450);
   };
   var sideObs = null, sideRaf = 0, SIDE_MQ = window.matchMedia ? matchMedia('(min-width: 1100px)') : null;
   function currentCard() {
@@ -1176,6 +1186,7 @@
   }
   function callBtnHtml(l, t) {
     if (String(l.dial || '').replace(/\D/g, '').length < 10) return '<button class="btn call-btn closed" type="button"' + (l.own && !DEMO ? ' data-edit' : ' disabled') + '>No phone number' + (l.own && !DEMO ? '<small>Tap to add one</small>' : '') + '</button>';
+    if (!TZ[l.st]) return '<button class="btn call-btn closed" type="button"' + (l.own && !DEMO ? ' data-edit' : ' disabled') + '>Add their state to call' + (l.own && !DEMO ? '<small>Tap to edit: the state tells the app their local time</small>' : '<small>Station has no state for this business</small>') + '</button>';
     if (triedToday(S.log[l.id])) return '<button class="btn call-btn closed" type="button" disabled>✓ Tried today<small>Back on your list tomorrow</small></button>';
     if (!t.ok) return '<button class="btn call-btn closed" type="button" disabled>' + (t.unknown ? 'Check their local time' : 'Calls open ' + t.opens) + '<small>The number shows when calls open</small></button>';
     var s = S.log[l.id], again = s && (s.o === 'interested' || s.wasInterested);
@@ -1217,10 +1228,11 @@
       '\n\nQuestions? Just reply to this email.\n\n' + S.name + ', independent partner with Station (Station Automations Group LLC, Houston, Texas)\nIf you’d rather not get emails from me, reply and say so, and I won’t send more.';
     var subject = web ? 'Your custom website questions' : 'The ' + named + ' page I mentioned';
     var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> ' + (bx.earn ? '<b class="plus">+' + money(bx.earn) + ' a ' + period(bx) + '</b> to you once they start paying' + (bx.trial ? ' (after their ' + TD + '-day trial)' : '') + '. ' : '') +
-        (s.accepted ? 'Station has confirmed this win.' : 'Send them your link so the sale is credited to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; Station checks the win and matches it to their signup; you see the client under Money once they pay.')
+        (s.accepted ? 'Station has confirmed this win.' : l.own ? 'Send them your link: signing up from it is what credits the sale to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; you see the client under Money once they pay.'
+          : 'Send them your link so the sale is credited to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; Station checks the win and matches it to their signup; you see the client under Money once they pay.')
       : '<strong>Interested in ' + esc(bx.name) + '.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
     return '<div class="won-next' + (s.o === 'won' ? '' : ' warm') + '"><p>' + head + '</p>' +
-      '<label class="field slim" for="em-' + esc(l.id) + '">Their email <span class="ask">Ask: “What’s the best email to send it to?”</span><input class="text" type="email" id="em-' + esc(l.id) + '" data-email autocomplete="off" value="' + esc(s.email || '') + '" placeholder="owner@business.com"></label>' +
+      '<label class="field slim" for="em-' + esc(l.id) + '">Their email <span class="ask">Ask: “What’s the best email to send it to?”</span><input class="text" type="email" id="em-' + esc(l.id) + '" data-email autocomplete="off" value="' + esc(s.email || l.email || '') + '" placeholder="owner@business.com"></label>' +
       '<div class="won-btns"><a class="btn btn-green" data-mail href="mailto:' + cleanEmail(s.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body) + '">Email them the link</a><button class="btn" type="button" data-copy-won>Copy link</button></div>' +
       (s.o === 'won' && !s.accepted ? '<button class="link-btn" type="button" data-change>Marked Won by mistake? Change it</button>' : s.accepted ? '<p class="small">To change a confirmed win, email <a href="mailto:main@station.solutions">main@station.solutions</a>.</p>' : '') + '</div>';
   }
@@ -1229,7 +1241,7 @@
   function doneBlock(l, s) {
     var when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     if (s.o === 'won') return sendBox(l, s);
-    return '<div class="done-box"><p><strong>' + esc(OUT[s.o]) + '</strong> · marked ' + when + '. ' + (s.o === 'dnc' ? 'Never call this business again.' : s.o === 'bad' ? 'Station takes it back.' : 'This business is finished.') + '</p>' +
+    return '<div class="done-box"><p><strong>' + esc(OUT[s.o]) + '</strong> · marked ' + when + '. ' + (s.o === 'dnc' ? 'Never call this business again.' : s.o === 'bad' ? (l.own ? 'It’s off your calls.' : 'Station takes it back.') : 'This business is finished.') + '</p>' +
       (lockedAtStation(l.id, s) ? '<p class="small">Marked by mistake? Email <a href="mailto:main@station.solutions">main@station.solutions</a> and Station will fix it.</p>' : '<button class="link-btn" type="button" data-change>Change this</button>') + '</div>';
   }
   function untilText(l) { return untilDate(l).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
@@ -1248,24 +1260,24 @@
     var talked = s && (TALKED[s.o] || s.wasInterested), warm = s && (s.o === 'won' || (!closed && (s.o === 'interested' || s.wasInterested)));
     var shown = closed && BOX[s.box] ? BOX[s.box] : b, es = closed && s.o !== 'won' ? '' : earnShort(shown);
     var fitNote = !talked && b.id !== l.fits && sellable(BOX[l.fits]) ? ' <button class="link-btn fit-btn" type="button" data-fit>Pitch ' + esc(BOX[l.fits].name) + ' instead (best fit)</button>' : '';
-    var eid = esc(l.id);
+    var eid = esc(l.id), noPhone = String(l.dial || '').replace(/\D/g, '').length < 10;
     return '<article class="lead" id="lead-' + eid + '" data-id="' + eid + '" data-ok="' + t.ok + '" data-rank="' + rk + '" aria-labelledby="h-' + eid + '"><div class="lead-card' + (closed && s.o !== 'won' ? ' done' : '') + (warm ? ' warm' : '') + '">' +
       '<div class="lead-meta">' + (closed ? '' : l.own ? '<span class="pill mine">Your lead</span>' : '<button class="pill from" type="button" data-until>Yours till ' + untilDate(l).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</button>') + pill + (es ? '<span class="earn-pill">' + es + '</span>' : '') + '</div>' +
       '<div><h2 id="h-' + eid + '">' + esc(l.name) + '</h2><div class="facts"><span>' + esc(l.trade) + ' · ' + esc(placeOf(l)) + '</span>' + stars(l) + '</div></div>' +
-      (closed ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + timeLine(t) + '</span></div>') +
+      (closed || noPhone ? '' : '<div class="facts"><span data-time class="' + (t.ok ? 'okc' : 'late') + '">' + timeLine(t) + '</span></div>') +
       '<div class="pitch-box"><div class="pitch-head"><span>' + (closed ? 'Pitched' : 'Pitch') + ' <b>' + esc(shown.name) + '</b></span>' +
       (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' + (closed || !fitNote ? '' : '<div class="fit-row">' + fitNote + '</div>') +
       (!closed && s && (s.o === 'interested' || s.o === 'callback' || s.wasInterested) ? '<p class="opener"><span class="first">Following up:</span> “' + esc(followLine(b)) + '”</p>'
         : '<p class="opener"><span class="first">Say who you are, then:</span> “' + esc(openerOf(b)) + '”</p>') + '<p class="gap"><b>Why them:</b> ' + esc(l.gap) + '</p></div>' +
       (closed ? doneBlock(l, s) : (s && (s.o === 'interested' || s.wasInterested) ? sendBox(l, s) : '') + callBtnHtml(l, t)) +
       (closed ? '' : '<div class="card-lines">' + sayBoxes(quickLines(b)) + '</div>') +
-      (closed ? '' : '<div class="card-actions"><button class="btn" type="button" data-log>How did it go?</button><button class="btn btn-next" type="button" data-next>Next business</button></div>') +
+      (closed ? '' : '<div class="card-actions">' + (noPhone ? '' : '<button class="btn" type="button" data-log>How did it go?</button>') + '<button class="btn btn-next" type="button" data-next>Next business</button></div>') +
       '<div class="note-box"' + (S.notes[l.id] ? '' : ' hidden') + '><label class="sr" for="note-' + eid + '">Note about ' + esc(l.name) + '</label><input class="text" id="note-' + eid + '" placeholder="Business facts only, like: ask for Maria after 2" value="' + esc(S.notes[l.id] || '') + '"></div>' +
       olderNotes(l) +
       '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button><button class="link-btn" type="button" data-script>Full script</button>' +
       (closed ? '' : '<button class="link-btn" type="button" data-vm>Voicemail?</button>') +
       (t.ok && !closed && !tt && !touch ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') /* on a phone, Call dials */ + (closed ? '<button class="link-btn" type="button" data-next>Next business</button>' : '') +
-      (l.own && !DEMO ? '<button class="link-btn" type="button" data-edit>Edit</button><button class="link-btn" type="button" data-remove>Remove</button>' : '') + '</div></div></article>';
+      (l.own && !DEMO ? '<button class="link-btn" type="button" data-edit>Edit</button>' + (s && s.o === 'won' ? '' : '<button class="link-btn" type="button" data-remove>Remove</button>') : '') + '</div></div></article>';
   }
   function renderCard(card) {
     if (!LEAD[card.getAttribute('data-id')]) { card.remove(); updateEnd(); return null; } // Station took it back
@@ -1549,7 +1561,8 @@
   function startTour() {
     var card = feedEl() && feedEl().querySelector('.lead[data-id]'); if (!card || location.hash.indexOf('#calls') !== 0 || !sheet.hidden) return;
     TOUR = { i: 0, steps: [
-      [card.querySelector('h2'), 'This is 1 of your ' + LEADS.length + ' businesses. Each one is yours for ' + holdDays() + ' days, and every call you log keeps it longer; the date is on the tag above it.'],
+      [card.querySelector('h2'), LEAD[card.getAttribute('data-id')] && LEAD[card.getAttribute('data-id')].own ? 'This is 1 of your ' + LEADS.length + ' businesses: one you added yourself. It stays on your list until you remove it.'
+        : 'This is 1 of your ' + LEADS.length + ' businesses. Each one Station sends is yours for ' + holdDays() + ' days, and every call you log keeps it longer; the date is on the tag above it.'],
       [card.querySelector('.pitch-box'), 'What to pitch them, and what to say after you say who you are. Tap Change to pitch something else.'],
       [card.querySelector('.call-btn'), 'Tap to call. Your lines show before the phone opens.'],
       [card.querySelector('[data-log]'), 'When you hang up, tell the app how it went. You can undo any mistake.']
@@ -1615,14 +1628,15 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       function v(id) { return document.getElementById(id).value.trim(); }
-      function bad(id, msg) { err.textContent = msg; var el = id && document.getElementById(id); if (el) { el.setAttribute('aria-invalid', 'true'); el.focus(); } }
+      function bad(id, msg) { err.textContent = msg; var el = id && document.getElementById(id); if (el) { var lab = el.closest('label'); if (lab) lab.insertAdjacentElement('afterend', err); } else go.insertAdjacentElement('beforebegin', err); if (el) { el.setAttribute('aria-invalid', 'true'); el.focus(); } }
       form.querySelectorAll('[aria-invalid]').forEach(function (x) { x.removeAttribute('aria-invalid'); });
       var name = v('lf-name'), phone = v('lf-phone'), digits = phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, ''), email = v('lf-email');
       if (!name) { bad('lf-name', 'Please add the business name.'); return; }
-      if (digits.length !== 10) { bad('lf-phone', 'Please add their 10-digit phone number, like (405) 555-0123.'); return; }
+      var oldRow = l ? (LL.leads || []).filter(function (x) { return String(x.id) === l.id; })[0] || {} : {};
+      if (digits.length !== 10 && !(l && !phone && (email || oldRow.email))) { bad('lf-phone', 'Please add their 10-digit phone number, like (405) 555-0123.'); return; }
       if (!v('lf-state')) { bad('lf-state', 'Please pick their state, so the app knows their local time.'); return; }
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { bad('lf-email', 'That email doesn’t look right. Leave it empty if you don’t have it.'); return; }
-      var body = { name: name, phone: '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6), city: v('lf-city'), state: v('lf-state'),
+      var body = { name: name, phone: digits.length === 10 ? '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6) : '', city: v('lf-city'), state: v('lf-state'),
         niche: v('lf-niche'), gap: v('lf-gap'), sku: v('lf-fit'), email: email, website: v('lf-web') };
       if (l) { body.id = l.id; body.edit = true; var old = (LL.leads || []).filter(function (x) { return String(x.id) === l.id; })[0] || {}; body.price_line = old.price_line || ''; }
       go.disabled = true; go.textContent = l ? 'Saving…' : 'Adding…'; err.textContent = '';
@@ -1637,7 +1651,7 @@
         var nid = String(d.lead.id), onCalls = location.hash.indexOf('#calls') === 0;
         afterSheet(function () {
           toast(l ? 'Saved.' : 'Added. It’s on your list.', 3000);
-          if (onCalls) { VIEWS.calls(); var c = cardEl(nid); if (c) goTo(c, true); } else location.hash = '#calls';
+          if (onCalls) { VIEWS.calls(); var c = cardEl(nid); if (c) goTo(c, true); } else { showAfter = nid; location.hash = '#calls'; }
         });
       }, function () { go.disabled = false; go.textContent = l ? 'Save changes' : 'Add to my list'; bad(null, 'No connection to Station. Your details are still here; try again.'); });
     });
@@ -1650,6 +1664,7 @@
     var done = false, go = function () { if (done) return; done = true; window.removeEventListener('popstate', go); setTimeout(fn, 0); };
     window.addEventListener('popstate', go); setTimeout(go, 400);
   }
+  var showAfter = '';
   function removeOwn(l, btn) {
     if (btn.getAttribute('data-armed') !== '1') { btn.setAttribute('data-armed', '1'); btn.textContent = 'Tap again to take it off your list'; setTimeout(function () { if (document.contains(btn)) { btn.removeAttribute('data-armed'); btn.textContent = 'Remove'; } }, 4000); return; }
     if (queuedCall(l.id, true)) { toast('Saving your last result for this business first. Try again in a moment.', 4000); pump(); return; }
@@ -1660,7 +1675,7 @@
       (LL.leads || []).forEach(function (x) { if (String(x.id) === l.id) x.archived = d.archived || new Date().toISOString(); });
       applyLeads(LL);
       var c = cardEl(l.id), nx = c && c.nextElementSibling; if (c) { c.remove(); updateEnd(); if (nx) goTo(nx, true); }
-      toast('Taken off your list. Station keeps it in your archive.', 3500);
+      toast('Taken off your list. Need it back? Email main@station.solutions.', 4000);
     }, function () { btn.disabled = false; toast('No connection to Station. Try again in a moment.', 4000); });
   }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-addlead]')) openLeadForm(null); });
@@ -1682,7 +1697,7 @@
   function glossaryHtml() {
     return ('<dl class="gloss">' +
       '<dt>No answer, Voicemail</dt><dd>You couldn’t reach them. They stay on your list and come back tomorrow.</dd>' +
-      '<dt>Bad lead</dt><dd>Wrong number, closed down, or not a business that could use it. Station takes it back.</dd>' +
+      '<dt>Bad lead</dt><dd>Wrong number, closed down, or not a business that could use it. Station takes it back (one you added just leaves your calls).</dd>' +
       '<dt>Talked to them</dt><dd>You spoke to someone. Then pick how it went.</dd>' +
       '<dt>Interested</dt><dd>They want to hear more. They stay on your list.</dd>' +
       '<dt>Call back</dt><dd>They asked you to call another day. Pick when; on that day they move to the top of your list.</dd>' +
@@ -1691,7 +1706,8 @@
       '<dt>Won</dt><dd>They’re buying. Send them your link; Station checks it and sets them up.</dd>' +
       '<dt>Undo</dt><dd>Tapped the wrong one? Press Undo at the bottom of the screen right after you save.</dd>' +
       '<dt>Tried today</dt><dd>After No answer or Voicemail, a business comes back tomorrow. Nobody gets called twice in one day.</dd>' +
-      '<dt>Yours until</dt><dd>Every business is yours for ' + holdDays() + ' days, and every call you log on it restarts the ' + holdDays() + ' days. If ' + holdDays() + ' days go by without a call, it goes back to Station’s shared list.</dd></dl>');
+      '<dt>Your lead</dt><dd>A business you added yourself. It stays on your list until you remove it.</dd>' +
+      '<dt>Yours until</dt><dd>Every business Station sends is yours for ' + holdDays() + ' days, and every call you log on it restarts the ' + holdDays() + ' days. If ' + holdDays() + ' days go by without a call, it goes back to Station’s shared list.</dd></dl>');
   }
   function hideSheet() {
     if (sheet.hidden) return;
@@ -1729,7 +1745,7 @@
   function cents(n) { return money((+n || 0) / 100); }
   function liveClients() {
     var out = '', lines = ((MONEY && MONEY.lines) || []).slice(0, 30); // the engine's own order (installments stay in sequence)
-    var waiting = LEADS.filter(function (l) { var s = S.log[l.id]; return s && s.o === 'won' && !s.accepted; });
+    var waiting = LEADS.filter(function (l) { var s = S.log[l.id]; return s && s.o === 'won' && !s.accepted && !l.own; }); // Station accepts wins on its own leads only
     if (!MONEY) out += '<p class="empty">' + esc(MONEY_ERR || 'Your money couldn’t load just now.') + ' Your records are safe at Station. <button class="link-btn" type="button" id="moneyRetry">Try again</button></p>';
     if (lines.length) out += '<div class="table-wrap"><table><thead><tr><th scope="col">Client</th><th scope="col">On</th><th scope="col" class="r">They paid</th><th scope="col" class="r">You earn</th><th scope="col">Where it stands</th></tr></thead><tbody>' +
       lines.map(function (x) {
@@ -1902,7 +1918,7 @@
       '<li>If anyone says “take me off your list,” say sorry, end the call and mark them Do not call.</li>' +
       '<li>Never record a call, and never text or email a business unless they ask you to.</li>' +
       '<li>Your link is what credits a sale to you, so send it every time. Log every call too: Station’s records decide who gets credit.</li>' +
-      '<li>You can add a business you found yourself (Calls › Add a business). Never one another partner gave you, and never one that asked not to be called.</li>' +
+      '<li>You can add a business you found yourself: “Found a business yourself?” on Home, or at the end of Calls. Those stay on your list until you remove them. Never one another partner gave you, and never one that asked not to be called.</li>' +
       '<li>Don’t copy leads or client details into your own spreadsheet or CRM, and never ask a business to send you their customer list.</li></ul>' +
       '<h2>How a call works</h2><p>Tap <b>Call now</b>, put it on speaker somewhere private, and read your lines. When you come back to the app, tap how it went. Pressed the wrong button? Tap <b>Undo</b>.</p>' +
       '<div class="help-btns"><button class="btn" type="button" id="tourBtn">Show me the tour again</button><button class="btn" type="button" id="glossBtn">What the buttons mean</button>' +

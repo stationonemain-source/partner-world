@@ -764,3 +764,6 @@ ul.biz li .small{text-align:right}
 .pickday input{min-height:48px;font:inherit;padding:6px 10px;border:2px solid var(--line-2);border-radius:var(--r-sm);background:var(--card)}
 .older-notes{font-size:15px;margin:4px 0}.older-notes summary{cursor:pointer;color:var(--ink-2);min-height:36px;display:flex;align-items:center}
 .older-notes ul{margin:4px 0 0;padding-left:18px}.older-notes li{margin:4px 0}
+/* round 2 (10-07) */
+.text[aria-invalid="true"]{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+body:not(.has-tabs) .toast{top:auto!important;bottom:24px!important}
