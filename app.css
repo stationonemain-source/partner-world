@@ -885,3 +885,14 @@ input.text::placeholder{color:var(--ink-3)}
 .pill,.badge,.earn-pill{border-radius:6px}
 .earn-card p{color:#B9E8CD}
 @media (max-width:760px){.lead-card{gap:8px;padding:14px 16px}}
+/* WHITE ACCENT (2026-10-07, Circle: "I don't like the yellow, make it white"). Night Shift structure, white instead of amber:
+   primary buttons, current place, labels, the logo and the "what to say" rules are white/neutral; green = money, red = problems. */
+:root{--acc:#FFFFFF;--acc-ink:#0B0D10;--acc-soft:rgba(255,255,255,.08);--acc-line:rgba(255,255,255,.4);
+  --amber:#F5F5F3;--amber-ink:#F5F5F3;--amber-bg:#171B21}
+.pill.due,.undo button,.badge.first{background:var(--acc);color:var(--acc-ink)}
+.undo button:hover{filter:brightness(.92)}
+.pill.from{background:#1F242C;color:var(--ink)}
+.tabbar a.on svg{background:#1F242C;fill:var(--acc)}
+.steps3 b{background:#1F242C;color:var(--ink)}
+.say small,ol.route li.say small,.opener .first,.next-call .lbl,.start-here .lbl,.coach-bubble .coach-step,.pitch-head .small{color:var(--ink-2)}
+.btn-dark:hover{filter:brightness(.92)}
