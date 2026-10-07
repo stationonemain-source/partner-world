@@ -281,6 +281,11 @@
      ends, so two writes in flight can roll each other back (engine note AE-3). A call result waits in the queue until
      its Undo has gone; anything that can't be sent stays queued in this browser and goes as soon as Station answers. */
   var ME = null, LL = null, MONEY = null, MONEY_ERR = '', BOOTED = false, BOOTING = false, BOOT_ERR = '', LOADED_AT = 0, SIGNIN_MSG = '', SIGNIN_GOOD = false, signMode = 'login';
+  /* the join page (partners.station.solutions/join) links here as /?join=1&src=ig-partner#request: open the request form directly and
+     keep where the person came from, so Station can see which post or bio sent them (engine stores it as source) */
+  var JOIN_SRC = '';
+  try { JOIN_SRC = (Q0.get('src') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40); if (JOIN_SRC) sessionStorage.setItem('pw-src', JOIN_SRC); else JOIN_SRC = sessionStorage.getItem('pw-src') || ''; } catch (e) {}
+  if (Q0.has('join') || location.hash === '#request') signMode = 'request';
   var FROM_ENGINE = { no_answer: 'noanswer', voicemail: 'voicemail', bad_lead: 'bad', interested: 'interested', callback: 'callback', not_interested: 'notint', dnc: 'dnc', won: 'won',
     called: 'called', demo_sent: 'interested' }; // the last two only come from the old portal's outcome list
   var NOTE_MAX = DEMO ? 200 : 1500; // the engine keeps notes up to 1,500 characters
@@ -646,7 +651,7 @@
       if (!document.getElementById('r-a2').checked) { bad('r-a2', 'Please tick this to send your request.'); return; }
       go.disabled = true; go.textContent = 'Sending…'; err.textContent = '';
       api('partner_request', { name: name, email: email, phone: '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6), state: v('r-state'),
-        about: v('r-about'), password: pw, agree: true, website: v('r-web') }).then(function (d) {
+        about: v('r-about'), password: pw, agree: true, website: v('r-web'), source: JOIN_SRC }).then(function (d) {
         go.disabled = false; go.textContent = 'Send my request';
         if (d.ok) { REQUESTED = name.split(/\s+/)[0]; renderRequest(); return; }
         bad(null, sentence(d.error, 'Station couldn’t take your request just now. Try again in a minute.'));
