@@ -1110,3 +1110,13 @@ input[type=checkbox]{accent-color:var(--acc);width:22px;height:22px}
 .msg-thread .mt{display:block;margin-top:4px;font-size:12.5px;color:var(--ink-3)}
 .msg-text{min-height:96px;resize:vertical}
 .msg-go{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+
+/* Clients tab (2026-10-07) */
+.client-list{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.client-row{display:flex;flex-direction:column;gap:4px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-decoration:none}
+a.client-row:hover,a.client-row:focus-visible{border-color:var(--edge)}
+.client-row .small{color:var(--ink-3);overflow-wrap:anywhere}
+.client-row .pill{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--blue-bg);color:var(--blue);font-size:12.5px;font-weight:700}
+/* six tabs since Clients (2026-10-07): the bar sizes to the visible tabs (Team stays hidden for most partners) */
+.tabbar{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
+.tabbar a[hidden]{display:none}

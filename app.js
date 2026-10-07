@@ -2150,6 +2150,68 @@
     });
   }
 
+  /* ---------- clients: talk to your own clients (Circle, 2026-10-07). Threads live in Station's CRM, so Station sees
+     every message; replies go by email from Station's address (Station's phone line is retired, so no texts). ---------- */
+  var CONV = null, CONV_ERR = '';
+  function convWhen(at) { var t = Date.parse(at || ''); return t ? dayLabel(ymd(new Date(t))) + ' at ' + clock(t) : ''; }
+  function clientRules() {
+    return '<p class="small fine">You can answer your clients’ questions and talk to them about adding Station products, at published prices only. ' +
+      'Billing, refunds, cancellations, anything technical and anything legal: tell the client Station will handle it, and pass it to Station the same day with <a href="#help">Message Station</a>. Station sees every message here.</p>';
+  }
+  VIEWS.clients = function (id) {
+    chrome(true, 'clients');
+    if (DEMO) {
+      mount('<div class="wrap clients"><h1>Your clients</h1><p class="sub">Once you’re live, every client in your book shows here. Open one to read the conversation and reply by email from Station.</p>' +
+        '<div class="client-list"><div class="client-row"><b>Example: Lone Star Roofing</b><span class="small">“Thanks! Can we add the review requests too?” · yesterday</span></div></div>' + clientRules() + '</div>', 'Clients');
+      return;
+    }
+    if (id) { clientThread(decodeURIComponent(id)); return; }
+    mount('<div class="wrap clients"><h1>Your clients</h1><p class="sub">Conversations with the clients in your book. Open one to read it and reply.</p><div id="convList"><p class="small">Loading your clients…</p></div>' + clientRules() + '</div>', 'Clients');
+    api('conv_list').then(function (d) {
+      if (d.signedOut) return; var box = document.getElementById('convList'); if (!box) return;
+      if (d.ok === false) { box.innerHTML = '<p class="empty">' + esc(sentence(d.error, 'Your clients couldn’t load just now.')) + '</p>'; return; }
+      CONV = d.threads || [];
+      if (!CONV.length) { box.innerHTML = '<p class="empty">No clients yet. When a business you brought in starts paying Station, it shows up here and you can talk to them.</p>'; return; }
+      box.innerHTML = '<div class="client-list">' + CONV.map(function (c) {
+        return '<a class="client-row" href="#clients/' + encodeURIComponent(c.contactId) + '"><b>' + esc(c.name) + (c.unread ? ' <span class="pill">' + c.unread + ' new</span>' : '') + '</b>' +
+          '<span class="small">' + (c.last ? '“' + esc(c.last) + '”' + (c.last_at ? ' · ' + esc(convWhen(c.last_at)) : '') : 'No messages yet. Open to write the first one.') + '</span></a>';
+      }).join('') + '</div>';
+    }, function () { var box = document.getElementById('convList'); if (box) box.innerHTML = '<p class="empty">No connection to Station. Try again in a moment.</p>'; });
+  };
+  function clientThread(contactId) {
+    var known = (CONV || []).filter(function (c) { return c.contactId === contactId; })[0] || {};
+    mount('<div class="wrap clients"><p><a href="#clients">← All clients</a></p><h1 id="clientH">' + esc(known.name || 'Your client') + '</h1>' +
+      '<div class="msg-thread" id="convThread" aria-live="polite"><p class="small">Loading the conversation…</p></div>' +
+      '<label class="sr" for="convText">Your reply</label><textarea class="text msg-text" id="convText" rows="4" maxlength="2000" placeholder="Write to your client"></textarea>' +
+      '<div class="msg-go"><button class="btn btn-dark" type="button" id="convSend">Send email</button><span class="small" id="convNote" role="status"></span></div>' + clientRules() + '</div>', known.name || 'Client');
+    var list = [], cl = null, box = document.getElementById('convThread'), ta = document.getElementById('convText'), btn = document.getElementById('convSend'), note = document.getElementById('convNote');
+    function draw() {
+      if (!list.length) { box.innerHTML = '<p class="small">No messages yet. Your email goes to ' + esc((cl && cl.email) || 'the client') + ' from Station.</p>'; return; }
+      box.innerHTML = list.map(function (m) {
+        var out = /out/i.test(String(m.direction || '')), ch = /email/i.test(String(m.type || '')) ? 'email' : /sms/i.test(String(m.type || '')) ? 'text' : '';
+        return '<div class="mm ' + (out ? 'me' : 'st') + '"><p>' + esc(m.body || '') + '</p><span class="mt">' + (out ? 'Station / you' : esc((cl && cl.name) || 'Client')) + (ch ? ' · ' + ch : '') + (m.at ? ' · ' + esc(convWhen(m.at)) : '') + '</span></div>';
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+    api('conv_thread', { contactId: contactId }).then(function (d) {
+      if (d.signedOut) return;
+      if (d.ok === false) { box.innerHTML = '<p class="small">' + esc(sentence(d.error, 'This conversation couldn’t load just now.')) + '</p>'; btn.disabled = true; return; }
+      cl = d.client || null; if (cl && cl.name) { var h = document.getElementById('clientH'); if (h) h.textContent = cl.name; }
+      list = (d.messages || []).slice().sort(function (a, b) { return (Date.parse(a.at || '') || 0) - (Date.parse(b.at || '') || 0); }); draw();
+      if (cl && !cl.email) { btn.disabled = true; note.textContent = 'Station has no email for this client yet. Message Station to add one.'; }
+    }, function () { box.innerHTML = '<p class="small">No connection to Station. Try again in a moment.</p>'; });
+    btn.addEventListener('click', function () {
+      var text = ta.value.trim(); if (!text) { note.textContent = 'Type a message first.'; ta.focus(); return; }
+      btn.disabled = true; note.textContent = 'Sending…';
+      api('conv_send', { contactId: contactId, channel: 'EMAIL', subject: 'A note from ' + ((ME && firstName(ME.name)) || S.name) + ' at Station', message: text }).then(function (d) {
+        btn.disabled = false; if (d.signedOut) return;
+        if (d.ok === false) { note.textContent = sentence(d.error, 'Your email didn’t send. Try again, or Message Station.'); return; }
+        ta.value = ''; list = list.concat([{ direction: 'outbound', type: 'TYPE_EMAIL', body: text, at: new Date().toISOString() }]); draw();
+        note.textContent = 'Sent to ' + (d.to || 'your client') + '.';
+      }, function () { btn.disabled = false; note.textContent = 'No connection. Your email wasn’t sent; try again.'; });
+    });
+  }
+
   /* ---------- money ---------- */
   VIEWS.money = function () {
     chrome(true, 'money');
