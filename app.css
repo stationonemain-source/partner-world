@@ -771,3 +771,117 @@ body:not(.has-tabs) .toast{top:auto!important;bottom:24px!important}
 .hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
 .enter-card .check{align-items:flex-start}
 .enter-card .check input{flex:none;margin-top:2px}
+
+/* ======================================================================================================================
+   NIGHT SHIFT (2026-10-07, Circle: "make it the same as Circle Command Center, I liked that vibe").
+   Circle's own palette and type (circle.html <style id="nsCSS">): near-black canvas, dark panels, hairline lines, IBM Plex
+   Sans with small uppercase Plex Mono labels, amber accent (#FFB000) for primary actions and the current place. On a
+   desktop the header becomes Circle's fixed left sidebar. Status colours keep their meaning; the accent is never a status.
+   Text sizes stay Partner World's (18px base, Bigger text) -- the partners include people who need large type.
+   ====================================================================================================================== */
+:root{
+  --acc:#FFB000;--acc-ink:#0B0D10;--acc-soft:rgba(255,176,0,.12);--acc-line:rgba(255,176,0,.45);
+  --bg:#0B0D10;--bg-2:#12151A;--card:#12151A;--panel2:#171B21;--hover:#1A1F27;
+  --ink:#E8E6E1;--ink-2:#B3B7BE;--ink-3:#9AA0A8;--line:#1F242C;--line-2:#2B313B;--edge:#5B616B;
+  --amber:#FFB000;--amber-ink:#FFC34D;--amber-bg:#2A2110;
+  --red:#F2A3A5;--red-bg:#2B1416;--blue:#E8E6E1;--blue-bg:#171B21;
+  --green:#4FD08B;--green-bg:#0F2519;--warn:#F5B37A;--warn-bg:#2A1A10;
+  --shadow:none;
+  --font:"IBM Plex Sans","Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink)}
+::selection{background:var(--acc-soft);color:var(--ink)}
+:focus-visible{outline-color:var(--acc)}
+a,.link-btn{color:var(--ink);text-decoration-color:var(--acc)}
+
+/* labels: Circle's small uppercase mono */
+.lbl,.bal-chip .lbl,.tile .lbl,.money-box .lbl,.total-line .lbl,.earn-card .lbl,.next-call .lbl,.start-here .lbl{
+  font-family:var(--mono);font-weight:500;letter-spacing:.14em;text-transform:uppercase}
+.next-call .lbl,.start-here .lbl{color:var(--acc)}
+
+/* surfaces that were ink-filled: panels now; the accent marks primary actions and "you are here" */
+.skip,.preview{background:var(--panel2);color:var(--ink)}
+.preview .link-btn{color:var(--acc)}
+.preview.warn{background:var(--warn-bg);color:var(--warn)}.preview.warn .link-btn{color:var(--warn)}
+.btn{background:var(--panel2);border-color:var(--line-2);color:var(--ink)}
+.btn:hover{background:var(--hover)}
+.btn-dark,.btn-dark:hover{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.btn-dark:hover{filter:brightness(1.08)}
+.btn-green,.btn-green:hover{background:var(--green);border-color:var(--green);color:var(--acc-ink)}
+.topnav a.on,.chip[aria-pressed="true"],.size-btn[aria-pressed="true"],.size-inline[aria-pressed="true"],
+.outcomes button.sel,.outcomes button:active{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.outcomes button.sel small,.outcomes button:active small{color:rgba(11,13,16,.75)}
+.outcomes .won.sel{background:var(--green);border-color:var(--green);color:var(--acc-ink)}.outcomes .won.sel small{color:rgba(11,13,16,.75)}
+.badge.bundle,.step .n,.pill.status{background:var(--panel2);color:var(--ink);border:1px solid var(--line-2)}
+.money-box,.total-line{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.money-box .lbl,.total-line .lbl,.undo-key{color:var(--ink-3)}
+.money-box .big{color:var(--ink)}.money-box .row,.total-line .small{color:var(--ink-2)}.money-box .row b{color:var(--ink)}
+.money-box:not(.zero){box-shadow:inset 3px 0 0 var(--acc)}
+.undo,.toast{background:var(--panel2);color:var(--ink);border:1px solid var(--line-2);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.undo button{color:var(--acc)}
+
+/* fields and pickable rows */
+input.text,select.text,textarea.text,.choice,details.acc,.outcomes button,.pick,.won-next input.text,.won-next .copyrow code{background:var(--panel2);color:var(--ink);border-color:var(--line-2)}
+input.text::placeholder{color:var(--ink-3)}
+.choice:hover,.pick:hover,.outcomes button:hover{background:var(--hover)}
+.pick.on{box-shadow:inset 3px 0 0 var(--acc)}
+
+/* status colours: same meaning, dark tints */
+.explain.good,.won-next,.earn-card .big,.earn-card .per,.tile.hero .v{color:#8FE0B4}
+.explain.bad,.dont{color:var(--red)}
+.won-next.warm,.callout b{color:var(--amber-ink)}
+.setup-row{border-top-color:var(--line)}
+.lead-card{background:var(--card);border-color:var(--line);box-shadow:none}
+.lead-card.done{background:#0F1216}
+.lead-card.warm{box-shadow:inset 3px 0 0 var(--acc)}
+.pill.from{background:var(--amber-bg);color:var(--amber-ink)}
+.bar-track i{background:var(--acc)}
+
+/* glass bars and scrims */
+.bar{background:rgba(11,13,16,.92);border-bottom-color:var(--line)}
+.cta-bar{background:rgba(11,13,16,.96);border-top-color:var(--line);box-shadow:none}
+.filters-wrap::after{background:linear-gradient(90deg,rgba(11,13,16,0),var(--bg))}
+.sheet{background:rgba(0,0,0,.6)}
+.sheet-card{background:var(--card);border:1px solid var(--line)}
+.coach-ring{box-shadow:0 0 0 9999px rgba(0,0,0,.7);border-color:var(--acc)}
+@keyframes pwScrim{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,.6)}}
+@keyframes pwScrimOut{from{background:rgba(0,0,0,.6)}to{background:rgba(0,0,0,0)}}
+.tabbar{background:var(--card);border-top:1px solid var(--line)}
+.tabbar a.on{color:var(--ink)}.tabbar a.on svg{fill:var(--acc)}
+.bal-chip{background:var(--green-bg);color:var(--green)}
+.logo .mark,.enter-top .mark{color:var(--acc)}
+.logo .wm{letter-spacing:.22em}
+.logo .wordmark{font:500 12px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.enter-card{background:var(--card);border:1px solid var(--line)}
+
+/* ---- desktop: the header becomes Circle's left sidebar (232px) ---- */
+.topnav .ni{display:none}
+@media (min-width:1100px){
+  body.has-tabs{padding-left:232px}
+  body.has-tabs .preview{margin-left:232px}
+  .bar{position:fixed;left:0;top:0;bottom:0;width:232px;z-index:40;flex-direction:column;align-items:stretch;gap:0;padding:0;
+    background:#0E1014;border-right:1px solid var(--line);border-bottom:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .bar .logo{margin:0;padding:16px 16px 14px;border-bottom:1px solid var(--line);min-height:0;flex-wrap:wrap;row-gap:4px}
+  .bar .logo .wordmark{display:block;flex-basis:100%;border-left:0;padding-left:0;margin-left:38px}
+  .bar .topnav{flex-direction:column;gap:2px;padding:12px 10px;flex:1}
+  .bar .topnav::before{content:"Menu";display:block;font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);padding:6px 10px 8px}
+  .bar .topnav a{position:relative;justify-content:flex-start;gap:10px;min-height:44px;padding:0 12px;border-radius:6px;font-weight:400;font-size:16px;color:#A2A7AF;background:none}
+  .bar .topnav a:hover{background:#1A1F27;color:var(--ink)}
+  .bar .topnav a.on{background:#181C23;color:var(--ink);font-weight:500}
+  .bar .topnav a.on::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:2px;background:var(--acc)}
+  .bar .topnav .ni{display:block;width:20px;height:20px;fill:currentColor;opacity:.7;flex:none}
+  .bar .topnav a.on .ni{opacity:1;fill:var(--acc)}
+  .bar .size-btn{order:3;margin:0 14px 10px;align-self:stretch}
+  .bar .bal-chip{order:4;margin:0 14px 14px;align-items:flex-start;padding:10px 12px;border-radius:10px}
+  .bar .bal-chip .lbl-long{display:inline}.bar .bal-chip .lbl-short{display:none}
+  body.calls-mode .calls-top{top:0}
+}
+@media (min-width:1100px) and (max-width:1300px){.wrap{padding-left:24px;padding-right:24px}}
+/* Circle's geometry: 10px corners on buttons and cards, not pills */
+:root{--r:10px;--r-sm:8px;--r-lg:12px}
+.btn,.call-btn,.chip,.size-btn,.size-inline,.topnav a,.money-box,.lead-card,.next-call,.start-here,.box,.enter-card,.sheet-card,.undo,.toast{border-radius:10px}
+.pill,.badge,.earn-pill{border-radius:6px}
+.earn-card p{color:#B9E8CD}
+@media (max-width:760px){.lead-card{gap:8px;padding:14px 16px}}
