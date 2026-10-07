@@ -19,7 +19,7 @@ window.PW={
 "mrr": 0,
 "setup": 0,
 "earn": null,
-"earnLabel": "40% of their monthly hosting & care, which Station quotes. The build fee earns nothing.",
+"earnLabel": "40% of the setup fee, once, when the client pays it. Hosting & care earns nothing.",
 "who": "Businesses with no website, or one that is out of date.",
 "easy": false,
 "ask": "What kind of work do you do, and where?",
@@ -31,7 +31,7 @@ window.PW={
 "about": [
 "A custom-designed (bespoke) website built around the business, not a template. This is separate from the free Station-built website that comes with every collection and plan (see The free website below). It has booking and lead forms wired to their Station inbox, and Station revises it until it’s right. The domain and site stay the client’s.",
 "It’s <b>priced to the project</b>, with no published price, so never quote a number. The owner answers about 5 minutes of questions at station.solutions/custom/. Station builds a free demo by hand and emails it within 2 to 3 business days. Nothing is charged until they’ve seen it and said yes.",
-"After it’s built, the client either takes the site over and runs it themselves, or Station hosts it and looks after it for them. <b>Hosting &amp; care</b> is one monthly subscription with <b>no list price</b>: Station quotes it for each client, and the quote covers what their domain costs plus the amount of care that fits that business. Never quote, estimate or discount it. Email Station at main@station.solutions with what the client needs, and Station sends them the quote. It’s recurring, so you earn your 40% on whatever the client actually pays for it."
+"After it’s built, the client either takes the site over and runs it themselves, or Station hosts it and looks after it for them. <b>Hosting &amp; care</b> is one monthly subscription with <b>no list price</b>: Station quotes it for each client, and the quote covers what their domain costs plus the amount of care that fits that business. Never quote, estimate or discount it. Email Station at main@station.solutions with what the client needs, and Station sends them the quote. Hosting &amp; care earns no commission. You earn 40% of the website’s setup fee, once, when the client pays it."
 ],
 "call": {
 "opener": "Is your website bringing in the kind of customers you want, or is it something you’ve been meaning to fix?",
@@ -549,7 +549,7 @@ window.PW={
 "<ul class=\"ticks\"><li><b>Answer, $297 a month:</b> missed-call text-back (Lineback), website chat (Greet), online booking and reminders (Slate), a business number with texting (Dial) and card payments (Tap). They’re worth $382 a month separately. Add the AI receptionist (Frontdesk, 750 minutes) for $297 a month more. It’s $397 on its own.</li></ul>",
 "If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
-"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. The $500 earns no commission, and hosting &amp; care earns your 40%. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
+"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
 "call": {
 "opener": "When you’re busy with a customer and the phone rings, what happens to that caller?",
@@ -592,7 +592,7 @@ window.PW={
 "<ul class=\"ticks\"><li><b>Get Found, $497 a month:</b> Google profile managed (Echo), review requests and replies (Repute) and social posting self-serve (Marquee). They’re worth $641 a month separately.</li></ul>",
 "If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
-"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. The $500 earns no commission, and hosting &amp; care earns your 40%. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
+"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
 "call": {
 "opener": "When someone searches for what you do, how do your Google reviews compare with the competitor you lose work to?",
@@ -635,7 +635,7 @@ window.PW={
 "<ul class=\"ticks\"><li><b>Follow Up, $427 a month:</b> lead follow-up (Pursuit), win-back campaigns (Revive) and email campaigns self-serve (Dispatch). They’re worth $538 a month separately.</li></ul>",
 "If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
-"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. The $500 earns no commission, and hosting &amp; care earns your 40%. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
+"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
 "call": {
 "opener": "When someone asks about a job and you don’t book them right then, how many times do you follow up?",
@@ -678,7 +678,7 @@ window.PW={
 "<ul class=\"ticks\"><li><b>Core, $1,297 a month:</b> every product at its Standard tier, including Frontdesk at 750 minutes, plus a free Station-built website. It’s worth $1,899 a month separately.</li></ul>",
 "If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
-"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. The $500 earns no commission, and hosting &amp; care earns your 40%. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
+"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
 "call": {
 "opener": "If you could stop thinking about your front office, what would you hand off first: calls, follow-up, reviews or booking?",
@@ -721,7 +721,7 @@ window.PW={
 "<ul class=\"ticks\"><li><b>Pro, $2,197 a month:</b> every product at its busy tier (Greet 750 chats, Lineback 5,000 texts, Frontdesk 1,200 minutes, Slate 2,500, Pursuit 6,000 texts and 40,000 emails). Station writes and runs the social posts (12 a month plus ads) and the email campaigns (4 a month). It also includes a free Station-built website. It’s worth $3,072 a month separately.</li></ul>",
 "If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
-"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. The $500 earns no commission, and hosting &amp; care earns your 40%. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
+"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
 "call": {
 "opener": "Which takes more of your week: the social posts, the email campaigns, or the calls?",
@@ -764,7 +764,7 @@ window.PW={
 "<ul class=\"ticks\"><li><b>Max, $2,797 a month:</b> every product at its top tier (Greet 1,750 chats, Frontdesk 2,500 minutes), with social and email done for the client, priority support and a quarterly review call, plus a custom-designed website. It’s worth $3,472 a month before the website. Max was called Custom before 2026-10-04. The word Custom now only means a quoted custom website.</li></ul>",
 "If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
-"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. The $500 earns no commission, and hosting &amp; care earns your 40%. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
+"If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
 "call": {
 "opener": "What would it mean to hand the whole front office, marketing included, to someone else?",

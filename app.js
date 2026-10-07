@@ -13,7 +13,12 @@
    How a call works (09-29 UX pass): each lead card carries its own pitch and opener. "Call now" opens a short
    "Ready to call" card (the lines to say, speaker tip), then the phone. When the partner comes back to the app,
    "How did it go?" opens by itself. Every save can be undone for a few seconds; in LIVE mode a result is only sent
-   to Station once its Undo has gone, so Undo never has to take anything back from the engine. */
+   to Station once its Undo has gone, so Undo never has to take anything back from the engine.
+
+   Follow-up (10-07, engine v4.60): a call-back has a day AND a time (stored at Station with the partner's own clock),
+   "Interested" needs a call-back time or a booked call, call-backs due now are listed at the top of Calls (overdue 2 hours
+   after their time), "Book a call" uses the partner's own booking calendar, and "Write them an email" sends through
+   Station (engine lead_email; off until Station finishes the partner sending address, and the composer says so). */
 (function () {
   'use strict';
   var PW = window.PW, KEY = 'pw-preview-v2';
@@ -111,6 +116,14 @@
     if (s === ymd(new Date(Date.now() - 864e5))) return 'yesterday';
     return new Date(s + 'T12:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
+  /* call-back times are the partner's own clock: "2:30 pm", and an ISO time with this browser's offset for Station */
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  function clock(ms) { return new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase(); }
+  function isoLocal(ms) {
+    var d = new Date(ms), off = -d.getTimezoneOffset(), ao = Math.abs(off);
+    return ymd(d) + 'T' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':00' + (off < 0 ? '-' : '+') + p2(Math.floor(ao / 60)) + ':' + p2(ao % 60);
+  }
+  function myTz() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } }
 
   /* ---------- sample leads: fictional businesses, reserved 555-01xx numbers with real area codes ---------- */
   var HOLD_DAYS = 14; // Circle, 10-03: a business you haven't finished goes back to Station's shared list after 14 days
@@ -185,8 +198,13 @@
   var CLOSED = { bad: 1, notint: 1, dnc: 1, won: 1 };
   var TALKED = { interested: 1, callback: 1, notint: 1, dnc: 1, won: 1, talked: 1 }; // talked: an earlier conversation in the engine's call history
   function triedToday(s) { return !!s && (s.o === 'noanswer' || s.o === 'voicemail' || s.o === 'called') && ymd(new Date(s.at)) === today(); }
-  /* a call-back day can sit on any open outcome (the old portal sets one on Interested too) */
-  function dueNow(s) { return !!s && !CLOSED[s.o] && !!s.due && (s.due < today() || (s.due === today() && (!s.dueAt || Date.now() >= s.dueAt))); }
+  /* a call-back day can sit on any open outcome (the old portal sets one on Interested too). With a time (dueAt) it is due from
+     15 minutes before that time and overdue 2 hours after it; a day with no time (older rows) is due all that day. */
+  var DUE_SOON = 15 * 60e3, OVERDUE_AFTER = 2 * 3600e3;
+  function dueNow(s) { if (!s || CLOSED[s.o] || !s.due) return false; return s.dueAt ? Date.now() >= s.dueAt - DUE_SOON : s.due <= today(); }
+  function overdue(s) { return dueNow(s) && (s.dueAt ? Date.now() > s.dueAt + OVERDUE_AFTER : s.due < today()); }
+  function dueWords(s) { return dayLabel(s.due) + (s.dueAt ? ' at ' + clock(s.dueAt) : ''); }
+  function bookedFor(l) { var b = l && l.booked, t = b ? Date.parse(b.start || '') : NaN; return isFinite(t) && t > Date.now() - 3600e3 ? t : 0; }
   function warmToday(s) { return !!s && s.o === 'interested' && ymd(new Date(s.at)) === today(); } // just talked: not the next call
   function rank(l) {
     var s = S.log[l.id];
@@ -220,8 +238,8 @@
     return s;
   }
   function statusText(s) {
-    if (s.o !== 'callback' && s.due && !CLOSED[s.o]) return OUT[s.o] + ' · call back ' + (s.due < today() ? 'overdue since ' : '') + dayLabel(s.due);
-    var t = s.o === 'callback' && s.due ? (s.due < today() ? 'Call back: overdue since ' + dayLabel(s.due) : s.due === today() && s.dueAt && Date.now() < s.dueAt ? 'Call back after ' + new Date(s.dueAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase() : 'Call back ' + dayLabel(s.due)) : OUT[s.o];
+    if (s.o !== 'callback' && s.due && !CLOSED[s.o]) return OUT[s.o] + ' · call back ' + (overdue(s) ? 'overdue since ' : '') + dueWords(s);
+    var t = s.o === 'callback' && s.due ? (overdue(s) ? 'Call back: overdue since ' + dueWords(s) : dueNow(s) ? 'Call back now · ' + dueWords(s) : 'Call back ' + dueWords(s)) : OUT[s.o];
     if ((s.o === 'noanswer' || s.o === 'voicemail') && s.tries > 1) t += ' · ' + s.tries + ' tries';
     return s.wasInterested && !CLOSED[s.o] ? 'Interested · ' + t : t;
   }
@@ -256,9 +274,9 @@
     { q: 'A business owner asks, “Can you do it cheaper?” What do you say?',
       a: [['Prices are the same for everyone, so I can’t.', 1], ['I’ll give you part of my commission.', 0], ['I can take a bit off if you sign up today, just between us.', 0]],
       why: 'Station sets prices and they’re the same for everyone. Never offer part of your commission, a deal or a longer trial.' },
-    { q: 'A client pays Station a one-time fee to build a website. Do you earn 40% of that fee?',
-      a: [['Yes, 40% of everything they pay, one-time fees included.', 0], ['No. Only the monthly payments count.', 1], ['Yes, once their free trial ends.', 0]],
-      why: 'Your 40% is on the monthly payments that clear. Website build fees earn nothing, but the monthly price behind them earns you every month.' },
+    { q: 'A client pays Station a setup fee to build their website, then a monthly fee for hosting & care. What do you earn?',
+      a: [['40% of the setup fee. Hosting & care earns nothing.', 1], ['40% of the hosting & care, every month. The setup fee earns nothing.', 0], ['40% of both, every month.', 0]],
+      why: 'You earn 40% of what each client pays Station: for a website, 40% of the setup fee; for everything else, 40% of every payment while they stay. Paid once the client’s payment clears. Hosting & care earns nothing.' },
     { q: 'Someone asks, “Do you work for Station?”',
       a: [['Yes, I’m on Station’s sales team for your area.', 0], ['I’m an independent partner. I earn a commission if you sign up.', 1], ['I’d rather not say who I work for.', 0]],
       why: 'You’re an independent partner, not an employee. Saying so honestly is what makes people trust you.' },
@@ -272,7 +290,7 @@
       a: [['Say sorry, end the call, mark them Do not call.', 1], ['Ask if they’re sure, then give the pitch one more time just in case.', 0], ['Call back next week in case they change their mind.', 0]],
       why: 'When someone asks you to stop, stop. Do not call means nobody calls that business again.' }
   ];
-  var HINT = ['Think about who sets the prices.', 'Think about which payments repeat every month.', 'Think about what’s true, and what makes people trust you.',
+  var HINT = ['Think about who sets the prices.', 'Think about which website payment counts, and how often.', 'Think about what’s true, and what makes people trust you.',
     'Think about who has to approve texting first.', 'Think about whose clock matters.', 'Think about what they asked you to do.'];
 
   /* ---------- LIVE: Station's partner engine ----------
@@ -333,7 +351,9 @@
     return { id: String(r.id), name: r.name || 'A local business', trade: niche ? tradeName(niche) : 'Local business',
       city: r.city || '', st: String(r.state || '').toUpperCase().slice(0, 2), rating: +r.rating || 0, reviews: +r.reviews || 0,
       gap: r.gap || (r.source === 'station' ? 'Station picked this business for you.' : 'You added this business.'), fits: BOX[r.sku] ? r.sku : 'bundle-answer', own: r.source !== 'station',
-      phone: nice, dial: d.length === 10 ? '+1' + d : nice.replace(/[^\d+]/g, ''), until: +r.until || 0 };
+      phone: nice, dial: d.length === 10 ? '+1' + d : nice.replace(/[^\d+]/g, ''), until: +r.until || 0,
+      email: String(r.email || ''), booked: r.booked && r.booked.start ? { start: String(r.booked.start) } : null, // v4.60
+      mailed: r.mailed && r.mailed.last_at ? { n: +r.mailed.n || 1, last: String(r.mailed.last_at) } : null };
   }
   /* the engine's record of a row -> this app's status for it; prev keeps what only this browser knows (the email typed, the hour of a "later today") */
   function logFromRow(r, prev) {
@@ -343,7 +363,10 @@
     prev = prev || {};
     var x = { o: o, at: Date.parse(r.outcome_at || (last && last.at) || '') || Date.now(), box: prev.box || (BOX[r.sku] ? r.sku : 'bundle-answer') };
     var tries = att.filter(function (a) { return a.result === 'no_answer' || a.result === 'voicemail'; }).length; if (tries) x.tries = tries;
-    if (r.next_at && !CLOSED[o]) { x.due = String(r.next_at).slice(0, 10); if (prev.due === x.due && prev.dueAt) x.dueAt = prev.dueAt; } // any open outcome can carry a call-back day
+    if (r.next_at && !CLOSED[o]) { // any open outcome can carry a call-back day; since v4.60 Station keeps its time too
+      var nx = String(r.next_at), tm = nx.length > 10 ? Date.parse(nx) : 0;
+      x.due = nx.slice(0, 10); if (tm) x.dueAt = tm; else if (prev.due === x.due && prev.dueAt) x.dueAt = prev.dueAt;
+    }
     if (prev.email) x.email = prev.email;
     if (prev.wasInterested && !CLOSED[o] && o !== 'interested') x.wasInterested = true;
     if (o === 'won' && r.won && r.won.accepted_at) x.accepted = true;
@@ -397,9 +420,9 @@
     // a correction to a result still waiting here replaces it; a correction to one Station already has (or to a waiting
     // correction) sends only the new outcome, so the engine never logs a conversation twice
     if (changing && (!waiting || waiting.change) && map.outcome) body.outcome = map.outcome; else Object.assign(body, map);
-    if (o === 'callback' && extra && extra.due) body.next_at = extra.due;
+    if ((o === 'callback' || o === 'interested') && extra && (extra.dueIso || extra.due)) body.next_at = extra.dueIso || extra.due; // v4.60: with the time
     body.note = ('Pitched ' + pitchFor(l).name).slice(0, 200); // what Station sees with the call; the partner's notes are their own journal
-    if (body.next_at && body.next_at < chicagoToday()) body.next_at = chicagoToday();
+    if (body.next_at && body.next_at.length === 10 && body.next_at < chicagoToday()) body.next_at = chicagoToday();
     if (waiting) {
       waiting.prev = { body: waiting.body, o: waiting.o, change: waiting.change, hold: waiting.hold, prev: waiting.prev }; // Undo goes back one step
       waiting.body = body; waiting.o = o; waiting.hold = true; save(); syncLine(); return waiting.q;
@@ -576,7 +599,10 @@
       applyLeads(d);
       return api('money_lines').then(function (x) { MONEY = x && x.ok !== false ? x : null; MONEY_ERR = x && x.ok === false ? sentence(x.error, '') : ''; },
         function () { MONEY = null; MONEY_ERR = 'Your money couldn’t load just now.'; });
-    }).then(function () { BOOTING = false; BOOTED = true; LOADED_AT = Date.now(); save(); applyTeamNav(); pump(); },
+    }).then(function () {
+      BOOTING = false; BOOTED = true; LOADED_AT = Date.now(); save(); applyTeamNav(); pump();
+      var tz = myTz(); if (tz && ME && ME.tz !== tz) api('tz_set', { tz: tz }).then(function (d) { if (d && d.ok && ME) ME.tz = d.tz; }, function () {}); // Station keeps the partner's time zone (reminders, the booking calendar)
+    },
       function (e) { BOOTING = false; if (e === 'out') return; BOOT_ERR = typeof e === 'string' ? e : e && e.http ? 'Station’s system had a problem (error ' + e.http + '). It’s not your connection. Try again in a minute.' : 'No connection to Station. Check your internet and try again.'; });
   }
   function startLive() {
@@ -612,15 +638,15 @@
     var pct = Math.round(PW.rate * 100) + '%';
     return '<div class="gate-pitch">' +
       '<p class="lbl">Station partner program</p>' +
-      '<h2 class="gate-h">Sell what local businesses already need. Earn ' + pct + ' every month they pay.</h2>' +
-      '<p class="gate-sub">Station gives you businesses to call, the words to say and an app to work from. When one signs up, you earn ' + pct + ' of what it pays Station, for as long as it keeps paying.</p>' +
+      '<h2 class="gate-h">Sell what local businesses already need. Earn ' + pct + ' of what they pay.</h2>' +
+      '<p class="gate-sub">Station gives you businesses to call, the words to say and an app to work from. You earn 40% of what each client pays Station: for a website, 40% of the setup fee; for everything else, 40% of every payment while they stay. Paid once the client’s payment clears.</p>' +
       (mode === 'request' ? '' : '<div class="gate-ctas"><button class="btn btn-dark btn-big" type="button" data-join>Become a partner</button><a class="gate-peek" href="?preview">See the app first</a></div>') +
       gateEarn('ge-pitch') +
       '<ol class="gate-steps">' +
       '<li><b>1</b><span><strong>Request an account.</strong> It takes about a minute.</span></li>' +
       '<li><b>2</b><span><strong>Station approves you</strong> and sends businesses to your list.</span></li>' +
       '<li><b>3</b><span><strong>Call from the app.</strong> The script is on screen for every call.</span></li>' +
-      '<li><b>4</b><span><strong>Get paid every two weeks</strong> once $50 or more is ready.</span></li></ol>' +
+      '<li><b>4</b><span><strong>Get paid</strong> once your client’s payment clears.</span></li></ol>' +
       '<ul class="gate-facts"><li>No quota</li><li>Work from your phone</li><li>Station sets up every client</li><li>' + PW.boxes.filter(function (b) { return b.brand === 'station'; }).length + ' products to sell</li></ul>' +
       '</div>';
   }
@@ -833,10 +859,10 @@
     mount('<section class="enter"><div class="enter-card">' +
       '<div class="enter-top">' + MARK + '<button class="size-inline" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">Aa</span> Bigger text</button></div>' +
       '<h1>Welcome to Station Partner World</h1>' +
-      '<p class="intro">Call local businesses Station gives you. When one signs up, you earn 40% of what they pay Station, every month they keep paying.</p>' +
+      '<p class="intro">Call local businesses Station gives you. You earn 40% of what each client pays Station: for a website, 40% of the setup fee; for everything else, 40% of every payment while they stay. Paid once the client’s payment clears.</p>' +
       '<ol class="steps3"><li><b>1</b><span><strong>Learn one product.</strong> Start with the Answer collection; its cheat sheet takes 2 minutes.</span></li>' +
       '<li><b>2</b><span><strong>Call your list.</strong> The words to say are on every card.</span></li>' +
-      '<li><b>3</b><span><strong>Get paid.</strong> 40% of every monthly payment your clients make.</span></li></ol>' +
+      '<li><b>3</b><span><strong>Get paid.</strong> 40% of what each client pays Station, once their payment clears.</span></li></ol>' +
       '<form id="hello" novalidate>' +
       '<label class="field" for="w-name">Your first name<input class="text" id="w-name" autocomplete="given-name" aria-describedby="e-name" value="' + esc(S.name) + '"></label><p class="field-err" id="e-name" role="alert"></p>' +
       '<label class="field" for="w-code">Your partner code<span class="hint">It’s in your invite email, something like jsmith. Can’t find it? Email main@station.solutions.</span><input class="text" id="w-code" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="e-code w-codeuse" value="' + esc(S.code) + '"></label>' +
@@ -916,7 +942,7 @@
   function canAskHome() { return !DEMO && dealtTotal() > 0 && !S.asked && counts().stFresh === 0; } // your own new businesses never block asking
   function todayLine(c) {
     var later = LEADS.filter(function (l) { return rank(l) < 4 && triedToday(S.log[l.id]); }).length, now = LEADS.filter(callableNow).length;
-    return now + ' to call today' + (later ? ' · ' + later + ' tomorrow' : '');
+    return (c.due ? c.due + (c.due === 1 ? ' call-back' : ' call-backs') + ' due now · ' : '') + now + ' to call today' + (later ? ' · ' + later + ' tomorrow' : '');
   }
   function askedText() {
     if (!S.askedAt) return '';
@@ -934,8 +960,9 @@
         '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#box/bundle-answer">Learn the Answer collection</a></div></section>';
     } else if (next) {
       var nb = pitchFor(next), due = rank(next) === 0;
-      nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">' + (due ? 'Call-back due' : 'Your next call') + '</span>' +
-        '<h2 id="nextH">' + esc(next.name) + '</h2><p class="facts"><span>' + esc(next.trade) + ' · ' + esc(placeOf(next)) + '</span>' + (next.rating ? '<span>★ ' + next.rating + '</span>' : '') + '</p>' +
+      var ns0 = S.log[next.id];
+      nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">' + (due ? (overdue(ns0) ? 'Call-back overdue' : 'Call-back due now') : 'Your next call') + '</span>' +
+        '<h2 id="nextH">' + esc(next.name) + '</h2><p class="facts"><span>' + esc(next.trade) + ' · ' + esc(placeOf(next)) + '</span>' + (next.rating ? '<span>★ ' + next.rating + '</span>' : '') + (due ? '<span>You set it for ' + esc(dueWords(ns0)) + '</span>' : '') + '</p>' +
         ((function () { var ns = S.log[next.id]; return ns && !CLOSED[ns.o] && (ns.o === 'interested' || ns.o === 'callback' || ns.wasInterested); })() ? '<p class="pitch-line">Following up on <strong>' + esc(nb.name) + '</strong>: “' + esc(followLine(nb)) + '”</p>' :
         '<p class="pitch-line">Pitch <strong>' + esc(nb.name) + '</strong>' + (S.pitch[next.id] ? ' (your pick)' : sellable(BOX[S.focus]) && S.focusDay === today() && nb.id === S.focus ? ' (your pick for today)' : '') + '. Say who you are, then open with: “' + esc(openerOf(nb)) + '”</p>') +
         '<p class="small' + (now.ok ? '' : ' closed-note') + '" id="callNote"' + (now.ok ? ' hidden' : '') + '>' + closedNote(now) + '</p>' +
@@ -1004,7 +1031,7 @@
       '<li class="say"><small>2 Free trial</small>' + TD + ' days for single products and collections. Core, Pro and Max have no trial. Nothing is earned during a trial.</li>' +
       '<li class="say"><small>3 First payment clears</small>Your 40% starts here.</li>' +
       '<li class="say"><small>4 Held up to 30 days</small>A new client’s first payment is held up to 30 days for refunds and chargebacks. Renewals aren’t held.</li>' +
-      '<li class="say"><small>5 You’re paid</small>Every two weeks, once $50 or more is ready and your tax form and Stripe account are set up.</li></ol>' +
+      '<li class="say"><small>5 You’re paid</small>Once $50 or more is ready and your tax form and Stripe account are set up.</li></ol>' +
       '<p class="small fine">So a yes on a collection is weeks, not days, before money lands. Plans skip the trial, so they start sooner.</p>';
   }
 
@@ -1014,7 +1041,7 @@
     if (b.easy) badges += '<span class="badge first">Good first pick</span>';
     
     var earn = b.earn ? '<span class="earn"><b class="amt num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client</span>'
-      : '<span class="earn tbd">You earn 40% of their monthly care plan</span>';
+      : '<span class="earn tbd">You earn 40% of the setup fee, once</span>';
     return '<a class="box" href="#box/' + b.id + '"><div class="badges">' + badges + '</div><span class="name">' + esc(b.name) + '</span><span class="what">' + esc(b.blurb || b.what) + '</span>' + earn + '</a>';
   }
   function easyFirst(a, b) { var k = function (x) { return x.easy ? 0 : x.id === 'website' ? 2 : 1; }; return k(a) - k(b); }
@@ -1060,7 +1087,7 @@
     return '<details class="script-peek"><summary>If someone else answers</summary><div class="say"><small>Say</small>' + esc(gateLine()) + '</div></details>' +
       '<details class="script-peek"><summary>If you get voicemail</summary><div class="say"><small>Say</small>' + esc(vmLine(l)) + '</div><p class="small">Then tap Voicemail. You can try them again tomorrow.</p></details>';
   }
-  function earnShort(b) { return b.earn ? 'Sale: ' + money(b.earn) + (period(b) === 'quarter' ? '/qtr' : '/mo') : b.id === 'website' ? '40% of care plan' : ''; }
+  function earnShort(b) { return b.earn ? 'Sale: ' + money(b.earn) + (period(b) === 'quarter' ? '/qtr' : '/mo') : b.id === 'website' ? '40% of setup fee' : ''; }
   function closeLineOf(b) { return (b.call && b.call.close) || 'Want me to send you the link so you can take a look? What’s the best email?'; }
   function priceLine(b) {
     var r = (b.replyFix || {})['How much is it?'];
@@ -1116,7 +1143,7 @@
     var link = linkFor(b);
     var earnNote = b.kind === 'plan' ? 'That’s 40% of the plan price, starting with their first monthly payment once it clears. Plans have no free trial, so there’s nothing to wait for.'
       : b.bundle ? 'That’s 40% of the collection price, starting after their ' + TD + '-day free trial, once the payment clears. The free Station-built website earns nothing; the monthly price does.'
-      : b.id === 'website' ? 'Station quotes each client’s monthly hosting & care. You earn 40% of whatever they pay for it, every month. The build fee earns nothing.'
+      : b.id === 'website' ? 'You earn 40% of the website’s setup fee, once, when the client pays it and the payment clears. Station quotes the setup fee for each project. Hosting & care earns nothing.'
       : b.id === 'revive' ? 'That’s 40% of the $197 each client pays per month, starting after their ' + TD + '-day free trial, once the payment clears.'
       : b.id === 'echo' ? 'That’s 40% of the $247 each client pays per month, starting after their ' + TD + '-day free trial. There’s no setup fee.'
       : 'That’s 40% of what each client pays, starting after their ' + TD + '-day free trial, once the payment clears.';
@@ -1131,7 +1158,7 @@
     var more = [
       ['The full script', sayBoxes(script(b), true) + '<button class="link-btn" type="button" data-copy-script>Copy the whole script</button>'],
       ['If they push back', repliesBlock(b) || '<p>Keep it simple: answer the question, then offer to send the link.</p>'],
-      ['When they say yes', b.id === 'website' ? '<ul class="ticks"><li>Send them your link to the questions, so the demo is credited to you.</li><li>Mark the call <strong>Interested</strong>. Station builds the free demo and quotes the project.</li><li>Mark it <strong>Won</strong> only when Station tells you they’ve said yes. You earn on their monthly hosting & care.</li></ul>'
+      ['When they say yes', b.id === 'website' ? '<ul class="ticks"><li>Send them your link to the questions, so the demo is credited to you.</li><li>Mark the call <strong>Interested</strong>. Station builds the free demo and quotes the project.</li><li>Mark it <strong>Won</strong> only when Station tells you they’ve said yes. You earn 40% of the setup fee, once, when they pay it. Station builds the site; you never build one.</li></ul>'
         : '<ul class="ticks"><li>If they want to look first, mark the call <strong>Interested</strong> and send them your link. They stay on your list.</li><li>When they’re signing up, mark it <strong>Won</strong> and send the link, so the sale is credited to you. Station checks it and sets everything up; you don’t set anything up yourself.</li><li>You earn once they start paying. Station handles billing and support.</li></ul>'],
       ['Why they buy it', '<ul class="ticks">' + (b.why.length ? b.why : [b.what]).map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>'],
       ['Price details', '<p><strong>' + esc(b.price) + '</strong></p>' + (priceNote(b) ? '<p class="small">' + priceNote(b) + '</p>' : '')],
@@ -1139,9 +1166,9 @@
     ].map(function (m) { return '<details class="more"><summary><h3>' + m[0] + '</h3></summary><div>' + m[1] + '</div></details>'; }).join('');
     mount('<div class="wrap prod"><a class="back" href="#products">&larr; All products</a>' +
       '<div class="prod-top"><h1>' + esc(b.name) + '</h1><p class="what">' + esc(b.what) + '</p>' +
-      '<p class="earn-line">' + (b.earn ? 'You earn <b class="num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client' : 'You earn 40% of their monthly care plan') + '</p></div>' + cheat +
+      '<p class="earn-line">' + (b.earn ? 'You earn <b class="num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client' : 'You earn 40% of the setup fee, once') + '</p></div>' + cheat +
       '<div class="earn-card"><span class="lbl">What you earn per paying client</span>' +
-      (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they keep paying &middot; ' + money(b.earn * 12) + ' over 12 months of payments</div>' : '<div class="big">40% of their monthly care</div>') +
+      (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they keep paying &middot; ' + money(b.earn * 12) + ' over 12 months of payments</div>' : '<div class="big">40% of the setup fee, once</div>') +
       '<p>' + earnNote + ' Nothing is earned during a trial, and it’s arithmetic, not a forecast.</p></div>' +
       '<h2 class="more-h">Everything else</h2><div class="more-list">' + more + '</div></div>' +
       '<div class="cta-bar"><a class="btn btn-dark btn-big" href="#calls/' + b.id + '">Start calling for ' + esc(b.name) + '</a></div>', b.name);
@@ -1185,12 +1212,14 @@
     mount('<h1 class="sr">Calls</h1><div class="calls-top">' +
       '<div class="prog"><div class="prog-row"><span class="count" id="leftCount" aria-live="polite"></span><span class="small" id="triedCount"></span><button class="size-btn small-size" type="button" data-size aria-pressed="' + !!S.big + '" aria-label="AA Bigger text"><span aria-hidden="true">A<b>A</b></span></button></div>' +
       '<div class="bar-track" aria-hidden="true"><i id="progBar"></i></div></div>' +
+      '<div class="due-strip" id="dueStrip" role="region" aria-label="Call-backs due now" hidden></div>' +
       (focus ? '<div class="focus-chip"><span>Pitching <b>' + esc(focus.name) + '</b> to everyone today</span><button class="link-btn" type="button" id="clearFocus">Use each business’s best fit</button></div>' : '') +
       '</div><div class="calls-body"><div class="feed" id="feed" role="region" aria-label="Businesses to call, one per screen">' + cards + '</div>' +
       '<aside class="side" id="side" aria-label="Your lines for the business on screen"></aside></div>', 'Calls');
     var cf = document.getElementById('clearFocus');
     if (cf) cf.addEventListener('click', function () { S.focus = ''; save(); history.replaceState(null, '', '#calls'); VIEWS.calls(); toast('Each business now gets its best fit.'); });
     feedEl().querySelectorAll('.lead[data-id]').forEach(wireCard);
+    document.getElementById('dueStrip').addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-due]'); if (b) goTo(cardEl(b.getAttribute('data-due')), true); });
     wireKeys(); updateEnd(); sizeFeed(); wireSide();
     tick = setInterval(refreshTimes, 15000); // times go stale and calling hours open or close while the page sits there
     if (showAfter) { var sa = cardEl(showAfter); showAfter = ''; if (sa) setTimeout(function () { goTo(sa, true); }, 60); }
@@ -1220,7 +1249,22 @@
       '';
     side.querySelector('[data-side-script]').addEventListener('click', function () { openScript(b); });
   }
+  /* ---------- Due now (10-07): call-backs from 15 minutes before their time, overdue 2 hours after it ---------- */
+  function dueList() {
+    var at = function (l) { var s = S.log[l.id]; return s.dueAt || Date.parse(s.due + 'T09:00') || 0; };
+    return LEADS.filter(function (l) { return dueNow(S.log[l.id]); }).sort(function (a, b) { return at(a) - at(b); });
+  }
+  function drawDue() {
+    var el = document.getElementById('dueStrip'); if (!el) return;
+    var list = dueList(), h = list.length ? '<span class="lbl">Due now</span><ul class="due-list">' + list.map(function (l) {
+      var s = S.log[l.id], od = overdue(s);
+      return '<li><button type="button" class="due-item' + (od ? ' over' : '') + '" data-due="' + esc(l.id) + '"><b>' + esc(l.name) + '</b><span>' + (od ? 'Overdue · ' : '') + esc(dueWords(s)) + '</span></button></li>';
+    }).join('') + '</ul>' : '';
+    if (el._h === h) return;
+    el._h = h; el.innerHTML = h; el.hidden = !h; sizeFeed();
+  }
   function updateEnd() {
+    drawDue();
     var c = counts(), end = document.querySelector('#endCard .lead-card'); if (!end) return;
     document.getElementById('leftCount').textContent = c.tried + ' called';
     document.getElementById('triedCount').textContent = c.fresh + ' new left';
@@ -1265,6 +1309,7 @@
   }
   function refreshTimes() {
     if (location.hash.indexOf('#calls') !== 0 || !feedEl()) { clearInterval(tick); tick = null; return; }
+    drawDue();
     feedEl().querySelectorAll('.lead[data-id]').forEach(function (card) {
       var l = LEAD[card.getAttribute('data-id')]; if (!l) { if (!card.contains(document.activeElement)) card.remove(); return; } // Station took it back
       var t = localTime(l.st), line = card.querySelector('[data-time]');
@@ -1312,6 +1357,22 @@
     return o.map(function (x, i) { return '<button type="button"' + (o.length % 2 && i === o.length - 1 ? ' class="wide"' : '') + ' data-day="' + x[0] + '">' + x[1] + '</button>'; }).join('') +
       '<label class="pickday wide">Or pick the day they said <input type="date" data-pickday min="' + addDays(1) + '" max="' + ymd(new Date(Date.now() + 90 * 864e5)) + '"></label>';
   }
+  /* is this moment inside the business's calling hours (9 am to 8 pm, Monday to Saturday, their time)? */
+  function bizParts(l, ms) {
+    var tz = TZ[l.st], p = {}; if (!tz) return null;
+    new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', hour: 'numeric', hour12: false }).formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+    return { sun: p.weekday === 'Sun', h: +p.hour % 24 };
+  }
+  function bizOk(l, ms) { var b = bizParts(l, ms); return !b || (!b.sun && b.h >= 9 && b.h < 20); }
+  function bizClock(l, ms) { var tz = TZ[l.st]; return tz ? new Date(ms).toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' }).toLowerCase() : ''; }
+  function timeRow(l, day) {
+    var now = Date.now(), other = TZ[l.st] && TZ[l.st] !== myTz();
+    return '<p class="small wide row-h" tabindex="-1">What time on ' + esc(dayLabel(day)) + '? Your time.</p>' + [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(function (h) {
+      var ms = new Date(day + 'T' + p2(h) + ':00').getTime(), ok = ms > now + 10 * 60e3 && bizOk(l, ms);
+      return '<button type="button" data-hm="' + p2(h) + ':00"' + (ok ? '' : ' disabled') + '>' + clock(ms) + (other ? '<small>' + esc(bizClock(l, ms)) + ' for them</small>' : '') + '</button>';
+    }).join('') +
+      '<label class="pickday wide" for="pt-' + esc(l.id) + '">Or type the time they said<span class="pt-row"><input type="time" id="pt-' + esc(l.id) + '" data-picktime step="300"><button type="button" class="btn" data-time-go>Set</button></span></label>';
+  }
   function goTo(el, instant) {
     if (!el) return;
     if (pending && el.getAttribute('data-id') !== pending.id) setPending(null); // a call you moved away from is never logged against the next business
@@ -1330,18 +1391,15 @@
 
   function cleanEmail(e) { return String(e || '').replace(/[\s?&#<>"']/g, ''); }
   function sendBox(l, s) {
-    var bx = BOX[s.box] || pitchFor(l), link = linkFor(bx), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    var web = bx.id === 'website', named = bx.bundle ? 'the ' + bx.name : bx.name;
-    var body = 'Hi, thanks for talking with me. ' + (web ? 'Here are the questions for your custom website I mentioned: ' : 'Here’s the ' + named + ' page I mentioned. It shows the price and how it works: ') + link +
-      '\n\nQuestions? Just reply to this email.\n\n' + S.name + ', independent partner with Station (Station Automations Group LLC, Houston, Texas)\nIf you’d rather not get emails from me, reply and say so, and I won’t send more.';
-    var subject = web ? 'Your custom website questions' : 'The ' + named + ' page I mentioned';
+    var bx = BOX[s.box] || pitchFor(l), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> ' + (bx.earn ? '<b class="plus">+' + money(bx.earn) + ' a ' + period(bx) + '</b> to you once they start paying' + (bx.trial ? ' (after their ' + TD + '-day trial)' : '') + '. ' : '') +
         (s.accepted ? 'Station has confirmed this win.' : l.own ? 'Send them your link: signing up from it is what credits the sale to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; you see the client under Money once they pay.'
           : 'Send them your link so the sale is credited to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; Station checks the win and matches it to their signup; you see the client under Money once they pay.')
       : '<strong>Interested in ' + esc(bx.name) + '.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
     return '<div class="won-next' + (s.o === 'won' ? '' : ' warm') + '"><p>' + head + '</p>' +
       '<label class="field slim" for="em-' + esc(l.id) + '">Their email <span class="ask">Ask: “What’s the best email to send it to?”</span><input class="text" type="email" id="em-' + esc(l.id) + '" data-email autocomplete="off" value="' + esc(s.email || l.email || '') + '" placeholder="owner@business.com"></label>' +
-      '<div class="won-btns"><a class="btn btn-green" data-mail href="mailto:' + cleanEmail(s.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body) + '">Email them the link</a><button class="btn" type="button" data-copy-won>Copy link</button></div>' +
+      '<div class="won-btns"><button class="btn btn-dark" type="button" data-compose>' + (l.mailed ? 'Email them again' : 'Write them an email') + '</button><button class="btn" type="button" data-copy-won>Copy link</button></div>' +
+      (l.mailed ? '<p class="small">You emailed them ' + esc(dayLabel(ymd(new Date(l.mailed.last)))) + '. Replies come back to Station and show under the email button.</p>' : '') +
       (s.o === 'won' && !s.accepted ? '<button class="link-btn" type="button" data-change>Marked Won by mistake? Change it</button>' : s.accepted ? '<p class="small">To change a confirmed win, email <a href="mailto:main@station.solutions">main@station.solutions</a>.</p>' : '') + '</div>';
   }
   /* Station's engine keeps Do not call and Bad lead for good once they reach it; only Station can lift them */
@@ -1377,6 +1435,7 @@
       (closed ? '' : '<button class="link-btn" type="button" data-pitch>Change</button>') + '</div>' + (closed || !fitNote ? '' : '<div class="fit-row">' + fitNote + '</div>') +
       (!closed && s && (s.o === 'interested' || s.o === 'callback' || s.wasInterested) ? '<p class="opener"><span class="first">Following up:</span> “' + esc(followLine(b)) + '”</p>'
         : '<p class="opener"><span class="first">Say who you are, then:</span> “' + esc(openerOf(b)) + '”</p>') + '<p class="gap"><b>Why them:</b> ' + esc(l.gap) + '</p></div>' +
+      (!closed && bookedFor(l) ? '<p class="booked-line">Call booked: <b>' + esc(whenLong(bookedFor(l))) + '</b> (your time)</p>' : '') +
       (closed ? doneBlock(l, s) : (s && (s.o === 'interested' || s.wasInterested) ? sendBox(l, s) : '') + callBtnHtml(l, t)) +
       (closed ? '' : '<div class="card-lines">' + sayBoxes(quickLines(b)) + '</div>') +
       (closed ? '' : '<div class="card-actions">' + (noPhone ? '' : '<button class="btn" type="button" data-log>How did it go?</button>') + '<button class="btn btn-next" type="button" data-next>Next business</button></div>') +
@@ -1384,6 +1443,9 @@
       olderNotes(l) +
       '<div class="card-links"><button class="link-btn" type="button" data-note>' + (S.notes[l.id] ? 'Edit note' : 'Add a note') + '</button><button class="link-btn" type="button" data-script>Full script</button>' +
       (closed ? '' : '<button class="link-btn" type="button" data-vm>Voicemail?</button>') +
+      (!closed && !bookedFor(l) && s && (s.o === 'interested' || s.o === 'callback' || s.wasInterested) ? '<button class="link-btn" type="button" data-book>Book a call</button>' : '') + /* once you've talked; keeps a new card on one phone screen */
+      (s && TALKED[s.o] && s.o !== 'won' && s.o !== 'interested' && !s.wasInterested && !closed ? '<button class="link-btn" type="button" data-compose>Email them</button>' : '') +
+      (l.mailed && closed ? '<button class="link-btn" type="button" data-compose>Emails with them</button>' : '') +
       (t.ok && !closed && !tt && !touch ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') /* on a phone, Call dials */ + (closed ? '<button class="link-btn" type="button" data-next>Next business</button>' : '') +
       (l.own && !DEMO ? '<button class="link-btn" type="button" data-edit>Edit</button>' + (s && s.o === 'won' ? '' : '<button class="link-btn" type="button" data-remove>Remove</button>') : '') + '</div></div></article>';
   }
@@ -1409,6 +1471,8 @@
       if (t.closest('[data-log]')) { openCallSheet(l, 'after'); return; }
       if (t.closest('[data-script]')) { openScript(pitchFor(l)); return; }
       if (t.closest('[data-pitch]')) { openPitchPicker(l); return; }
+      if (t.closest('[data-book]')) { openBooking(l, null); return; }
+      if (t.closest('[data-compose]')) { openComposer(l); return; }
       if (t.closest('[data-vm]')) { openSheet('If you get voicemail', '<div class="say"><small>Say</small>' + esc(vmLine(l)) + '</div><p class="small">Then tap Voicemail when you log the call. They come back on your list tomorrow.</p>'); return; }
       if (t.closest('[data-edit]')) { openLeadForm(l); return; }
       var rm = t.closest('[data-remove]'); if (rm) { removeOwn(l, rm); return; }
@@ -1438,10 +1502,7 @@
     ni.addEventListener('input', function () { var v = this.value.slice(0, NOTE_MAX); if (v.trim()) S.notes[id] = v; else delete S.notes[id]; save(); noteChanged(id); });
     ni.addEventListener('change', function () { noteDone(id); });
     var em = card.querySelector('[data-email]');
-    if (em) em.addEventListener('input', function () {
-      S.log[id].email = em.value.trim().slice(0, 120); save();
-      var a = card.querySelector('[data-mail]'); a.setAttribute('href', a.getAttribute('href').replace(/^mailto:[^?]*/, 'mailto:' + cleanEmail(S.log[id].email)));
-    });
+    if (em) em.addEventListener('input', function () { S.log[id].email = em.value.trim().slice(0, 120); save(); }); // the email composer starts from it
   }
 
   /* ---------- during a call: "Ready to call", then "How did it go?" when they come back from the phone ---------- */
@@ -1508,20 +1569,32 @@
   function outcomeRows(l) {
     return '<div class="outcomes big" data-row="1">' + ROW1 + '</div>' +
       '<div class="outcomes big" data-row="2" hidden><p class="small wide row-h" tabindex="-1">How did the conversation go?</p>' +
-      '<button type="button" data-o="interested" aria-pressed="false">Interested<small>Wants to see more</small></button><button type="button" data-o="callback" aria-pressed="false" aria-expanded="false">Call back<small>You pick the day</small></button>' +
+      '<button type="button" data-o="interested" aria-pressed="false" aria-expanded="false">Interested<small>Wants to see more</small></button><button type="button" data-o="callback" aria-pressed="false" aria-expanded="false">Call back<small>You pick the day and time</small></button>' +
       '<button type="button" data-o="notint" aria-pressed="false">Not interested<small>They said no</small></button><button type="button" data-o="dnc" aria-pressed="false">Do not call<small>They asked you to stop</small></button>' +
       '<button type="button" class="wide won" data-o="won" aria-pressed="false">Won: they’re buying<small>Send them your link next</small></button></div>' +
-      '<div class="outcomes big" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(localTime(l.st).laterOk) + '</div>';
+      '<div class="outcomes big" data-row="next" hidden><p class="small wide row-h" tabindex="-1">Interested. What’s the next step?</p>' +
+      '<button type="button" data-next-cb>Set a call-back time<small>The day and time you’ll call</small></button>' +
+      (DEMO || (ME && ME.booking && ME.booking.calendar) ? '<button type="button" data-next-book>Book a call<small>On your booking calendar</small></button>'
+        : '<button type="button" data-next-book disabled>Book a call<small>Your booking calendar is being set up</small></button>') + '</div>' +
+      '<div class="outcomes big" data-row="day" hidden><p class="small wide row-h" tabindex="-1">When should you call them back?</p>' + dayButtons(localTime(l.st).laterOk) + '</div>' +
+      '<div class="outcomes big" data-row="time" hidden></div>';
   }
   function wireOutcomes(body, l, changing) {
+    var want = 'callback', pday = ''; // what the day and time are for (Call back, or Interested's next step), and the day picked
+    var r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]'), rt = body.querySelector('[data-row="time"]'), rn = body.querySelector('[data-row="next"]');
+    function reveal(el) { el.hidden = false; el.classList.add('open-in'); el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
+    function showTime(day) { pday = day; rt.innerHTML = timeRow(l, day); reveal(rt); }
+    function setAt(ms) {
+      if (!(ms > Date.now() + 5 * 60e3)) { toast('Pick a time that hasn’t passed yet.', 3500); return; }
+      if (!bizOk(l, ms)) { toast('That’s ' + bizClock(l, ms) + ' for them. Pick a time from 9 am to 8 pm, Monday to Saturday, their time.', 5000); return; }
+      commit(l, want, { due: ymd(new Date(ms)), dueAt: ms, dueIso: isoLocal(ms) }, changing);
+    }
     body.addEventListener('change', function (e) {
       var pd = e.target.closest && e.target.closest('[data-pickday]'); if (!pd || !pd.value) return;
       if (new Date(pd.value + 'T12:00').getDay() === 0) { toast('No calls on Sundays. Pick another day.', 3500); pd.value = ''; return; }
       if (pd.value <= today()) { toast('Pick a day after today, or use Later today.', 3500); pd.value = ''; return; }
-      commit(l, 'callback', { due: pd.value }, changing);
+      showTime(pd.value);
     });
-    var r2 = body.querySelector('[data-row="2"]'), rd = body.querySelector('[data-row="day"]');
-    function reveal(el) { el.hidden = false; el.classList.add('open-in'); el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); el.querySelector('.row-h').focus({ preventScroll: true }); }
     function pick(ob) {
       body.querySelectorAll('[data-o]').forEach(function (x) {
         var on = x === ob || (r2.contains(ob) && x.getAttribute('data-o') === 'talked');
@@ -1530,17 +1603,34 @@
       body.querySelector('[data-o="talked"]').setAttribute('aria-expanded', String(!r2.hidden || ob.getAttribute('data-o') === 'talked'));
     }
     body.addEventListener('click', function (e) {
-      var ob = e.target.closest('[data-o]'), db = e.target.closest('[data-day]');
+      var ob = e.target.closest('[data-o]'), db = e.target.closest('[data-day]'), hm = e.target.closest('[data-hm]');
       if (ob) {
         var o = ob.getAttribute('data-o');
         pick(ob);
-        if (o !== 'callback') { rd.hidden = true; body.querySelector('[data-o="callback"]').setAttribute('aria-expanded', 'false'); }
+        if (o !== 'callback' && o !== 'interested') { rd.hidden = true; rt.hidden = true; rn.hidden = true; }
+        body.querySelector('[data-o="callback"]').setAttribute('aria-expanded', String(o === 'callback'));
+        body.querySelector('[data-o="interested"]').setAttribute('aria-expanded', String(o === 'interested'));
         if (o === 'talked') { reveal(r2); return; }
-        if (o === 'callback') { ob.setAttribute('aria-expanded', 'true'); reveal(rd); return; }
+        if (o === 'callback') { want = 'callback'; rn.hidden = true; rt.hidden = true; reveal(rd); return; }
+        if (o === 'interested') {
+          if (bookedFor(l) > Date.now()) { commit(l, o, null, changing); return; } // a call is already booked: that is the next step
+          want = 'interested'; rd.hidden = true; rt.hidden = true; reveal(rn); return; // Circle 10-07: Interested needs a call-back time or a booked call
+        }
         commit(l, o, null, changing);
+      } else if (e.target.closest('[data-next-cb]')) { rt.hidden = true; reveal(rd);
+      } else if (e.target.closest('[data-next-book]')) {
+        if (e.target.closest('[data-next-book]').disabled) return;
+        openBooking(l, function () { commit(l, 'interested', null, changing); });
       } else if (db) {
-        var lt = localTime(l.st), n = +db.getAttribute('data-day'), late = n === 0 && !lt.laterOk; if (late) n = 1;
-        commit(l, 'callback', n === 0 ? { due: today(), dueAt: Date.now() + 3 * 3600e3 } : { due: addDays(n) }, changing, late);
+        var n = +db.getAttribute('data-day');
+        if (n === 0 && localTime(l.st).laterOk) { setAt(Math.ceil((Date.now() + 3 * 3600e3) / 900e3) * 900e3); return; } // later today: 3 hours from now
+        showTime(addDays(n === 0 ? 1 : n));
+      } else if (hm) {
+        if (!hm.disabled) setAt(new Date(pday + 'T' + hm.getAttribute('data-hm')).getTime());
+      } else if (e.target.closest('[data-time-go]')) {
+        var ti = body.querySelector('[data-picktime]');
+        if (!ti || !ti.value) { toast('Type the time first.', 3000); return; }
+        setAt(new Date(pday + 'T' + ti.value).getTime());
       }
     });
   }
@@ -1571,7 +1661,7 @@
     showUndo(msg + ' · ' + l.name + tail, l.id, before, null, callsBefore, qid); // the outcome first: a long name gets cut, not the result
     var pp = fresh.querySelector('.lead-meta .pill:not(.from)'); if (pp && !reduced) pp.classList.add('pop');
     if (o === 'won' || o === 'interested') {
-      feedShow(fresh, true, true); var f = fresh.querySelector('[data-mail]');
+      feedShow(fresh, true, true); var f = fresh.querySelector('[data-compose]');
       if (f) { f.focus({ preventScroll: true }); keepAboveUndo(fresh.querySelector('.won-btns') || f); }
     } else {
       var nx = fresh.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
@@ -1788,6 +1878,131 @@
   }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-addlead]')) openLeadForm(null); });
 
+  /* ---------- follow-up (10-07, engine v4.60): book a call on the partner's own calendar, and email from Station ---------- */
+  function rowOf(id) { return (LL && (LL.leads || []).filter(function (x) { return String(x.id) === String(id); })[0]) || null; }
+  function whenLong(ms, tz) {
+    var o = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }; if (tz) o.timeZone = tz;
+    try { return new Date(ms).toLocaleString('en-US', o).replace(/\s(AM|PM)$/, function (m) { return m.toLowerCase(); }); } catch (e) { return new Date(ms).toLocaleString(); }
+  }
+  function clockIn(iso, tz) {
+    try { return new Date(iso).toLocaleTimeString('en-US', tz ? { timeZone: tz, hour: 'numeric', minute: '2-digit' } : { hour: 'numeric', minute: '2-digit' }).toLowerCase(); } catch (e) { return clock(Date.parse(iso)); }
+  }
+  /* the preview's open times: three working days at 10, 11, 2 and 3 */
+  function demoSlots() {
+    var out = [], n = 1;
+    while (out.length < 3 && n < 10) {
+      var day = addDays(n++);
+      if (out.some(function (x) { return x.date === day; })) continue;
+      out.push({ date: day, slots: [10, 11, 14, 15].map(function (h) { return isoLocal(new Date(day + 'T' + p2(h) + ':00').getTime()); }) });
+    }
+    return out;
+  }
+  /* then(): what happens after a booking lands (Interested's next step saves the outcome); null from the card's own link */
+  function openBooking(l, then) {
+    var title = 'Book a call with ' + l.name;
+    if (!DEMO && !(ME && ME.booking && ME.booking.calendar)) {
+      openSheet(title, '<div class="explain wait">' + esc((ME && ME.booking && ME.booking.note) || 'Your booking calendar is being set up. Station will let you know when it’s ready.') + '</div>' +
+        '<p class="small">Until then, set a call-back time when you log the call.</p>');
+      return;
+    }
+    var tz = DEMO ? '' : (ME && ME.tz) || myTz();
+    openSheet(title, '<p class="small">Pick a time on your booking calendar. Times are yours' + (tz ? ' (' + esc(tz.replace(/_/g, ' ')) + ')' : '') + '. You call them from your own phone at that time.</p>' +
+      '<div id="bk-days"><p class="small">Loading your open times…</p></div><div id="bk-confirm"></div><p class="field-err" id="bk-err" role="alert"></p>');
+    var box = document.getElementById('bk-days'), conf = document.getElementById('bk-confirm'), err = document.getElementById('bk-err');
+    function draw(days) {
+      if (!days.length) { box.innerHTML = '<p class="empty">No open times in the next 7 days. Set a call-back time instead, or email main@station.solutions to open more hours on your calendar.</p>'; return; }
+      box.innerHTML = days.slice(0, 7).map(function (d) {
+        return '<div class="bk-day"><p class="bk-date">' + esc(dayLabel(d.date)) + '</p><div class="slot-grid">' + d.slots.slice(0, 16).map(function (x) {
+          return '<button type="button" class="slot" data-slot="' + esc(x) + '" aria-pressed="false">' + esc(clockIn(x, tz)) + '</button>'; }).join('') + '</div></div>';
+      }).join('');
+    }
+    if (DEMO) draw(demoSlots());
+    else api('book_slots', {}).then(function (d) {
+      if (d.signedOut || sheet.hidden || !document.getElementById('bk-days')) return;
+      if (!d.ok) { box.innerHTML = '<p class="empty">' + esc(sentence(d.error, 'Your calendar couldn’t load just now.')) + '</p>'; return; }
+      if (d.calendar === false) { box.innerHTML = '<div class="explain wait">' + esc(d.note || 'Your booking calendar is being set up.') + '</div>'; return; }
+      tz = d.tz || tz; draw(d.days || []);
+    }, function () { if (document.getElementById('bk-days')) box.innerHTML = '<p class="empty">No connection to Station. Try again in a moment.</p>'; });
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-slot]'); if (!b) return;
+      box.querySelectorAll('[data-slot]').forEach(function (x) { x.classList.toggle('sel', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      var at = b.getAttribute('data-slot');
+      conf.innerHTML = '<div class="bk-ok"><p>Book <b>' + esc(l.name) + '</b> for <b>' + esc(whenLong(Date.parse(at), tz)) + '</b>?</p><button class="btn btn-dark btn-big btn-block" type="button" data-bk-go>Book it</button></div>';
+      var go = conf.querySelector('[data-bk-go]'); go.focus({ preventScroll: true }); feedShowSheet(conf);
+      go.addEventListener('click', function () {
+        err.textContent = '';
+        if (DEMO) { l.booked = { start: at }; afterSheet(function () { toast('Preview: nothing was booked.', 3000); if (then) then(); else { var c0 = cardEl(l.id); if (c0) renderCard(c0); } }); return; }
+        go.disabled = true; go.textContent = 'Booking…';
+        api('lead_book', { id: l.id, start: at }).then(function (d) {
+          go.disabled = false; go.textContent = 'Book it';
+          if (d.signedOut) return;
+          if (!d.ok) { err.textContent = sentence(d.error, 'That time couldn’t be booked. Pick another.'); return; }
+          var r = rowOf(l.id); if (r) { r.booked = d.booked; applyLeads(LL); }
+          afterSheet(function () {
+            toast('Booked: ' + whenLong(Date.parse(at), tz) + '. Station emailed you the details.', 4500);
+            if (then) then(); else { var c = cardEl(l.id); if (c && !c.contains(document.activeElement)) renderCard(c); }
+          });
+        }, function () { go.disabled = false; go.textContent = 'Book it'; err.textContent = 'No answer from Station, so it’s not known whether that booked. Close this and check the card before you try again.'; resync(true); });
+      });
+    });
+  }
+  function feedShowSheet(el) { try { el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }); } catch (e) {} }
+  var MAIL_OFF = 'Partner email turns on once Station finishes setting up your sending address.';
+  function mailState() { return (ME && ME.mail) || { on: false, note: MAIL_OFF }; }
+  /* a first email has no link (it asks a question); once they've answered, the link goes */
+  function draftFor(l, first) {
+    var s = S.log[l.id] || {}, bx = BOX[s.box] || pitchFor(l), named = bx.bundle ? 'the ' + bx.name : bx.name, web = bx.id === 'website';
+    if (first) return { subject: 'Following up on our call', body: 'Hi,\n\nThanks for talking with me today. I’d like to send you ' + (web ? 'the questions for your custom website' : 'the ' + named + ' page') + ' so you can see how it works' + (web ? '' : ' and what it costs') + '. Is this the best address for it?\n\n' + S.name };
+    return { subject: web ? 'Your custom website questions' : 'The ' + named + ' page I mentioned',
+      body: 'Hi,\n\n' + (web ? 'Here are the questions for your custom website: ' : 'Here’s the ' + named + ' page. It shows the price and how it works: ') + linkFor(bx) + '\n\nQuestions? Just reply to this email.\n\n' + S.name };
+  }
+  function openComposer(l) {
+    var ms = mailState(), s = S.log[l.id] || {}, first = !(l.mailed && l.mailed.n), d = draftFor(l, first), on = DEMO || !!ms.on, dis = on ? '' : ' readonly'; // off: the words can be read, Send stays off
+    openSheet('Email ' + l.name,
+      (on ? '' : '<div class="explain wait">' + esc(ms.note || MAIL_OFF) + '</div>') +
+      '<p class="small mail-from">' + (DEMO ? 'Preview: nothing is sent.' : ms.on ? 'From: ' + esc(ms.from) : 'From: you, at Station (not set up yet)') + '</p>' +
+      '<form id="mailForm" novalidate>' +
+      '<label class="field slim" for="mf-to">To<input class="text" type="email" id="mf-to" value="' + esc(s.email || l.email || '') + '" autocomplete="off" maxlength="160"' + dis + '></label>' +
+      '<label class="field slim" for="mf-sub">Subject<input class="text" id="mf-sub" value="' + esc(d.subject) + '" maxlength="120"' + dis + '></label>' +
+      '<label class="field slim" for="mf-body">Message<textarea class="text" id="mf-body" rows="8" maxlength="2000"' + dis + '>' + esc(d.body) + '</textarea></label>' +
+      '<p class="small">' + (first ? 'A first email has no links: ask a question, then send the link once they answer. ' : '') +
+        'Station adds your name, Station’s postal address and an unsubscribe line at the bottom. Replies go to Station and show here.' +
+        (ms.on && !DEMO ? ' ' + (+ms.sent_today || 0) + ' of ' + (+ms.per_day || 20) + ' sent today.' : '') + '</p>' +
+      '<p class="field-err" id="mf-err" role="alert"></p>' +
+      '<button class="btn btn-dark btn-big btn-block" type="submit" id="mf-go"' + (on ? '' : ' disabled') + '>Send</button></form>' +
+      (l.mailed && !DEMO ? '<h3 class="sheet-h">Emails with them</h3><div id="mf-thread"><p class="small">Loading…</p></div>' : ''));
+    var form = document.getElementById('mailForm'), err = document.getElementById('mf-err'), go = document.getElementById('mf-go');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); if (!on || go.disabled) return;
+      function v(id) { return document.getElementById(id).value.trim(); }
+      var to = v('mf-to'), sub = v('mf-sub'), body = v('mf-body');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { err.textContent = 'That email address doesn’t look right.'; return; }
+      if (!sub) { err.textContent = 'Add a subject.'; return; }
+      if (body.length < 20) { err.textContent = 'Write a little more first.'; return; }
+      if (first && /(https?:\/\/|www\.)/i.test(body + ' ' + sub)) { err.textContent = 'Leave links out of your first email. Ask a question, then send the link once they answer.'; return; }
+      if (S.log[l.id]) { S.log[l.id].email = to.slice(0, 120); save(); }
+      if (DEMO) { afterSheet(function () { toast('Preview: nothing was sent.', 3000); }); return; }
+      go.disabled = true; go.textContent = 'Sending…'; err.textContent = '';
+      api('lead_email', { id: l.id, to: to, subject: sub, body: body }).then(function (d) {
+        go.disabled = false; go.textContent = 'Send';
+        if (d.signedOut) return;
+        if (!d.ok) { err.textContent = sentence(d.error, 'Your email didn’t go out.'); return; }
+        if (ME && ME.mail) ME.mail.sent_today = d.sent_today;
+        var r = rowOf(l.id); if (r) { r.mailed = d.mailed; if (!r.email) r.email = to; applyLeads(LL); }
+        afterSheet(function () { toast('Sent from Station. Replies show when you open Email them.', 4500); var c = cardEl(l.id); if (c && !c.contains(document.activeElement)) renderCard(c); });
+      }, function () { go.disabled = false; go.textContent = 'Send'; err.textContent = 'No answer from Station, so it’s not known whether it went. Close this and open it again to check before you send it twice.'; });
+    });
+    var th = document.getElementById('mf-thread');
+    if (th) api('lead_thread', { id: l.id }).then(function (d) {
+      if (!document.getElementById('mf-thread')) return;
+      if (!d.ok) { th.innerHTML = '<p class="small">' + esc(sentence(d.error, 'The replies couldn’t load just now.')) + '</p>'; return; }
+      var m = d.messages || [];
+      th.innerHTML = m.length ? '<ul class="mail-thread">' + m.map(function (x) {
+        return '<li class="' + (x.dir === 'in' ? 'in' : 'out') + '"><span class="small">' + (x.dir === 'in' ? 'They replied' : 'You wrote') + ' · ' + esc(x.at ? whenLong(Date.parse(x.at)) : '') + '</span><p>' + esc(x.body) + '</p></li>';
+      }).join('') + '</ul>' : '<p class="small">No replies yet.</p>';
+    }, function () { th.innerHTML = '<p class="small">No connection to Station.</p>'; });
+  }
+
   /* ---------- sheets; focus stays inside while open ---------- */
   var lastFocus = null, sheet = document.getElementById('sheet');
   var ignorePop = false;
@@ -1807,8 +2022,8 @@
       '<dt>No answer, Voicemail</dt><dd>You couldn’t reach them. They stay on your list and come back tomorrow.</dd>' +
       '<dt>Bad lead</dt><dd>Wrong number, closed down, or not a business that could use it. Station takes it back (one you added just leaves your calls).</dd>' +
       '<dt>Talked to them</dt><dd>You spoke to someone. Then pick how it went.</dd>' +
-      '<dt>Interested</dt><dd>They want to hear more. They stay on your list.</dd>' +
-      '<dt>Call back</dt><dd>They asked you to call another day. Pick when; on that day they move to the top of your list.</dd>' +
+      '<dt>Interested</dt><dd>They want to hear more. Set the day and time you’ll call them back, or book a call. They stay on your list.</dd>' +
+      '<dt>Call back</dt><dd>They asked you to call another time. Pick the day and the time (yours). From 15 minutes before it, they’re under Due now at the top of Calls' + (ME && ME.reminders ? ', and Station emails you a reminder' : '') + '. Two hours after the time, it shows as overdue.</dd>' +
       '<dt>Not interested</dt><dd>They said no. That business is finished.</dd>' +
       '<dt>Do not call</dt><dd>They asked you to stop. Nobody calls that business again, and the call button goes away.</dd>' +
       '<dt>Won</dt><dd>They’re buying. Send them your link; Station checks it and sets them up.</dd>' +
@@ -1885,7 +2100,7 @@
     var b = (MONEY.totals && MONEY.totals.blockers) || [], min = (MONEY.min_cents || 5000) / 100;
     if (t.ready && b.length) return 'Ready, and paid in the first payout after the setup steps below are done.';
     if (t.ready && t.ready < min) return 'Paid once ' + money(min) + ' or more is ready. Smaller amounts roll forward.';
-    if (t.ready) return 'Ready. Payouts go out every two weeks.';
+    if (t.ready) return 'Ready for your next payout.';
     return 'No commission ready yet. It shows here once a client’s payment clears and any hold ends.';
   }
   /* uploads and payout setup write to Station too, so they never run while the queue is sending */
@@ -1937,13 +2152,13 @@
       var bx = BOX[S.log[k].box]; return { client: LEAD[k].name, on: bx ? bx.name : '', earn: bx && bx.earn, per: bx ? period(bx) : 'month' };
     });
     var mine = !DEMO ? liveClients() : won.length ? '<div class="table-wrap"><table><thead><tr><th scope="col">Client</th><th scope="col">On</th><th scope="col" class="r">You’ll earn</th><th scope="col">Where it stands</th></tr></thead><tbody>' +
-      won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="You’ll earn" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' a quarter' : ' a month') : '40% of their care plan') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('') + '</tbody></table></div>'
+      won.map(function (w) { return '<tr><td data-l="Client"><b>' + esc(w.client) + '</b></td><td data-l="On">' + esc(w.on) + '</td><td data-l="You’ll earn" class="r num">' + (w.earn ? money(w.earn) + (w.per === 'quarter' ? ' a quarter' : ' a month') : '40% of the setup fee, once') + '</td><td data-l="Where it stands">Won in your calls. Station checks it; you earn once they pay.</td></tr>'; }).join('') + '</tbody></table></div>'
       : '<p class="empty">No clients yet. When a business you called starts paying Station, it shows up here.</p>';
     var rows = BOOK.map(function (r) { return '<tr><td data-l="Client"><b>' + esc(r.client) + '</b></td><td data-l="On">' + esc(r.on) + '</td><td data-l="They pay" class="r num">' + money(r.pays) + ' a month</td><td data-l="You earn" class="r num">' + money(r.pays * PW.rate) + ' a month</td><td data-l="Where it stands">' + esc(r.state) + '</td></tr>'; }).join('');
     mount('<div class="wrap money"><h1>Your money</h1><p class="sub">' + (DEMO ? 'Once you’re live, these numbers come from Station’s payment records, and those records decide what you’re paid.' : 'From Station’s payment records, which decide what you’re paid.') + '</p>' +
       '<div class="tiles3"><div class="tile hero"><span class="lbl">Earned</span><div class="v num">' + (t.unknown ? '—' : money(t.ready)) + '</div><p>' + earnedNote(t) + '</p></div>' +
       '<div class="tile"><span class="lbl">On hold</span><div class="v num">' + (t.unknown ? '—' : money(t.hold)) + '</div><p>Station may hold a new client’s first payment up to 30 days after it clears (the refund window).</p></div>' +
-      '<div class="tile"><span class="lbl">Paid to date</span><div class="v num">' + (t.unknown ? '—' : money(t.paid)) + '</div><p>Payouts go out every two weeks once $50 or more is ready.</p></div></div>' +
+      '<div class="tile"><span class="lbl">Paid to date</span><div class="v num">' + (t.unknown ? '—' : money(t.paid)) + '</div><p>Paid once $50 or more is ready.</p></div></div>' +
       (DEMO ? '<div class="setup"><h2 class="setup-h">2 steps before Station can pay you</h2>' +
       '<div class="setup-row"><span><b>1. Your tax form.</b> U.S. partners: IRS Form W-9 (outside the U.S.: W-8BEN). Upload it here, never by email: it carries your Social Security number. Station issues a 1099 where the law requires; your taxes are your own.</span><button class="btn" type="button" data-demo="tax">Upload my tax form</button></div>' +
       '<div class="setup-row"><span><b>2. Your payout account.</b> Station pays you through Stripe. You type your bank details on Stripe’s own site; Station never sees them.</span><button class="btn" type="button" data-demo="stripe">Set up payouts with Stripe</button></div></div>' : setupLive()) +
@@ -1954,10 +2169,11 @@
       '<h2 class="gap-h">From a yes to your first payout</h2>' + yesToPaid() +
       '<h2 class="gap-h">What one paying client is worth</h2>' + worthTable() +
       '<h2 class="gap-h">How you get paid</h2><div class="howpay">' +
-      '<div><b>40% of every monthly payment</b>For as long as the client keeps paying and your agreement is in effect.</div>' +
+      '<div><b>40% of what each client pays Station</b>For a website, 40% of the setup fee; for everything else, 40% of every payment while they stay, for as long as your agreement is in effect. Paid once the client’s payment clears.</div>' +
+      '<div><b>Websites</b>Station builds every website; you never build one. Hosting & care earns nothing.</div>' +
       '<div><b>After the free trial</b>Every single product and every collection starts with a ' + TD + '-day trial. You earn from their first real payment. Core, Pro, Max and custom websites have no trial.</div>' +
-      '<div><b>Every two weeks</b>Paid to your Stripe account once $50 or more is ready. Smaller amounts roll forward and never expire.</div>' +
-      '<div><b>Monthly fees only</b>Website build fees and the one-time $500 to keep a built site earn nothing, and neither does a free website. The monthly price behind them does.</div>' +
+      '<div><b>Paid to your Stripe account</b>Once $50 or more is ready. Smaller amounts roll forward and never expire.</div>' +
+      '<div><b>What earns nothing</b>Hosting & care, the free Station-built website, the one-time $500 to keep a built site, and taxes.</div>' +
       '<div><b>Refunds and chargebacks</b>If a client’s payment is refunded or reversed, that commission comes off your balance or next payout. If there’s no balance left, Station may ask you to pay it back.</div>' +
       '<div><b>If a client cancels</b>Your commission on them stops when they stop paying. What you’ve already earned stays yours.</div>' +
       '<div><b>If the agreement ends</b>Either side can end it any time by email. You’re paid on payments that cleared up to that day, and nothing after.</div>' +
@@ -1995,7 +2211,7 @@
         buyerRow('Probably feeling (for you, not to say out loud)', y.feels) + buyerRow('Ask first', y.ask, 1) + buyerRow('Then say', y.say, 1) +
         buyerRow('The push-back: ' + y.worry, y.reply, 1) + buyerRow('Don’t', y.avoid) +
         '<div class="cheat-row"><span class="cheat-lbl">Best fit</span><p><a href="#box/' + y.fit + '"><b>' + esc(y.fitNote) + '</b></a></p></div>' +
-        (fit && fit.earn ? '<div class="cheat-row"><span class="cheat-lbl">What you earn</span><p>' + esc(fit.short || fit.name) + ' pays you ' + money(fit.earn) + ' a month per paying client. You earn 40% of whatever they pay Station.</p></div>' : '') +
+        (fit && fit.earn ? '<div class="cheat-row"><span class="cheat-lbl">What you earn</span><p>' + esc(fit.short || fit.name) + ' pays you ' + money(fit.earn) + ' a month per paying client: 40% of every payment while they stay.</p></div>' : '') +
         '<div class="cheat-row"><span class="cheat-lbl">Sounds like these businesses</span><p>' + esc(y.trades) + '</p></div>' +
         '<p class="small fine">Suggested words. Say it your way, and keep the facts and the rules.</p></section></div>' +
         '<div class="cta-bar"><a class="btn btn-dark btn-big" href="#box/' + y.fit + '">See the ' + esc(fit ? fit.short || fit.name : 'product') + ' cheat sheet</a></div>', y.name);
@@ -2161,7 +2377,7 @@
       '<li>Call businesses 9 am to 8 pm, Monday to Saturday, their time. Dial each business yourself, once a day at most. Leaving a voicemail is fine: tap Voicemail? on the card for the line.</li>' +
       '<li>Each business is yours for ' + holdDays() + ' days from the day Station sends it, or from the last call you logged on it. After that it goes back to Station’s shared list.</li>' +
       '<li>If anyone says “take me off your list,” say sorry, end the call and mark them Do not call.</li>' +
-      '<li>Never record a call, and never text or email a business unless they ask you to.</li>' +
+      '<li>Never record a call, and never text a business. Email one only after you’ve talked and they’re happy to hear from you: use <b>Email them</b> on the card, so it goes from Station with the right footer.</li>' +
       '<li>Your link is what credits a sale to you, so send it every time. Log every call too: Station’s records decide who gets credit.</li>' +
       '<li>You can add a business you found yourself: “Found a business yourself?” on Home, or at the end of Calls. Those stay on your list until you remove them. Never one another partner gave you, and never one that asked not to be called.</li>' +
       '<li>Don’t copy leads or client details into your own spreadsheet or CRM, and never ask a business to send you their customer list.</li></ul>' +
