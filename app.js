@@ -285,7 +285,7 @@
      keep where the person came from, so Station can see which post or bio sent them (engine stores it as source) */
   var JOIN_SRC = '';
   try { JOIN_SRC = (Q0.get('src') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40); if (JOIN_SRC) sessionStorage.setItem('pw-src', JOIN_SRC); else JOIN_SRC = sessionStorage.getItem('pw-src') || ''; } catch (e) {}
-  if (Q0.has('join') || location.hash === '#request') signMode = 'request';
+  if (Q0.has('join') || location.hash === '#request' || location.hash === '#join') signMode = 'request'; // /join links, #request and #join all open the request form
   var FROM_ENGINE = { no_answer: 'noanswer', voicemail: 'voicemail', bad_lead: 'bad', interested: 'interested', callback: 'callback', not_interested: 'notint', dnc: 'dnc', won: 'won',
     called: 'called', demo_sent: 'interested' }; // the last two only come from the old portal's outcome list
   var NOTE_MAX = DEMO ? 200 : 1500; // the engine keeps notes up to 1,500 characters
@@ -598,37 +598,74 @@
      The engine answers the same "received" for a new email, an email that already has an account, and a bot, so this screen
      never says which. Nothing is emailed to the person until Station approves them. */
   var REQUESTED = '';
-  function renderRequest() {
+  /* ---------- the gate (10-07 landing pass): one page for sign in, invite and request ----------
+     Desktop: the partner program on the left, the form on the right. Phone: the form first, the program underneath.
+     Recruiting links can send people straight to the request form with #join (or ?join). */
+  function earnOf(id) { var b = BOX[id]; return b && b.earn ? money(b.earn) : ''; }
+  function gateEarn(cls) {
+    var rows = [['bundle-answer', 'Answer collection'], ['bundle-getfound', 'Get Found collection'], ['bundle-core', 'Core plan']].filter(function (r) { return earnOf(r[0]); });
+    return '<div class="gate-earn ' + (cls || '') + '"><p class="lbl">One paying client earns you, every month</p><div class="ge-grid">' +
+      rows.map(function (r) { return '<div><span>' + r[1] + '</span><b class="num">' + earnOf(r[0]) + '</b></div>'; }).join('') + '</div>' +
+      '<p class="ge-note">' + Math.round(PW.rate * 100) + '% of Station’s published prices. Arithmetic, not a forecast: nothing is earned during a free trial.</p></div>';
+  }
+  function gatePitch(mode) {
+    var pct = Math.round(PW.rate * 100) + '%';
+    return '<div class="gate-pitch">' +
+      '<p class="lbl">Station partner program</p>' +
+      '<h2 class="gate-h">Sell what local businesses already need. Earn ' + pct + ' every month they pay.</h2>' +
+      '<p class="gate-sub">Station gives you businesses to call, the words to say and an app to work from. When one signs up, you earn ' + pct + ' of what it pays Station, for as long as it keeps paying.</p>' +
+      (mode === 'request' ? '' : '<div class="gate-ctas"><button class="btn btn-dark btn-big" type="button" data-join>Become a partner</button><a class="gate-peek" href="?preview">See the app first</a></div>') +
+      gateEarn('ge-pitch') +
+      '<ol class="gate-steps">' +
+      '<li><b>1</b><span><strong>Request an account.</strong> It takes about a minute.</span></li>' +
+      '<li><b>2</b><span><strong>Station approves you</strong> and sends businesses to your list.</span></li>' +
+      '<li><b>3</b><span><strong>Call from the app.</strong> The script is on screen for every call.</span></li>' +
+      '<li><b>4</b><span><strong>Get paid every two weeks</strong> once $50 or more is ready.</span></li></ol>' +
+      '<ul class="gate-facts"><li>No quota</li><li>Work from your phone</li><li>Station sets up every client</li><li>' + PW.boxes.filter(function (b) { return b.brand === 'station'; }).length + ' products to sell</li></ul>' +
+      '</div>';
+  }
+  function gateMount(mode, card, title) {
     chrome(false);
+    mount('<section class="gate gate-' + mode + '">' +
+      '<header class="gate-bar"><span class="gate-logo">' + MARK + '<span class="wm">Station</span><span class="wordmark">Partner World</span></span>' +
+      '<button class="size-inline" type="button" data-size aria-label="Bigger text" aria-pressed="' + !!S.big + '"><span aria-hidden="true">Aa</span><span class="gs-long"> Bigger text</span></button></header>' +
+      '<div class="gate-cols"><div class="gate-form"><div class="enter-card">' + card + '</div></div>' + gatePitch(mode) + '</div>' +
+      '<footer class="gate-foot"><span>Station Automations Group LLC · Houston, Texas</span><a href="mailto:main@station.solutions">main@station.solutions</a><a href="?preview">See the app with sample businesses</a></footer>' +
+      '</section>', title);
+    main.querySelectorAll('[data-join]').forEach(function (b) { b.addEventListener('click', function () { signMode = 'request'; SIGNIN_MSG = ''; SIGNIN_GOOD = false; renderSignIn(); }); });
+  }
+  function renderRequest() {
     if (REQUESTED) {
+      chrome(false);
       mount('<section class="enter"><div class="enter-card"><div class="enter-top">' + MARK + '</div><h1>Request sent</h1>' +
         '<p class="intro">Thanks, ' + esc(REQUESTED) + '. Station looks at every request by hand. When you’re approved, you’ll get an email, and then you sign in here with the email and password you just chose.</p>' +
         '<div class="explain good">Already have a partner account? Just sign in; you don’t need to ask again.</div>' +
-        '<p class="small">Questions: <a href="mailto:main@station.solutions">main@station.solutions</a></p>' +
+        '<p class="small">While you wait, <a href="?preview">try the app with sample businesses</a>. Questions: <a href="mailto:main@station.solutions">main@station.solutions</a></p>' +
         '<button class="btn btn-dark btn-big btn-block" type="button" id="reqDone">Back to sign in</button></div></section>', 'Request sent');
       document.getElementById('reqDone').addEventListener('click', function () { REQUESTED = ''; signMode = 'login'; renderSignIn(); });
       return;
     }
     var states = Object.keys(TZ).sort().map(function (s) { return '<option>' + s + '</option>'; }).join('');
-    mount('<section class="enter"><div class="enter-card">' +
-      '<div class="enter-top">' + MARK + '<button class="size-inline" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">Aa</span> Bigger text</button></div>' +
+    gateMount('request',
+      '<p class="lbl gate-eyebrow">New partners</p>' +
       '<h1>Request a partner account</h1>' +
-      '<p class="intro">Partners call local businesses Station gives them, and earn 40% of the monthly fees each new client pays Station, for as long as they keep paying and the partner agreement is in effect. No quota. Calls on their own pay nothing.</p>' +
-      '<ol class="steps3"><li><b>1</b><span><strong>Ask here.</strong> It takes a minute.</span></li><li><b>2</b><span><strong>Station reviews it</strong> and emails you when you’re approved.</span></li><li><b>3</b><span><strong>Sign in</strong> with the email and password you choose now.</span></li></ol>' +
+      '<p class="intro">About a minute. Station reviews every request by hand and emails you when you’re approved.</p>' +
+      gateEarn('ge-card') +
       '<form id="reqForm" novalidate>' +
       '<label class="field" for="r-name">Your full name<input class="text" id="r-name" autocomplete="name" maxlength="80"></label>' +
       '<label class="field" for="r-email">Email<input class="text" id="r-email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="160" value="' + esc(lastEmail) + '"></label>' +
-      '<label class="field" for="r-phone">Phone<span class="hint">So Station can reach you about your request.</span><input class="text" id="r-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="24"></label>' +
-      '<label class="field" for="r-state">State you live in<select class="text" id="r-state"><option value="">Pick a state</option>' + states + '</select></label>' +
+      '<div class="field-row"><label class="field" for="r-phone">Phone<input class="text" id="r-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="24"></label>' +
+      '<label class="field" for="r-state">State you live in<select class="text" id="r-state"><option value="">Pick a state</option>' + states + '</select></label></div>' +
       '<label class="field" for="r-about">Anything Station should know? (optional)<span class="hint">Sales experience, businesses you know, how much time you have.</span><input class="text" id="r-about" maxlength="300"></label>' +
       '<label class="field" for="r-pw">Choose a password<span class="hint">10 or more characters. A short sentence is easiest to remember.</span><input class="text" id="r-pw" type="password" autocomplete="new-password"></label>' +
       '<div class="hp" aria-hidden="true"><label for="r-web">Leave this empty</label><input id="r-web" tabindex="-1" autocomplete="off"></div>' +
       '<label class="check"><input type="checkbox" id="r-a1"> I’m 18 or older, and I understand I’d be an independent partner, not a Station employee.</label>' +
       '<label class="check"><input type="checkbox" id="r-a2"> I’ll follow Station’s calling rules (9 am to 8 pm their time, Monday to Saturday; stop when asked; never record a call), and I’ll sign the Station Partner Agreement before I’m paid.</label>' +
       '<p class="field-err" id="r-err" role="alert"></p>' +
-      '<button class="btn btn-dark btn-big btn-block" type="submit" id="r-go">Send my request</button></form>' +
-      '<button class="btn btn-big btn-block swap-btn" type="button" id="reqBack">I already have an account: sign in</button>' +
-      '</div></section>', 'Request an account');
+      '<button class="btn btn-dark btn-big btn-block" type="submit" id="r-go">Send my request</button>' +
+      '<p class="small center gate-fine">Phone is only so Station can reach you about your request. Nothing is emailed to you until you’re approved.</p></form>' +
+      '<div class="gate-or"><span>Already a partner?</span></div>' +
+      '<button class="btn btn-big btn-block swap-btn" type="button" id="reqBack">Sign in</button>', 'Request an account');
     document.getElementById('reqBack').addEventListener('click', function () { signMode = 'login'; renderSignIn(); });
     document.getElementById('r-name').focus({ preventScroll: true });
     var form = document.getElementById('reqForm'), go = document.getElementById('r-go'), err = document.getElementById('r-err');
@@ -661,13 +698,12 @@
 
   function renderSignIn() {
     if (signMode === 'request') { renderRequest(); return; }
-    chrome(false);
     var claim = signMode === 'claim';
-    mount('<section class="enter"><div class="enter-card">' +
-      '<div class="enter-top">' + MARK + '<button class="size-inline" type="button" data-size aria-pressed="' + !!S.big + '"><span aria-hidden="true">Aa</span> Bigger text</button></div>' +
-      '<h1>' + (claim ? 'Set your password' : 'Sign in to Station Partner World') + '</h1>' +
-      '<p class="intro">' + (claim ? 'First time here? Use the partner code and the email from your invite, then choose a password of 10 or more characters.'
-        : 'Call local businesses Station gives you. When one signs up, you earn 40% of the monthly fees they pay Station, for as long as they keep paying and your partner agreement is in effect.') + '</p>' +
+    gateMount(claim ? 'claim' : 'login',
+      '<p class="lbl gate-eyebrow">' + (claim ? 'Your invite' : 'Partners') + '</p>' +
+      '<h1>' + (claim ? 'Set your password' : 'Sign in') + '</h1>' +
+      '<p class="intro">' + (claim ? 'Use the partner code and the email from your invite, then choose a password of 10 or more characters.'
+        : 'Welcome back. Your list, your scripts and your money are waiting.') + '</p>' +
       (SIGNIN_MSG ? '<div class="explain ' + (SIGNIN_GOOD ? 'good' : 'bad') + '" role="status">' + esc(SIGNIN_MSG) + '</div>' : '') +
       '<form id="signin" novalidate>' +
       (claim ? '<label class="field" for="s-code">Your partner code<span class="hint">It’s in your invite email, something like jsmith.</span><input class="text" id="s-code" autocomplete="off" autocapitalize="none" spellcheck="false"></label>' : '') +
@@ -677,13 +713,10 @@
       '<label class="check"><input type="checkbox" id="s-shared"> This is a shared computer: don’t keep me signed in</label>' +
       '<p class="field-err" id="e-form" role="alert"></p>' +
       '<button class="btn btn-dark btn-big btn-block" type="submit" id="s-go">' + (claim ? 'Set my password' : 'Sign in') + '</button></form>' +
-      '<button class="btn btn-big btn-block swap-btn" type="button" id="swapMode">' + (claim ? 'Already set your password? Sign in' : 'First time here? Activate your invite') + '</button>' +
-      '<p class="small center">Forgot your password? Email <a href="mailto:main@station.solutions">main@station.solutions</a>. Once Station resets it, use “First time here?” to set a new one.</p>' +
-      '<p class="small center">You stay signed in on this device for 30 days, unless you tick “shared computer”. Sign out any time in Help.</p>' +
-      (claim ? '' : '<button class="btn btn-big btn-block swap-btn" type="button" id="toRequest">New to Station? Request an account</button>') +
-      '<p class="small center"><a href="?preview">Just looking? Open the preview with sample businesses</a></p>' +
-      '<p class="trust">Used the old Station partner portal? Same email and password. No quota: a flat 40% of monthly fees. Station sends you the Station Partner Agreement to sign; ask main@station.solutions for a copy any time. Station is Station Automations Group LLC, in Houston, Texas. The Station Partner Agreement wins over anything in this app.</p>' +
-      '</div></section>', claim ? 'Set your password' : 'Sign in');
+      '<p class="gate-links"><button class="link-btn" type="button" id="swapMode">' + (claim ? 'Already set your password? Sign in' : 'First time here? Activate your invite') + '</button></p>' +
+      '<p class="small gate-fine">Forgot your password? Email <a href="mailto:main@station.solutions">main@station.solutions</a>. Once it’s reset, use “First time here?” to set a new one.' + (claim ? '' : ' Used the old partner portal? Same email and password.') + '</p>' +
+      (claim ? '' : '<div class="gate-or"><span>New to Station?</span></div><button class="btn btn-big btn-block swap-btn" type="button" id="toRequest">Request an account</button>') +
+      '<p class="small gate-fine">The Station Partner Agreement you sign wins over anything in this app.</p>', claim ? 'Set your password' : 'Sign in');
     var tr = document.getElementById('toRequest'); if (tr) tr.addEventListener('click', function () { signMode = 'request'; SIGNIN_MSG = ''; SIGNIN_GOOD = false; renderSignIn(); });
     document.getElementById('swapMode').addEventListener('click', function () { signMode = claim ? 'login' : 'claim'; SIGNIN_MSG = ''; SIGNIN_GOOD = false; renderSignIn(); });
     var first = document.getElementById(claim ? 's-code' : 's-email'); if (first) first.focus({ preventScroll: true });
@@ -926,9 +959,10 @@
       '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
     mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml + myLeadCard() +
       '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' +
-      '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a>' +
-      '<button class="btn btn-block add-own" type="button" data-addlead>Found a business yourself? Add it to your list</button>' +
-      '<a class="buyers-link" href="#buyers"><b>Who buys? Ten real buyers</b><span>What each is feeling, and the words that work.</span></a></div>', 'Home');
+      '<div class="home-more">' +
+      '<a class="hm all-products" href="#products"><b>See all ' + PW.boxes.length + ' products</b><span>Prices, cheat sheets and what you earn on each.</span></a>' +
+      '<button class="hm add-own" type="button" data-addlead><b>Found a business yourself?</b><span>Add it to your list and call it from here.</span></button>' +
+      '<a class="hm buyers-link" href="#buyers"><b>Who buys? Ten real buyers</b><span>What each is feeling, and the words that work.</span></a></div></div>', 'Home');
     var ah = document.getElementById('askHome'); if (ah) ah.addEventListener('click', function () { askForMore(ah); });
     tick = setInterval(function () {
       if (!/^#?(home)?$/.test(location.hash)) return;
@@ -961,7 +995,7 @@
       var b = BOX[id]; if (!b || !b.earn) return '';
       return '<tr><th scope="row">' + esc(b.short || b.name) + '</th><td class="r num" data-l="You earn a month">' + money(b.earn) + '</td><td class="r num" data-l="12 months of payments">' + money(b.earn * 12) + '</td></tr>';
     }).join('');
-    return '<div class="table-wrap"><table><thead><tr><th scope="col">One paying client on</th><th scope="col" class="r">You earn a month</th><th scope="col" class="r">12 months of payments</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    return '<div class="table-wrap worth"><table><thead><tr><th scope="col">One paying client on</th><th scope="col" class="r">You earn a month</th><th scope="col" class="r">12 months of payments</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<p class="small fine">Arithmetic from published prices: 40% of what the client pays. It is not a forecast. Nothing is earned during a free trial, and refunds and cancellations reduce it. Yearly prepaid plans pay out in monthly installments, so ask Station before offering one.</p>';
   }
   function yesToPaid() {
@@ -1003,7 +1037,7 @@
     }
     var chip = function (k, label) { return '<button class="chip" type="button" data-f="' + k + '" aria-pressed="' + (f === k) + '">' + label + '</button>'; };
     mount('<div class="wrap home"><div class="hello"><div><h1>Products</h1><p>Pick one, learn it in 2 minutes, start calling.</p><p class="small fine">What you earn is shown per paying client. It’s the math, not a forecast or a promise.</p></div></div>' +
-      '<a class="buyers-link" href="#buyers"><b>Not sure what to pitch? See who buys</b></a>' +
+      '<a class="buyers-inline" href="#buyers">Not sure what to pitch? See who buys <span aria-hidden="true">&rarr;</span></a>' +
       '<section id="wall" aria-label="Products you can sell"><div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chip('all', 'Everything') + chip('easy', 'Easiest') + chip('pay', 'Top pay') + chip('collections', 'Collections') + chip('plans', 'Plans') + '</div></div>' +
       groups + '</section></div>', 'Products');
     main.querySelectorAll('[data-f]').forEach(function (btn) {
@@ -1264,7 +1298,7 @@
     if (triedToday(S.log[l.id])) return '<button class="btn call-btn closed" type="button" disabled>✓ Tried today<small>Back on your list tomorrow</small></button>';
     if (!t.ok) return '<button class="btn call-btn closed" type="button" disabled>' + (t.unknown ? 'Check their local time' : 'Calls open ' + t.opens) + '<small>The number shows when calls open</small></button>';
     var s = S.log[l.id], again = s && (s.o === 'interested' || s.wasInterested);
-    return '<a class="btn ' + (again ? 'call-again' : 'btn-green') + ' call-btn" href="tel:' + l.dial + '" data-call>' + (again ? 'Call again' : touch ? 'Call now' : 'Call') + '<small>' + esc(l.phone) + '</small></a>';
+    return '<a class="btn ' + (again ? 'call-again' : 'btn-dark') + ' call-btn" href="tel:' + l.dial + '" data-call>' + (again ? 'Call again' : touch ? 'Call now' : 'Call') + '<small>' + esc(l.phone) + '</small></a>';
   }
   /* call-back choices, without two buttons that land on the same day (Saturday: tomorrow and in 2 days are both Monday) */
   function dayButtons(ok) {
@@ -1440,7 +1474,7 @@
     }
     if (mode === 'before') {
       openSheet('Ready to call ' + l.name,
-        '<a class="btn btn-green btn-big btn-block" href="tel:' + l.dial + '" data-dial>Call ' + esc(l.phone) + '</a>' +
+        '<a class="btn btn-dark btn-big btn-block" href="tel:' + l.dial + '" data-dial>Call ' + esc(l.phone) + '</a>' +
         (touch ? (S.calls.length >= 3 ? '<label class="check"><input type="checkbox" data-skip' + (S.skipPrep ? ' checked' : '') + '> Skip this card and go straight to the phone next time</label>' : '')
                : '<p class="small center">Opens your calling app. No calling app? <button class="link-btn" type="button" data-copyonly>Copy the number</button> and dial it on your phone.</p>') +
         '<p class="tip"><b>Tip:</b> put the call on speaker somewhere private, then come back to this app. Your lines stay right here. Never record a call. They’ll see your number, like any call. If they’re interested, get their email before you hang up.</p>' + quick + extrasHtml(l) +
@@ -2078,7 +2112,7 @@
         '<h2 class="sub-h">Their list (' + rows.length + ')</h2>' +
         (rows.length ? '<div class="table-wrap"><table><thead><tr><th scope="col">Business</th><th scope="col">From</th><th scope="col">Where it stands</th><th scope="col" class="r">Calls</th><th scope="col">Last call</th></tr></thead><tbody>' +
           rows.map(function (r) {
-            return '<tr><td data-l="Business"><b>' + esc(r.name) + '</b><br><span class="small">' + esc([r.city, r.state].filter(Boolean).join(', ')) + (r.niche ? ' · ' + esc(tradeName(r.niche)) : '') + '</span></td>' +
+            return '<tr><td data-l="Business"><span class="cellv"><b>' + esc(r.name) + '</b><span class="small">' + esc([r.city, r.state].filter(Boolean).join(', ')) + (r.niche ? ' · ' + esc(tradeName(r.niche)) : '') + '</span></span></td>' +
               '<td data-l="From">' + (r.station ? 'Station' : 'Their own') + '</td>' +
               '<td data-l="Where it stands">' + esc(OUT_WORDS[r.outcome] || r.outcome) + (r.next_at ? ' · call back ' + esc(dayLabel(String(r.next_at).slice(0, 10))) : '') + (r.won_accepted ? ' · accepted' : '') + '</td>' +
               '<td data-l="Calls" class="r num">' + r.calls + '</td><td data-l="Last call">' + esc(r.last_at ? agoText(r.last_at) : 'not yet') + '</td></tr>';
