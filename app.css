@@ -323,8 +323,8 @@ body.calls-mode{overflow:hidden;height:100dvh}
 .won-btns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
 .won-btns .btn{min-height:48px;font-size:16px;flex:1 1 auto}
 .closed-note{color:var(--warn)!important;font-weight:700}
-.setup{background:var(--warn-bg);border-radius:var(--r);padding:16px 18px;margin:18px 0 22px;color:#5E3300}
-.setup-h{font-size:20px;margin-bottom:10px;color:#5E3300}
+.setup{background:var(--bg-2);border-radius:var(--r);padding:16px 18px;margin:18px 0 22px;color:var(--ink)}
+.setup-h{font-size:20px;margin-bottom:10px;color:var(--ink)}
 .setup-row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(138,75,0,.2);font-size:16px}
 .setup-row span{flex:1 1 280px}
 .tile.hero{border:2px solid var(--green);background:var(--green-bg)}
@@ -549,7 +549,7 @@ details.script-peek{margin-top:12px}
 /* short or zoomed screens: let the page scroll so every button can be reached */
 @media (max-height:520px){html.calls-lock,body.calls-mode,html.big body.calls-mode{overflow:auto;height:auto}.feed{scroll-snap-type:none}}
 .feed{scroll-padding-bottom:16px}
-html.big .gap{display:none}
+/* html.big keeps "Why them" (10-07 review: the person who needs big text needs it most) */
 html.big .card-actions{position:sticky;bottom:0;background:var(--card);padding-top:8px;z-index:1}
 /* the active tab is marked by more than colour */
 .tabbar a{position:relative}
@@ -755,3 +755,12 @@ ul.biz li .small{text-align:right}
 .setup-row .tax-pick,.setup-row .done-mark{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;max-width:100%}
 .setup-row .done-mark{font-weight:700;color:var(--green)}
 .tax-pick select.text{width:auto;min-height:48px;margin:0}
+/* own leads (10-07) */
+.pill.mine{background:var(--bg-2);color:var(--ink-2)}
+.add-own{margin-top:12px}
+.end-card .add-line{margin:14px 0 0}
+.swap-btn{margin-top:12px}
+.pickday{display:flex;flex-direction:column;gap:6px;font-size:16px;font-weight:600;padding:8px 0}
+.pickday input{min-height:48px;font:inherit;padding:6px 10px;border:2px solid var(--line-2);border-radius:var(--r-sm);background:var(--card)}
+.older-notes{font-size:15px;margin:4px 0}.older-notes summary{cursor:pointer;color:var(--ink-2);min-height:36px;display:flex;align-items:center}
+.older-notes ul{margin:4px 0 0;padding-left:18px}.older-notes li{margin:4px 0}
