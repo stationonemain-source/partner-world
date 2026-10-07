@@ -549,7 +549,7 @@
     save();
     SIGNIN_MSG = msg || ''; signMode = 'login';
     if (!sheet.hidden) hideSheet();
-    hideUndo(); route();
+    hideUndo(); TEAM = null; applyTeamNav(); route();
   }
   function showLoading() {
     chrome(false);
@@ -571,7 +571,7 @@
       applyLeads(d);
       return api('money_lines').then(function (x) { MONEY = x && x.ok !== false ? x : null; MONEY_ERR = x && x.ok === false ? sentence(x.error, '') : ''; },
         function () { MONEY = null; MONEY_ERR = 'Your money couldn’t load just now.'; });
-    }).then(function () { BOOTING = false; BOOTED = true; LOADED_AT = Date.now(); save(); pump(); },
+    }).then(function () { BOOTING = false; BOOTED = true; LOADED_AT = Date.now(); save(); applyTeamNav(); pump(); },
       function (e) { BOOTING = false; if (e === 'out') return; BOOT_ERR = typeof e === 'string' ? e : e && e.http ? 'Station’s system had a problem (error ' + e.http + '). It’s not your connection. Try again in a minute.' : 'No connection to Station. Check your internet and try again.'; });
   }
   function startLive() {
@@ -919,7 +919,7 @@
       '<span class="row">' + moneyLine(t) + '</span>' +
       setupLine() +
       '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
-    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml +
+    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml + myLeadCard() +
       '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' +
       '<a class="btn btn-big btn-block all-products" href="#products">See all ' + PW.boxes.length + ' products</a>' +
       '<button class="btn btn-block add-own" type="button" data-addlead>Found a business yourself? Add it to your list</button>' +
@@ -1971,6 +1971,143 @@
         return '<details class="acc"><summary>' + (i + 1) + '. ' + esc(h.t) + '</summary><div><p>' + esc(h.why) + '</p><div class="say"><small>Say</small>' + esc(h.say.replace(/\[your name\]/g, S.name)) + '</div><div class="dont"><b>Don’t</b> ' + esc(h.never) + '</div></div></details>';
       }).join('') + '</div></div>', 'Who buys');
   };
+
+  /* ---------- Partner Lead (engine v4.55): one level only. A lead sees their team, opens one partner's list (read-only), leaves
+     coaching notes and records training levels. Partners see their lead, their level and the latest notes on Home. No money here. ---------- */
+  var LEVELS = ['Not started', 'Ready', 'Working', 'Closer', 'Coach'];
+  var LEVEL_WHAT = [
+    'Next: pass the rules check, learn one product, then a practice call (roleplay) with your lead.',
+    'Ready: you’ve practised with your lead. Next: 50 calls logged and 5 real conversations, then your lead reviews one call.',
+    'Working: you’re on the phones. Next: your first Won that Station accepts.',
+    'Closer: you’ve closed a sale. Next: sit in on a new partner’s practice call.',
+    'Coach: you help your lead train new partners.'];
+  function teamInfo() { return (ME && ME.team) || null; }
+  function isTeamLead() { var t = teamInfo(); return !DEMO && !!(t && t.is_lead); }
+  function applyTeamNav() {
+    var on = isTeamLead();
+    document.querySelectorAll('[data-tab="team"]').forEach(function (a) { a.hidden = !on; });
+    var tb = document.getElementById('tabbar'); if (tb) tb.classList.toggle('six', on);
+  }
+  function agoText(isoTs) {
+    var t = Date.parse(isoTs || ''); if (!t) return 'never';
+    var d = Math.floor((Date.now() - t) / 864e5);
+    return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago';
+  }
+  function quietDays(p) { var t = Date.parse((p.activity || {}).last_call_at || ''); return t ? Math.floor((Date.now() - t) / 864e5) : null; }
+  function isQuiet(p) {
+    var holding = (p.counts.held || 0) + (p.counts.own_open || 0), q = quietDays(p);
+    return holding > 0 && (q === null ? (p.counts.dealt_total || 0) > 0 : q >= 2);
+  }
+  function lvPill(t) { var lv = (t && t.level) || 0; return '<span class="pill lv lv' + lv + '">Level ' + lv + ' · ' + esc(LEVELS[lv]) + '</span>'; }
+  /* partner side: who leads them, their level, the latest coaching notes */
+  function myLeadCard() {
+    var t = teamInfo(); if (DEMO || !t || !t.lead) return '';
+    var lv = (t.training && t.training.level) || 0, notes = t.coach || [];
+    return '<section class="lead-box" aria-labelledby="leadH"><span class="lbl">Your Partner Lead</span><h2 id="leadH">' + esc(t.lead.name) + '</h2>' +
+      '<p>' + lvPill(t.training) + '</p><p class="small">' + esc(LEVEL_WHAT[lv]) + '</p>' +
+      (notes.length ? '<div class="coach-list"><span class="lbl">Latest from ' + esc(firstName(t.lead.name)) + '</span>' + notes.slice(0, 2).map(function (n) {
+        return '<div class="coach-note"><p>' + esc(n.text) + '</p><span class="small">' + esc(agoText(n.at)) + '</span></div>'; }).join('') + '</div>'
+        : '<p class="small">Notes from your lead show up here.</p>') + '</section>';
+  }
+  /* the lead's own screens */
+  var TEAM = null, TEAM_AT = 0;
+  function loadTeam(force) {
+    if (TEAM && !force && Date.now() - TEAM_AT < 60000) return Promise.resolve(TEAM);
+    return api('team_view').then(function (d) { if (d.ok) { TEAM = d; TEAM_AT = Date.now(); } return d; });
+  }
+  VIEWS.team = function (code) {
+    if (!isTeamLead()) { location.replace('#home'); return; }
+    chrome(true, 'team');
+    if (code) { teamPartner(code); return; }
+    mount('<div class="wrap team"><h1>Your team</h1><p class="small">Loading your team…</p></div>', 'Team');
+    loadTeam(true).then(function (d) {
+      if (location.hash !== '#team') return;
+      if (d.signedOut) return;
+      if (!d.ok) { mount('<div class="wrap team"><h1>Your team</h1><div class="explain bad">' + esc(sentence(d.error, 'Your team couldn’t load just now.')) + '</div></div>', 'Team'); return; }
+      var team = d.team || [], sum = { today: 0, week: 0, talks: 0, won: 0 };
+      team.forEach(function (p) { sum.today += p.activity.calls_today; sum.week += p.activity.calls_week; sum.talks += p.activity.talks_week; sum.won += p.counts.won; });
+      var rows = team.slice().sort(function (a, b) { return (isQuiet(b) ? 1 : 0) - (isQuiet(a) ? 1 : 0) || (b.asked_more ? 1 : 0) - (a.asked_more ? 1 : 0) || String(a.name).localeCompare(String(b.name)); });
+      mount('<div class="wrap team"><h1>Your team</h1>' +
+        '<p class="sub">' + team.length + (team.length === 1 ? ' partner' : ' partners') + ' on your team. Station assigns partners to you; you train them and keep them moving.</p>' +
+        '<div class="tiles4"><div class="tile"><span class="lbl">Calls today</span><div class="v num">' + sum.today + '</div></div>' +
+        '<div class="tile"><span class="lbl">Calls this week</span><div class="v num">' + sum.week + '</div></div>' +
+        '<div class="tile"><span class="lbl">Conversations this week</span><div class="v num">' + sum.talks + '</div></div>' +
+        '<div class="tile"><span class="lbl">Won, all time</span><div class="v num">' + sum.won + '</div></div></div>' +
+        (team.length ? '<div class="team-list">' + rows.map(function (p) {
+          var flags = (isQuiet(p) ? '<span class="pill flag">Quiet ' + (quietDays(p) === null ? '· no calls yet' : quietDays(p) + ' days') + '</span>' : '') +
+            (p.asked_more ? '<span class="pill flag">Asked for more</span>' : '') + (p.counts.won_waiting ? '<span class="pill flag">Won waiting for Station</span>' : '');
+          return '<a class="team-row" href="#team/' + encodeURIComponent(p.code) + '"><div class="tr-head"><b>' + esc(p.name) + '</b>' + lvPill(p.training) + flags + '</div>' +
+            '<div class="tr-nums"><span><b class="num">' + p.activity.calls_today + '</b> today</span><span><b class="num">' + p.activity.calls_week + '</b> this week</span>' +
+            '<span><b class="num">' + p.activity.talks_week + '</b> conversations</span><span><b class="num">' + p.counts.held + '</b> from Station held</span>' +
+            '<span><b class="num">' + p.counts.interested + '</b> interested</span><span><b class="num">' + p.counts.won + '</b> won</span></div>' +
+            '<div class="tr-foot small">Last call ' + esc(agoText(p.activity.last_call_at)) + (p.last_note_at ? ' · your last note ' + esc(agoText(p.last_note_at)) : ' · no notes yet') + '</div></a>';
+        }).join('') + '</div>' : '<div class="empty">No partners on your team yet. Station assigns them to you in Circle.</div>') +
+        '<h2 class="sub-h">The week</h2><ol class="route"><li class="say"><small>Monday</small>30-minute huddle: last week’s numbers, one win, one objection everyone practises.</li>' +
+        '<li class="say"><small>Wednesday</small>Call review: two partners each bring one call. Fix the line, not the person.</li>' +
+        '<li class="say"><small>Friday</small>Numbers. Anyone with zero calls gets a phone call from you, not a message.</li></ol>' +
+        '<h2 class="sub-h">The levels</h2><div class="more-list">' + LEVELS.map(function (n, i) { return '<div class="lv-row">' + lvPill({ level: i }) + '<span>' + esc(LEVEL_WHAT[i]) + '</span></div>'; }).join('') + '</div></div>', 'Team');
+    }, function () { mount('<div class="wrap team"><h1>Your team</h1><div class="explain bad">No connection to Station. Try again in a moment.</div></div>', 'Team'); });
+  };
+  var OUT_WORDS = { '': 'Not called yet', called: 'Called', no_answer: 'No answer', voicemail: 'Voicemail', bad_lead: 'Bad lead', interested: 'Interested',
+    callback: 'Call back', demo_sent: 'Demo sent', won: 'Won', not_interested: 'Not interested', dnc: 'Do not call' };
+  function teamPartner(code) {
+    mount('<div class="wrap team"><a class="back" href="#team">&larr; Your team</a><p class="small">Loading…</p></div>', 'Team');
+    api('team_partner', { code: code }).then(function (d) {
+      if (location.hash !== '#team/' + code && location.hash !== '#team/' + encodeURIComponent(code)) return;
+      if (d.signedOut) return;
+      if (!d.ok) { mount('<div class="wrap team"><a class="back" href="#team">&larr; Your team</a><div class="explain bad">' + esc(sentence(d.error, 'That partner couldn’t load.')) + '</div></div>', 'Team'); return; }
+      var t = d.training || {}, lv = t.level || 0;
+      var rows = (d.rows || []).slice().sort(function (a, b) { return String(b.last_at || '').localeCompare(String(a.last_at || '')); });
+      mount('<div class="wrap team"><a class="back" href="#team">&larr; Your team</a><h1>' + esc(d.name) + '</h1>' +
+        '<p>' + lvPill(t) + ' <span class="small">' + d.activity.calls_week + ' calls and ' + d.activity.talks_week + ' conversations this week · last call ' + esc(agoText(d.activity.last_call_at)) + '</span></p>' +
+        '<div class="grid2c"><section class="card-box" aria-labelledby="trH"><h2 id="trH" class="sub-h">Training</h2>' +
+        '<label class="field slim" for="trLevel">Level<select class="text" id="trLevel">' + LEVELS.map(function (n, i) { return '<option value="' + i + '"' + (i === lv ? ' selected' : '') + '>Level ' + i + ' · ' + esc(n) + '</option>'; }).join('') + '</select></label>' +
+        '<p class="small" id="trWhat">' + esc(LEVEL_WHAT[lv]) + '</p>' +
+        '<label class="check"><input type="checkbox" id="trRole"' + (t.roleplay_at ? ' checked' : '') + '> Practice call (roleplay) done' + (t.roleplay_at ? ' <span class="small">· ' + esc(agoText(t.roleplay_at)) + '</span>' : '') + '</label>' +
+        '<label class="check"><input type="checkbox" id="trRev"' + (t.review_at ? ' checked' : '') + '> One real call reviewed' + (t.review_at ? ' <span class="small">· ' + esc(agoText(t.review_at)) + '</span>' : '') + '</label>' +
+        '<label class="check"><input type="checkbox" id="trCoach"' + (t.coach_at ? ' checked' : '') + '> Sat in on a new partner’s practice call' + (t.coach_at ? ' <span class="small">· ' + esc(agoText(t.coach_at)) + '</span>' : '') + '</label>' +
+        '<button class="btn btn-dark" type="button" id="trSave">Save training</button></section>' +
+        '<section class="card-box" aria-labelledby="cnH"><h2 id="cnH" class="sub-h">Coaching notes</h2><p class="small">' + esc(firstName(d.name)) + ' sees your two latest notes on their Home.</p>' +
+        '<label class="sr" for="cnText">New note</label><textarea class="text" id="cnText" rows="3" maxlength="500" placeholder="One thing to keep, one thing to change"></textarea>' +
+        '<button class="btn btn-dark" type="button" id="cnSend">Send note</button><div id="cnList">' + coachListHtml(d.coach) + '</div></section></div>' +
+        '<h2 class="sub-h">Their list (' + rows.length + ')</h2>' +
+        (rows.length ? '<div class="table-wrap"><table><thead><tr><th scope="col">Business</th><th scope="col">From</th><th scope="col">Where it stands</th><th scope="col" class="r">Calls</th><th scope="col">Last call</th></tr></thead><tbody>' +
+          rows.map(function (r) {
+            return '<tr><td data-l="Business"><b>' + esc(r.name) + '</b><br><span class="small">' + esc([r.city, r.state].filter(Boolean).join(', ')) + (r.niche ? ' · ' + esc(tradeName(r.niche)) : '') + '</span></td>' +
+              '<td data-l="From">' + (r.station ? 'Station' : 'Their own') + '</td>' +
+              '<td data-l="Where it stands">' + esc(OUT_WORDS[r.outcome] || r.outcome) + (r.next_at ? ' · call back ' + esc(dayLabel(String(r.next_at).slice(0, 10))) : '') + (r.won_accepted ? ' · accepted' : '') + '</td>' +
+              '<td data-l="Calls" class="r num">' + r.calls + '</td><td data-l="Last call">' + esc(r.last_at ? agoText(r.last_at) : 'not yet') + '</td></tr>';
+          }).join('') + '</tbody></table></div>' : '<p class="empty">Nothing on their list right now.</p>') + '</div>', d.name);
+      var sel = document.getElementById('trLevel');
+      sel.addEventListener('change', function () { document.getElementById('trWhat').textContent = LEVEL_WHAT[+sel.value]; });
+      var save = document.getElementById('trSave');
+      save.addEventListener('click', function () {
+        save.disabled = true; save.textContent = 'Saving…';
+        api('training_set', { code: code, level: +sel.value, roleplay: document.getElementById('trRole').checked, review: document.getElementById('trRev').checked, coach: document.getElementById('trCoach').checked }).then(function (r) {
+          save.disabled = false; save.textContent = 'Save training';
+          if (r.signedOut) return;
+          if (!r.ok) { toast(sentence(r.error, 'That didn’t save.'), 5000); return; }
+          TEAM_AT = 0; toast('Training saved.');
+          var hp = document.querySelector('.wrap.team > p .pill.lv'); if (hp) hp.outerHTML = lvPill(r.training);
+        }, function () { save.disabled = false; save.textContent = 'Save training'; toast('No connection to Station. Try again.', 4000); });
+      });
+      var send = document.getElementById('cnSend'), box = document.getElementById('cnText');
+      send.addEventListener('click', function () {
+        var text = box.value.trim(); if (!text) { box.focus(); toast('Write the note first.'); return; }
+        send.disabled = true; send.textContent = 'Sending…';
+        api('coach_note', { code: code, text: text }).then(function (r) {
+          send.disabled = false; send.textContent = 'Send note';
+          if (r.signedOut) return;
+          if (!r.ok) { toast(sentence(r.error, 'That note didn’t send.'), 5000); return; }
+          box.value = ''; document.getElementById('cnList').innerHTML = coachListHtml(r.coach); TEAM_AT = 0; toast('Note sent.');
+        }, function () { send.disabled = false; send.textContent = 'Send note'; toast('No connection to Station. Your note is still here.', 4000); });
+      });
+    }, function () { mount('<div class="wrap team"><a class="back" href="#team">&larr; Your team</a><div class="explain bad">No connection to Station. Try again in a moment.</div></div>', 'Team'); });
+  }
+  function coachListHtml(list) {
+    list = list || [];
+    return list.length ? '<ul class="coach-hist">' + list.map(function (n) { return '<li><p>' + esc(n.text) + '</p><span class="small">' + esc(agoText(n.at)) + '</span></li>'; }).join('') + '</ul>' : '<p class="small">No notes yet.</p>';
+  }
 
   /* ---------- help ---------- */
   VIEWS.help = function () {

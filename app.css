@@ -896,3 +896,24 @@ input.text::placeholder{color:var(--ink-3)}
 .steps3 b{background:#1F242C;color:var(--ink)}
 .say small,ol.route li.say small,.opener .first,.next-call .lbl,.start-here .lbl,.coach-bubble .coach-step,.pitch-head .small{color:var(--ink-2)}
 .btn-dark:hover{filter:brightness(.92)}
+/* Partner Lead (10-07): Team tab for leads; "Your lead" card for partners */
+.tabbar.six{grid-template-columns:repeat(6,1fr)}.tabbar.six a{font-size:12px}
+.pill.lv{background:#1F242C;color:var(--ink);font-family:var(--mono);font-size:12.5px;letter-spacing:.04em}
+.pill.lv3,.pill.lv4{background:var(--green-bg);color:var(--green)}
+.pill.flag{background:var(--warn-bg);color:var(--warn)}
+.lead-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:16px 0;display:flex;flex-direction:column;gap:8px}
+.lead-box h2{font-size:24px;margin:0}.lead-box p{margin:0}
+.coach-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.coach-note{background:var(--panel2);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:10px 12px}.coach-note p{margin:0 0 4px}
+.tiles4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 18px}
+.tiles4 .tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}.tiles4 .v{font-size:30px;font-weight:700;margin-top:6px}
+.team-list{display:flex;flex-direction:column;gap:10px}
+.team-row{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink)}
+.team-row:hover{background:var(--hover)}
+.tr-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tr-head b{font-size:19px;margin-right:4px}
+.tr-nums{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px;color:var(--ink-2)}.tr-nums b{color:var(--ink);font-size:17px}
+.lv-row{display:flex;gap:12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);font-size:16px;color:var(--ink-2)}.lv-row .pill{flex:none}
+.grid2c{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:14px 0}
+.card-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.card-box .sub-h{margin:0}
+.coach-hist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}.coach-hist li{border-top:1px solid var(--line);padding-top:8px}.coach-hist p{margin:0 0 2px}
