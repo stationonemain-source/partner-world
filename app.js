@@ -353,7 +353,8 @@
       gap: r.gap || (r.source === 'station' ? 'Station picked this business for you.' : 'You added this business.'), fits: BOX[r.sku] ? r.sku : 'bundle-answer', own: r.source !== 'station',
       phone: nice, dial: d.length === 10 ? '+1' + d : nice.replace(/[^\d+]/g, ''), until: +r.until || 0,
       email: String(r.email || ''), booked: r.booked && r.booked.start ? { start: String(r.booked.start) } : null, // v4.60
-      mailed: r.mailed && r.mailed.last_at ? { n: +r.mailed.n || 1, last: String(r.mailed.last_at) } : null };
+      mailed: r.mailed && r.mailed.last_at ? { n: +r.mailed.n || 1, last: String(r.mailed.last_at) } : null,
+      siteReq: r.site_req && String(r.site_req.status || '') === 'open' ? { at: String(r.site_req.at || '') } : null }; // engine site_request (2026-10-07)
   }
   /* the engine's record of a row -> this app's status for it; prev keeps what only this browser knows (the email typed, the hour of a "later today") */
   function logFromRow(r, prev) {
@@ -1452,6 +1453,7 @@
       (!closed && !bookedFor(l) && s && (s.o === 'interested' || s.o === 'callback' || s.wasInterested) ? '<button class="link-btn" type="button" data-book>Book a call</button>' : '') + /* once you've talked; keeps a new card on one phone screen */
       (s && TALKED[s.o] && s.o !== 'won' && s.o !== 'interested' && !s.wasInterested && !closed ? '<button class="link-btn" type="button" data-compose>Email them</button>' : '') +
       (l.mailed && closed ? '<button class="link-btn" type="button" data-compose>Emails with them</button>' : '') +
+      (!DEMO && s && (s.o === 'interested' || s.o === 'callback' || s.o === 'won' || s.wasInterested) ? '<button class="link-btn" type="button" data-site>' + (l.siteReq ? 'Website: asked ✓' : 'They want a website') + '</button>' : '') + /* Partner Agreement s3.2: you request it, Station builds it */
       (t.ok && !closed && !tt && !touch ? '<button class="link-btn" type="button" data-copynum>Copy number</button>' : '') /* on a phone, Call dials */ + (closed ? '<button class="link-btn" type="button" data-next>Next business</button>' : '') +
       (l.own && !DEMO ? '<button class="link-btn" type="button" data-edit>Edit</button>' + (s && s.o === 'won' ? '' : '<button class="link-btn" type="button" data-remove>Remove</button>') : '') + '</div></div></article>';
   }
@@ -1479,6 +1481,7 @@
       if (t.closest('[data-pitch]')) { openPitchPicker(l); return; }
       if (t.closest('[data-book]')) { openBooking(l, null); return; }
       if (t.closest('[data-compose]')) { openComposer(l); return; }
+      if (t.closest('[data-site]')) { openSiteRequest(l); return; }
       if (t.closest('[data-vm]')) { openSheet('If you get voicemail', '<div class="say"><small>Say</small>' + esc(vmLine(l)) + '</div><p class="small">Then tap Voicemail when you log the call. They come back on your list tomorrow.</p>'); return; }
       if (t.closest('[data-edit]')) { openLeadForm(l); return; }
       var rm = t.closest('[data-remove]'); if (rm) { removeOwn(l, rm); return; }
@@ -2009,6 +2012,30 @@
     }, function () { th.innerHTML = '<p class="small">No connection to Station.</p>'; });
   }
 
+  /* ---------- website requests (Partner Agreement s3.2: partners never build; they ask, Station builds) ---------- */
+  function openSiteRequest(l) {
+    if (l.siteReq) {
+      openSheet('Website for ' + l.name, '<div class="explain">Station already has this request' + (l.siteReq.at ? ' (asked ' + esc(dayLabel(l.siteReq.at.slice(0, 10))) + ')' : '') + '. Station builds it and contacts the business; you don’t build anything. Questions: <a href="#help">Message Station</a>.</div>');
+      return;
+    }
+    openSheet('Ask Station to build their website',
+      '<p>Station builds every website; you never build one. Station shows the business a free demo first, then quotes it. You earn 40% of the setup fee once they pay.</p>' +
+      '<form id="siteForm" novalidate><label class="field slim" for="sr-note">What they told you (optional)<textarea class="text" id="sr-note" rows="4" maxlength="600" placeholder="For example: they want online booking and photos of their work"></textarea></label>' +
+      '<p class="small">Station needs a way to reach them: a phone, an email or their current website on this business.</p>' +
+      '<p class="field-err" id="sr-err" role="alert"></p><button class="btn btn-dark btn-big btn-block" type="submit" id="sr-go">Send to Station</button></form>');
+    var form = document.getElementById('siteForm'), err = document.getElementById('sr-err'), go = document.getElementById('sr-go');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); if (go.disabled) return;
+      go.disabled = true; go.textContent = 'Sending…'; err.textContent = '';
+      api('site_request', { id: l.id, note: document.getElementById('sr-note').value.trim() }).then(function (d) {
+        go.disabled = false; go.textContent = 'Send to Station'; if (d.signedOut) return;
+        if (!d.ok) { err.textContent = sentence(d.error, 'Station couldn’t take that just now.'); return; }
+        var r = rowOf(l.id); if (r) { r.site_req = d.site_req || { status: 'open', at: new Date().toISOString() }; applyLeads(LL); }
+        afterSheet(function () { toast(d.already ? 'Station already has this one.' : 'Sent. Station will build the demo and contact them.', 4500); var c = cardEl(l.id); if (c && !c.contains(document.activeElement)) renderCard(c); });
+      }, function () { go.disabled = false; go.textContent = 'Send to Station'; err.textContent = 'No answer from Station. Close this and open it again to check before you send it twice.'; });
+    });
+  }
+
   /* ---------- sheets; focus stays inside while open ---------- */
   var lastFocus = null, sheet = document.getElementById('sheet');
   var ignorePop = false;
@@ -2249,7 +2276,7 @@
       '<div><b>If a client cancels</b>Your commission on them stops when they stop paying. What you’ve already earned stays yours.</div>' +
       '<div><b>If the agreement ends</b>Either side can end it any time by email. You’re paid on payments that cleared up to that day, and nothing after.</div>' +
       '<div><b>Something looks wrong?</b>Tell Station in writing within 60 days. Station’s payment records decide.</div></div>' +
-      '<p class="small fine">The main points of the Station Partner Agreement.</p></div>', 'Money');
+      '<p class="small fine">The main points of the <a href="https://station.solutions/partners/agreement.html" target="_blank" rel="noopener">Station Partner Agreement</a>. The agreement you signed wins over this page.</p></div>', 'Money');
     main.querySelectorAll('[data-demo]').forEach(function (x) { x.addEventListener('click', function () { toast(x.getAttribute('data-demo') === 'tax' ? 'Signed in, this opens a secure upload.' : 'Signed in, this opens your own Stripe setup.'); }); });
     if (!DEMO) wireMoneyLive();
   };
@@ -2463,7 +2490,7 @@
       '<h2>How people decide</h2><p>Ten kinds of buyer and the habits that win the call.</p><a class="btn" href="#buyers">See who buys</a>' +
       '<h2>Take the check again</h2><p>Six questions, one minute.</p><a class="btn" href="#check">Retake the check</a>' +
       (DEMO ? '<h2>Start over</h2><p>Clears your name and the calls you logged in this preview, on this device only.</p><button class="btn" type="button" id="reset">Reset the preview</button>'
-        : '<h2>Your account</h2><p>Signed in as <b>' + esc((ME && ME.name) || S.name) + '</b>, partner code <b>' + esc(S.code) + '</b>. Partner World is where Station partners work now; the old partner portal is retired.</p><button class="btn" type="button" id="signOut">Sign out</button>') + '</div>', 'Help');
+        : '<h2>Your account</h2><p>Signed in as <b>' + esc((ME && ME.name) || S.name) + '</b>, partner code <b>' + esc(S.code) + '</b>. Partner World is where Station partners work now; the old partner portal is retired. Read the <a href="https://station.solutions/partners/agreement.html" target="_blank" rel="noopener">Station Partner Agreement</a>.</p><button class="btn" type="button" id="signOut">Sign out</button>') + '</div>', 'Help');
     if (!DEMO) wireMessages();
     document.getElementById('glossBtn').addEventListener('click', openGlossary);
     document.getElementById('tourBtn').addEventListener('click', function () { S.toured = false; save(); location.hash = '#calls'; });
