@@ -354,7 +354,8 @@
       phone: nice, dial: d.length === 10 ? '+1' + d : nice.replace(/[^\d+]/g, ''), until: +r.until || 0,
       email: String(r.email || ''), booked: r.booked && r.booked.start ? { start: String(r.booked.start) } : null, // v4.60
       mailed: r.mailed && r.mailed.last_at ? { n: +r.mailed.n || 1, last: String(r.mailed.last_at) } : null,
-      siteReq: r.site_req && String(r.site_req.status || '') === 'open' ? { at: String(r.site_req.at || '') } : null }; // engine site_request (2026-10-07)
+      siteReq: r.site_req && String(r.site_req.status || '') === 'open' ? { at: String(r.site_req.at || '') } : null, // engine site_request (2026-10-07)
+      added: Date.parse(r.claimed || r.dealt_at || r.created || '') || 0, web: String(r.website || '') }; // Leads (2026-10-08): newest first, and the website as given
   }
   /* the engine's record of a row -> this app's status for it; prev keeps what only this browser knows (the email typed, the hour of a "later today") */
   function logFromRow(r, prev) {
@@ -559,7 +560,7 @@
       var view = (location.hash || '').replace(/^#/, '').split('/')[0] || 'home';
       // never redraw over a partner mid-task: a sheet, the tour, an Undo, a call, typing. A forced redraw waits for them.
       if (busy() || (view === 'calls' && !force && (feedEl() && feedEl().scrollTop > 10))) { if (view === 'calls') updateEnd(); if (force) redrawWhenFree(view); return; }
-      if (view === 'home' || view === 'calls' || view === 'money') route();
+      if (view === 'home' || view === 'calls' || view === 'money' || view === 'leads') route();
     }, function () { resyncing = false; });
     if (location.hash === '#money') api('money_lines').then(function (x) { if (x && x.ok !== false) MONEY = x; }, function () {});
   }
@@ -2024,7 +2025,7 @@
   }
 
   /* ---------- website requests (Partner Agreement s3.2: partners never build; they ask, Station builds) ---------- */
-  function openSiteRequest(l) {
+  function openSiteRequest(l, then) { // then(): what to redraw after it lands (Leads); null from the card's own link
     if (l.siteReq) {
       openSheet('Website for ' + l.name, '<div class="explain">Station already has this request' + (l.siteReq.at ? ' (asked ' + esc(dayLabel(l.siteReq.at.slice(0, 10))) + ')' : '') + '. Station builds it and contacts the business; you don’t build anything. Questions: <a href="#help">Message Station</a>.</div>');
       return;
@@ -2037,12 +2038,13 @@
     var form = document.getElementById('siteForm'), err = document.getElementById('sr-err'), go = document.getElementById('sr-go');
     form.addEventListener('submit', function (e) {
       e.preventDefault(); if (go.disabled) return;
+      if (DEMO) { l.siteReq = { at: new Date().toISOString() }; afterSheet(function () { toast('Preview: nothing was sent to Station.', 3000); if (then) then(); }); return; }
       go.disabled = true; go.textContent = 'Sending…'; err.textContent = '';
       api('site_request', { id: l.id, note: document.getElementById('sr-note').value.trim() }).then(function (d) {
         go.disabled = false; go.textContent = 'Send to Station'; if (d.signedOut) return;
         if (!d.ok) { err.textContent = sentence(d.error, 'Station couldn’t take that just now.'); return; }
         var r = rowOf(l.id); if (r) { r.site_req = d.site_req || { status: 'open', at: new Date().toISOString() }; applyLeads(LL); }
-        afterSheet(function () { toast(d.already ? 'Station already has this one.' : 'Sent. Station will build the demo and contact them.', 4500); var c = cardEl(l.id); if (c && !c.contains(document.activeElement)) renderCard(c); });
+        afterSheet(function () { toast(d.already ? 'Station already has this one.' : 'Sent. Station will build the demo and contact them.', 4500); if (then) then(); else { var c = cardEl(l.id); if (c && !c.contains(document.activeElement)) renderCard(c); } });
       }, function () { go.disabled = false; go.textContent = 'Send to Station'; err.textContent = 'No answer from Station. Close this and open it again to check before you send it twice.'; });
     });
   }
@@ -2509,8 +2511,10 @@
       '<li>If anyone says “take me off your list,” say sorry, end the call and mark them Do not call.</li>' +
       '<li>Never record a call, and never text a business. Email one only after you’ve talked and they’re happy to hear from you: use <b>Email them</b> on the card, so it goes from Station with the right footer.</li>' +
       '<li>Your link is what credits a sale to you, so send it every time. Log every call too: Station’s records decide who gets credit.</li>' +
-      '<li>You can add a business you found yourself: “Found a business yourself?” on Home, or at the end of Calls. Those stay on your list until you remove them. Never one another partner gave you, and never one that asked not to be called.</li>' +
+      '<li>You can add a business you found yourself: “Found a business yourself?” on Home, “Add a business you found” on Leads, or at the end of Calls. Those stay on your list until you remove them. Never one another partner gave you, and never one that asked not to be called.</li>' +
       '<li>Don’t copy leads or client details into your own spreadsheet or CRM, and never ask a business to send you their customer list.</li></ul>' +
+      '<h2>Leads and Calendar</h2><ul class="ticks"><li><b>Leads</b> is your whole list in one place: search it, see where each business stands, book a call, ask Station for a website or add a note.</li>' +
+      '<li><b>Calendar</b> shows every call you’ve booked, in your time: with businesses, with Station, and Station support for your clients.</li></ul>' +
       '<h2>How a call works</h2><p>Tap <b>Call now</b>, put it on speaker somewhere private, and read your lines. When you come back to the app, tap how it went. Pressed the wrong button? Tap <b>Undo</b>.</p>' +
       '<div class="help-btns"><button class="btn" type="button" id="tourBtn">Show me the tour again</button><button class="btn" type="button" id="glossBtn">What the buttons mean</button>' +
       (S.skipPrep ? '<button class="btn" type="button" id="prepBtn">Show the “Ready to call” card again</button>' : '') + '</div>' +
@@ -2619,9 +2623,9 @@
     });
     (n.bookings || []).forEach(function (b) {
       var when = whenLong(Date.parse(b.start)), at = b.booked || b.start;
-      if (b.who === 'station-self') add(at, 'booking', 'Your call with Station is booked', when + ' (your time)' + (b.topic ? ' · ' + b.topic : ''), '#help');
-      else if (b.who === 'station-client') add(at, 'booking', 'Station support call booked for ' + (b.label || 'your client'), when + ' (your time)', '#clients');
-      else add(at, 'booking', 'Call booked with ' + (b.label || 'a business'), when + ' (your time)', '#calls');
+      if (b.who === 'station-self') add(at, 'booking', 'Your call with Station is booked', when + ' (your time)' + (b.topic ? ' · ' + b.topic : ''), '#calendar');
+      else if (b.who === 'station-client') add(at, 'booking', 'Station support call booked for ' + (b.label || 'your client'), when + ' (your time)', '#calendar');
+      else add(at, 'booking', 'Call booked with ' + (b.label || 'a business'), when + ' (your time)', '#calendar');
     });
     (n.claims || []).forEach(function (c) {
       if (c.status === 'accepted') add(c.decided_at, 'accepted', 'Station added ' + c.business + ' to your book', 'You earn 40% of what they pay Station, once each payment clears.', '#clients');
@@ -2828,7 +2832,7 @@
   }
 
   /* ---------- a call with Station: for you, or for a client in your book (engine st_slots / st_book) ---------- */
-  function openStationBooking(forWho, cl) {
+  function openStationBooking(forWho, cl, then) { // then(): Calendar redraws after a booking
     var forClient = forWho === 'client';
     var title = forClient ? 'Station support for ' + (cl.name || 'your client') : 'Book a call with Station';
     var tz = DEMO ? '' : (ME && ME.tz) || myTz();
@@ -2863,13 +2867,14 @@
       go.addEventListener('click', function () {
         var topic = document.getElementById('sb-topic').value.trim(); err.textContent = '';
         if (topic.length < 5) { err.textContent = 'Say in a few words what the call is about.'; document.getElementById('sb-topic').focus(); return; }
-        if (DEMO) { afterSheet(function () { toast('Preview: nothing was booked.', 3000); }); return; }
+        if (DEMO) { if (then) DEMO_CAL.push({ id: 'demo-' + at, who: forClient ? 'station-client' : 'station-self', label: forClient ? cl.name : 'Station', start: at, topic: topic });
+          afterSheet(function () { toast('Preview: nothing was booked.', 3000); if (then) then(); }); return; }
         go.disabled = true; go.textContent = 'Booking…';
         api('st_book', { for: forWho, contactId: forClient ? cl.contactId || cl.id : undefined, start: at, topic: topic }).then(function (d) {
           go.disabled = false; go.textContent = 'Book it'; if (d.signedOut) return;
           if (!d.ok) { err.textContent = engineSays(d.error, 'That time couldn’t be booked. Pick another.'); return; }
           if (NEWS) NEWS.bookings = [{ id: 'new', start: at, who: forClient ? 'station-client' : 'station-self', label: forClient ? cl.name : 'Station', booked: new Date().toISOString(), topic: topic }].concat(NEWS.bookings || []);
-          afterSheet(function () { toast('Booked with Station: ' + whenLong(Date.parse(at), tz) + '.' + (d.mail === 'sent' ? ' Station emailed you the details.' : ' It’s in What’s new on Home.'), 5000); });
+          afterSheet(function () { toast('Booked with Station: ' + whenLong(Date.parse(at), tz) + '.' + (d.mail === 'sent' ? ' Station emailed you the details.' : ' It’s on your Calendar.'), 5000); if (then) then(); });
         }, function () { go.disabled = false; go.textContent = 'Book it'; err.textContent = 'No answer from Station, so it’s not known whether that booked. Close this and check What’s new on Home before you try again.'; });
       });
     });
@@ -3055,6 +3060,293 @@
     return '';
   }
   document.addEventListener('click', function (e) { var m = document.getElementById('moneyRetry'); if (e.target.closest && e.target.closest('#moneyRetry2') && m) m.click(); });
+
+  /* ======================================================================================================================
+     LEADS + CALENDAR (2026-10-08; Circle: "a calendar so they can book appointments, a lead list, like a book of leads, and a
+     way to request a website for a particular lead").
+     - Leads (#leads): the partner's whole list in one place, searchable. Every action reuses what Calls already has: Call jumps
+       to the card (showAfter), Book a call = openBooking, Request a website = openSiteRequest (engine site_request; Station
+       decides what counts as a way to reach them), notes go through the same queue as the card's note box. Filter and sort
+       are view preferences (S.lf / S.ls); everything a partner changes goes to Station.
+     - Calendar (#calendar): engine cal_mine (calls booked with businesses, with Station, and Station support for a client),
+       grouped by day in the partner's own time zone. "Book a call" picks a business, then the same booking sheet; or Station.
+     ====================================================================================================================== */
+  var LFILT = [['all', 'All'], ['fresh', 'New'], ['callback', 'Call back'], ['interested', 'Interested'], ['booked', 'Booked'], ['won', 'Won'], ['closed', 'Closed']];
+  var LV = { q: '', shown: 25, open: '' };
+  var ICON_WEB = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.6 8.4 6.8 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.3 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4z"/></svg>';
+  var ICON_CAL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M7 2h2v2h6V2h2v2h3v18H4V4h3zM6 10v10h12V10zM8 12h3v3H8z"/></svg>';
+  function whenShort(ms) { var d = ymd(new Date(ms)); return dayLabel(d) + ' at ' + clock(ms); }
+  /* one status per business, in the words the filter uses */
+  function leadState(l) {
+    var s = S.log[l.id];
+    if (s && s.o === 'won') return { k: 'won', text: 'Won' };
+    if (s && CLOSED[s.o]) return { k: 'closed', text: 'Closed · ' + OUT[s.o] };
+    var bk = bookedFor(l);
+    if (bk) return { k: 'booked', text: 'Booked ' + whenShort(bk) };
+    if (!s) return { k: 'fresh', text: 'New' };
+    if (s.o === 'interested' || s.wasInterested) return { k: 'interested', text: 'Interested' + (s.due ? ' · call back ' + (overdue(s) ? '(overdue) ' : '') + dueWords(s) : ''), due: dueNow(s) };
+    if (s.due || s.o === 'callback') return { k: 'callback', text: 'Call back' + (s.due ? ' ' + (overdue(s) ? '(overdue) ' : '') + dueWords(s) : ''), due: dueNow(s) };
+    return { k: 'tried', text: 'Tried' + (s.tries > 1 ? ' · ' + s.tries + ' times' : '') };
+  }
+  function leadHay(l) { return [l.name, l.trade, l.city, l.st, String(l.phone || '').replace(/\D/g, ''), l.email].join(' ').toLowerCase(); }
+  function leadWeb(l) { var r = rowOf(l.id); return String(l.web || (r && r.website) || '').trim(); }
+  function webHref(w) { w = String(w || '').trim(); if (!w || /\s/.test(w)) return ''; return /^https?:\/\//i.test(w) ? w : /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/.*)?$/i.test(w) ? 'https://' + w : ''; }
+  function canReach(l) { return String(l.dial || '').replace(/\D/g, '').length >= 10 || !!(l.email || (S.log[l.id] && S.log[l.id].email)) || !!leadWeb(l); }
+  function lvFilter() { return LFILT.some(function (x) { return x[0] === S.lf; }) ? S.lf : 'all'; }
+  function lvSorted(list) {
+    var idx = {}; LEADS.forEach(function (l, i) { idx[l.id] = i; });
+    return list.slice().sort(S.ls === 'name' ? function (a, b) { return String(a.name).localeCompare(String(b.name), 'en', { sensitivity: 'base' }); }
+      : function (a, b) { return ((b.added || 0) - (a.added || 0)) || (idx[b.id] - idx[a.id]); }); // newest first; the engine lists the oldest first
+  }
+  function lvRow(l) {
+    var st = leadState(l), id = esc(l.id), open = LV.open === l.id;
+    var icons = (l.siteReq ? '<span class="lb-ic" title="Website requested">' + ICON_WEB + '<span class="sr">Website requested</span></span>' : '') +
+      (bookedFor(l) ? '<span class="lb-ic" title="Call booked">' + ICON_CAL + '<span class="sr">Call booked</span></span>' : '');
+    return '<li class="lb-row' + (open ? ' open' : '') + (st.k === 'closed' ? ' shut' : '') + '" data-lid="' + id + '">' +
+      '<button type="button" class="lb-head" data-lb-toggle aria-expanded="' + open + '"' + (open ? ' aria-controls="lvb-' + id + '"' : '') + '>' +
+      '<span class="lb-name">' + esc(l.name) + (l.own ? ' <span class="pill mine">Your lead</span>' : '') + '</span>' +
+      '<span class="lb-trade">' + esc(l.trade) + '</span><span class="lb-place">' + esc(placeOf(l)) + '</span>' +
+      '<span class="lb-st"><span class="pill lb-pill k-' + st.k + (st.due ? ' due' : '') + '">' + esc(st.text) + '</span></span>' +
+      '<span class="lb-icons">' + icons + '</span></button>' +
+      (open ? '<div class="lb-body" id="lvb-' + id + '" role="region" aria-label="' + esc(l.name) + '">' + lvBody(l) + '</div>' : '') + '</li>';
+  }
+  function lvBody(l) {
+    var s = S.log[l.id] || null, closed = s && CLOSED[s.o], dnc = s && s.o === 'dnc', web = leadWeb(l), href = webHref(web);
+    var email = l.email || (s && s.email) || '', hasPhone = String(l.dial || '').replace(/\D/g, '').length >= 10;
+    var note = S.notes[l.id] || (serverNotes(l.id)[0] || {}).text || '', bk = bookedFor(l);
+    var contact = '<dl class="lb-contact">' +
+      '<dt>Phone</dt><dd>' + (hasPhone ? '<span class="num">' + esc(l.phone) + '</span>' : 'None on file') + '</dd>' +
+      (email ? '<dt>Email</dt><dd>' + esc(email) + '</dd>' : '') +
+      (web ? '<dt>Website</dt><dd>' + (href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(web) + '</a>' : esc(web)) + '</dd>' : '') +
+      (bk ? '<dt>Call booked</dt><dd>' + esc(whenLong(bk)) + ' (your time)</dd>' : '') +
+      '<dt>Why them</dt><dd>' + esc(l.gap) + '</dd>' +
+      '<dt>Last note</dt><dd>' + (note ? esc(note) : '<span class="lb-none">No note yet</span>') + '</dd></dl>';
+    var acts = '';
+    if (dnc) acts += '<p class="small lb-dnc">They asked not to be called. Nobody calls this business again.</p>';
+    else acts += '<button class="btn btn-dark" type="button" data-lb-call>' + (closed || !hasPhone ? 'Open in Calls' : 'Call') + '</button>';
+    if (!closed && !bk) acts += '<button class="btn" type="button" data-lb-book>Book a call</button>';
+    if (!dnc && (l.siteReq || canReach(l))) acts += '<button class="btn" type="button" data-lb-site>' + (l.siteReq ? 'Website: asked ✓' : 'Request a website') + '</button>';
+    acts += '<button class="btn" type="button" data-lb-note>' + (note ? 'Edit note' : 'Add a note') + '</button>';
+    return contact + '<div class="lb-acts">' + acts + '</div>';
+  }
+  VIEWS.leads = function () {
+    chrome(true, 'leads');
+    var f = lvFilter();
+    var chips = LFILT.map(function (x) { return '<button class="chip" type="button" data-lf="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + x[1] + ' <span class="lf-n" data-lfn="' + x[0] + '"></span></button>'; }).join('');
+    mount('<div class="wrap leads-v"><div class="lb-top"><div><h1>Leads</h1><p class="sub">Every business on your list: the ones Station sent you and the ones you added. Tap one to call it, book a call, ask Station for a website or add a note.</p></div>' +
+      '<button class="btn btn-dark" type="button" data-addlead>Add a business you found</button></div>' +
+      '<div class="lb-tools"><label class="lb-q" for="lvQ"><span class="sr">Search your leads</span><input class="text" type="search" id="lvQ" placeholder="Search: name, trade, city or phone" autocomplete="off" value="' + esc(LV.q) + '"></label>' +
+      '<label class="lb-sort" for="lvSort">Sort<select class="text" id="lvSort"><option value="new"' + (S.ls === 'name' ? '' : ' selected') + '>Newest first</option><option value="name"' + (S.ls === 'name' ? ' selected' : '') + '>Name, A to Z</option></select></label></div>' +
+      '<div class="filters-wrap"><div class="filters" role="group" aria-label="Show">' + chips + '</div></div>' +
+      '<p class="small lb-count" id="lvCount" role="status" aria-live="polite"></p><div id="lvList"></div></div>', 'Leads');
+    var q = document.getElementById('lvQ'), qt = 0;
+    q.addEventListener('input', function () { clearTimeout(qt); qt = setTimeout(function () { LV.q = q.value; LV.shown = 25; drawLeads(); }, 120); });
+    document.getElementById('lvSort').addEventListener('change', function () { S.ls = this.value === 'name' ? 'name' : 'new'; save(); drawLeads(); });
+    main.querySelectorAll('[data-lf]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        S.lf = b.getAttribute('data-lf'); save(); LV.shown = 25;
+        main.querySelectorAll('[data-lf]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        drawLeads();
+      });
+    });
+    var box = document.getElementById('lvList');
+    box.addEventListener('click', function (e) {
+      var t = e.target; if (!t.closest) return;
+      if (t.closest('[data-lb-more]')) { LV.shown += 25; var keep = LV.shown - 25; drawLeads(); var heads = box.querySelectorAll('.lb-main > .lb-row > .lb-head'); if (heads[keep]) heads[keep].focus(); return; }
+      var row = t.closest('[data-lid]'), l = row && LEAD[row.getAttribute('data-lid')]; if (!l) return;
+      if (t.closest('[data-lb-toggle]')) { LV.open = LV.open === l.id ? '' : l.id; redrawRow(l.id, true); return; }
+      if (t.closest('[data-lb-call]')) { showAfter = l.id; location.hash = '#calls'; return; }
+      if (t.closest('[data-lb-book]')) { openBooking(l, function () { redrawRow(l.id); }); return; }
+      if (t.closest('[data-lb-site]')) { openSiteRequest(l, function () { redrawRow(l.id); }); return; }
+      if (t.closest('[data-lb-note]')) { openNoteSheet(l, function () { redrawRow(l.id); }); return; }
+    });
+    drawLeads();
+  };
+  function redrawRow(id, focusHead) {
+    var box = document.getElementById('lvList'); if (!box) return;
+    var li = box.querySelector('[data-lid="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]'), l = LEAD[id];
+    if (!li || !l) { drawLeads(); return; }
+    var tmp = document.createElement('ul'); tmp.innerHTML = lvRow(l); li.parentNode.replaceChild(tmp.firstChild, li);
+    if (focusHead) { var h = box.querySelector('[data-lid="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"] .lb-head'); if (h) h.focus({ preventScroll: true }); }
+    lvCounts();
+  }
+  function lvCounts() {
+    var n = { all: LEADS.length };
+    LEADS.forEach(function (l) { var k = leadState(l).k; n[k] = (n[k] || 0) + 1; });
+    main.querySelectorAll('[data-lfn]').forEach(function (x) { var k = x.getAttribute('data-lfn'); x.textContent = '(' + (n[k] || 0) + ')'; });
+  }
+  function drawLeads() {
+    var box = document.getElementById('lvList'), cnt = document.getElementById('lvCount'); if (!box) return;
+    lvCounts();
+    if (!LEADS.length) {
+      cnt.textContent = '';
+      box.innerHTML = '<p class="empty">' + (DEMO || dealtTotal() ? 'No businesses on your list right now.' : 'Station hasn’t sent you businesses yet.') + ' They show up here as soon as Station sends them. You can also add one you found yourself.</p>';
+      return;
+    }
+    var f = lvFilter(), words = LV.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    var hit = LEADS.filter(function (l) { var h = leadHay(l); return words.every(function (w) { return h.indexOf(w.replace(/[()\-.]/g, '')) >= 0 || h.indexOf(w) >= 0; }); });
+    var mainRows = [], shut = [];
+    hit.forEach(function (l) {
+      var k = leadState(l).k;
+      if (f === 'all') { if (k === 'closed') shut.push(l); else mainRows.push(l); }
+      else if (k === f) mainRows.push(l);
+    });
+    mainRows = lvSorted(mainRows); shut = lvSorted(shut);
+    if (!mainRows.length && !shut.length) {
+      cnt.textContent = '';
+      box.innerHTML = '<p class="empty">' + (words.length ? 'Nothing on your list matches “' + esc(LV.q.trim()) + '”.' : 'None right now.') + (f !== 'all' ? ' <button class="link-btn" type="button" data-lb-all>Show all</button>' : '') + '</p>';
+      var sa = box.querySelector('[data-lb-all]'); if (sa) sa.addEventListener('click', function () { S.lf = 'all'; save(); route(); });
+      return;
+    }
+    var shown = mainRows.slice(0, LV.shown), left = mainRows.length - shown.length;
+    cnt.textContent = (shown.length < mainRows.length ? 'Showing ' + shown.length + ' of ' + mainRows.length : mainRows.length + (mainRows.length === 1 ? ' business' : ' businesses')) +
+      (shut.length ? ' · ' + shut.length + ' closed, folded below' : '') + (words.length ? ' matching your search' : '');
+    box.innerHTML = (shown.length ? '<ul class="lb-list lb-main">' + shown.map(lvRow).join('') + '</ul>' : '') +
+      (left ? '<button class="btn lb-more" type="button" data-lb-more>Show ' + Math.min(25, left) + ' more (' + left + ' left)</button>' : '') +
+      (shut.length ? '<details class="acc lb-shut"' + (LV.open && shut.some(function (l) { return l.id === LV.open; }) ? ' open' : '') + '><summary>Closed (' + shut.length + ')</summary><div><p class="small">Not interested, Do not call and Bad lead. They’re finished; they stay here so you can look them up.</p><ul class="lb-list">' +
+        shut.slice(0, 200).map(lvRow).join('') + '</ul></div></details>' : '');
+  }
+  /* a note from the list: the same note as the card's note box, sent through the same queue */
+  function openNoteSheet(l, then) {
+    var cur = S.notes[l.id] || '';
+    openSheet('Note about ' + l.name, '<p class="small">Business facts only, like: ask for Maria after 2. It shows on this business’s card in Calls too' + (DEMO ? '. In this preview it stays on this device.' : ', and Station keeps it.') + '</p>' +
+      '<form id="lvNoteForm" novalidate><label class="sr" for="lvNote">Note about ' + esc(l.name) + '</label><textarea class="text" id="lvNote" rows="4" maxlength="' + NOTE_MAX + '">' + esc(cur) + '</textarea>' +
+      '<button class="btn btn-dark btn-big btn-block" type="submit" id="lvNoteGo">Save note</button></form>' + olderNotes(l));
+    var ta = document.getElementById('lvNote'); ta.focus({ preventScroll: true });
+    document.getElementById('lvNoteForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = ta.value.slice(0, NOTE_MAX), was = S.notes[l.id] || '';
+      if (v.trim()) S.notes[l.id] = v; else delete S.notes[l.id];
+      save();
+      if (v.trim() !== was.trim()) { noteChanged(l.id); noteDone(l.id); }
+      afterSheet(function () { toast(v.trim() ? (DEMO ? 'Note saved on this device (preview).' : 'Note saved.') : 'Note cleared.', 2500); if (then) then(); });
+    });
+  }
+
+  /* ---------- Calendar: the partner's booked calls (engine cal_mine) ---------- */
+  var CAL = null, CAL_ERR = '', CAL_LOADING = false, DEMO_CAL = [];
+  function calTz() { return DEMO ? '' : (ME && ME.tz) || myTz(); }
+  function calDay(ms, tz) { try { return new Intl.DateTimeFormat('en-CA', tz ? { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' } : { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms)); } catch (e) { return ymd(new Date(ms)); } }
+  function calDayTitle(key, tz) {
+    if (key === calDay(Date.now(), tz)) return 'Today';
+    if (key === calDay(Date.now() + 864e5, tz)) return 'Tomorrow';
+    if (key === calDay(Date.now() - 864e5, tz)) return 'Yesterday';
+    return new Date(key + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+  function demoBookings() {
+    var at = function (n, h) { var d = n < 0 ? ymd(new Date(Date.now() + n * 864e5)) : addDays(n); return isoLocal(new Date(d + 'T' + p2(h) + ':00').getTime()); };
+    return [
+      { id: 'demo-1', who: 'client', label: 'Juniper Lane Plumbing', start: at(1, 10), topic: 'Check in after their first month' },
+      { id: 'demo-2', who: 'station-self', label: 'Station', start: at(2, 14), topic: 'How to pitch Core to a dental office' },
+      { id: 'demo-3', who: 'station-client', label: 'Two Creeks Roofing', start: at(-3, 11), topic: 'Their review requests stopped going out' }
+    ].concat(DEMO_CAL);
+  }
+  /* the calls booked with businesses on the list, from the list itself (shown when cal_mine can't be read, and right after a booking) */
+  function listBookings() {
+    return LEADS.filter(function (l) { return l.booked && Date.parse(l.booked.start || ''); }).map(function (l) { return { id: 'lead-' + l.id, who: 'lead', label: l.name, start: l.booked.start, leadId: l.id }; });
+  }
+  function calItems() {
+    var src = DEMO ? demoBookings() : (CAL || []), seen = {}, out = [];
+    src.concat(listBookings()).forEach(function (b) {
+      var t = Date.parse(b && b.start || ''); if (!t) return;
+      var k = t + '|' + String(b.label || b.who || '').toLowerCase(); if (seen[k]) return; seen[k] = 1;
+      out.push(Object.assign({ t: t }, b));
+    });
+    return out.sort(function (a, b) { return a.t - b.t; });
+  }
+  function calLead(b) {
+    if (b.leadId && LEAD[b.leadId]) return LEAD[b.leadId];
+    if (b.who && b.who !== 'lead') return null;
+    var n = String(b.label || '').trim().toLowerCase(); if (!n) return null;
+    return LEADS.filter(function (l) { return String(l.name).trim().toLowerCase() === n; })[0] || null;
+  }
+  function calWho(b) {
+    var topic = String(b.topic || b.appt || '').trim();
+    if (b.who === 'station-self') return { name: 'Station', what: topic ? 'Your call with Station: ' + topic : 'Your call with a Station founder', tag: 'Station' };
+    if (b.who === 'station-client') return { name: b.label || 'Your client', what: 'Station support call' + (topic ? ': ' + topic : '') + '. Station handles the call.', tag: 'Support' };
+    if (b.who === 'client') return { name: b.label || 'Your client', what: topic || 'Call with your client', tag: 'Client' };
+    return { name: b.label || 'A business', what: topic && !/^partner call/i.test(topic) ? topic : 'Follow-up call. You call them from your phone.', tag: 'Business' };
+  }
+  function calLi(b, tz) {
+    var w = calWho(b), l = calLead(b);
+    return '<li class="cal-item"><time class="cal-time" datetime="' + new Date(b.t).toISOString() + '">' + esc(clockIn(b.start, tz)) + '</time>' +
+      '<div class="cal-main"><b>' + esc(w.name) + '</b><span>' + esc(w.what) + '</span>' +
+      (l ? '<button class="link-btn" type="button" data-cal-lead="' + esc(l.id) + '">Open in Calls</button>' : '') + '</div>' +
+      '<span class="cal-tag">' + esc(w.tag) + '</span></li>';
+  }
+  function calGroups(list, tz, newestFirst) {
+    var days = [], by = {};
+    list.forEach(function (b) { var k = calDay(b.t, tz); if (!by[k]) { by[k] = []; days.push(k); } by[k].push(b); });
+    if (newestFirst) { days.reverse(); days.forEach(function (k) { by[k].reverse(); }); }
+    return days.map(function (k) { return '<section class="cal-day"><h2 class="cal-h">' + esc(calDayTitle(k, tz)) + '</h2><ul class="cal-list">' + by[k].map(function (b) { return calLi(b, tz); }).join('') + '</ul></section>'; }).join('');
+  }
+  function calBodyHtml() {
+    var tz = calTz();
+    if (!DEMO && !CAL && !CAL_ERR) return '<p class="small">Loading your calendar…</p>';
+    var items = calItems(), now = Date.now(), soon = now + 14 * 864e5;
+    var up = items.filter(function (b) { return b.t >= now - 3600e3 && b.t < soon; }), later = items.filter(function (b) { return b.t >= soon; }), past = items.filter(function (b) { return b.t < now - 3600e3; });
+    var err = !DEMO && CAL_ERR ? '<div class="explain wait" role="status">' + esc(CAL_ERR) + (listBookings().length ? ' Below: only the calls booked with businesses on your list.' : '') + ' <button class="link-btn" type="button" data-cal-retry>Try again</button></div>' : '';
+    var h = err + '<h2 class="sub-h">Coming up</h2>' + (up.length ? calGroups(up, tz) : '<p class="empty">Nothing booked in the next 14 days.</p>');
+    if (later.length) h += '<h2 class="sub-h">Later</h2>' + calGroups(later, tz);
+    if (past.length) h += '<details class="acc cal-past"><summary>Earlier (' + past.length + ')</summary><div>' + calGroups(past.slice(-30), tz, true) + '</div></details>';
+    return h;
+  }
+  function loadCal() {
+    if (DEMO || !TOKEN) return Promise.resolve();
+    if (CAL_LOADING) return Promise.resolve();
+    CAL_LOADING = true;
+    return api('cal_mine', {}).then(function (d) {
+      CAL_LOADING = false; if (d.signedOut) return;
+      if (d.ok === false) { CAL_ERR = engineSays(d.error, 'Your calendar couldn’t load just now.'); return; }
+      CAL = Array.isArray(d.bookings) ? d.bookings : []; CAL_ERR = '';
+    }, function () { CAL_LOADING = false; CAL_ERR = 'No connection to Station, so your calendar couldn’t load.'; });
+  }
+  function redrawCal() { var b = document.getElementById('calBody'); if (b) b.innerHTML = calBodyHtml(); }
+  function reloadCal() { if (DEMO) { redrawCal(); return; } CAL_ERR = ''; loadCal().then(redrawCal); }
+  VIEWS.calendar = function () {
+    chrome(true, 'calendar');
+    var tz = calTz(), can = DEMO || !!(ME && ME.booking && ME.booking.calendar);
+    mount('<div class="wrap cal-v"><div class="lb-top"><div><h1>Calendar</h1><p class="sub">Your booked calls, in your time' + (tz ? ' (' + esc(tz.replace(/_/g, ' ')) + ')' : '') + '. Calls with businesses, with Station, and Station support for your clients.</p></div>' +
+      '<button class="btn btn-dark" type="button" data-cal-book>Book a call</button></div>' +
+      (can ? '' : '<p class="explain wait cal-note">' + esc((ME && ME.booking && ME.booking.note) || 'Your booking calendar is being set up, so you can’t book businesses yet. You can still book a call with Station.') + '</p>') +
+      '<div id="calBody">' + calBodyHtml() + '</div></div>', 'Calendar');
+    var body = document.getElementById('calBody');
+    body.addEventListener('click', function (e) {
+      var t = e.target; if (!t.closest) return;
+      var lb = t.closest('[data-cal-lead]'); if (lb) { showAfter = lb.getAttribute('data-cal-lead'); location.hash = '#calls'; return; }
+      if (t.closest('[data-cal-retry]')) { body.innerHTML = '<p class="small">Loading your calendar…</p>'; reloadCal(); }
+    });
+    main.querySelector('[data-cal-book]').addEventListener('click', openCalPicker);
+    if (!DEMO) { CAL_ERR = ''; loadCal().then(function () { if (location.hash.indexOf('#calendar') === 0) redrawCal(); }); }
+  };
+  /* Book a call: pick a business from the list (then the usual booking sheet), or a call with Station */
+  function openCalPicker() {
+    var can = DEMO || !!(ME && ME.booking && ME.booking.calendar);
+    var open = LEADS.filter(function (l) { var s = S.log[l.id]; return !(s && CLOSED[s.o]); });
+    openSheet('Book a call', (can
+      ? (open.length ? '<p class="small">Pick the business, then a time on your booking calendar.</p>' +
+          '<label class="sr" for="cpQ">Search your businesses</label><input class="text cp-q" type="search" id="cpQ" placeholder="Search your businesses" autocomplete="off">' +
+          '<div class="picks cp-list" id="cpList"></div>'
+        : '<p class="empty">No open businesses on your list to book.</p>')
+      : '<div class="explain wait">' + esc((ME && ME.booking && ME.booking.note) || 'Your booking calendar is being set up, so you can’t book businesses yet.') + '</div>') +
+      '<h3 class="sheet-h">Or talk with Station</h3><p class="small">A call with a Station founder about a business, a product, your account or your money.</p>' +
+      '<button class="btn btn-block" type="button" id="cpStation">Book a call with Station</button>');
+    document.getElementById('cpStation').addEventListener('click', function () { openStationBooking('me', null, reloadCal); });
+    var list = document.getElementById('cpList'), q = document.getElementById('cpQ'); if (!list) return;
+    function draw() {
+      var words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      var m = open.filter(function (l) { var h = leadHay(l); return words.every(function (w) { return h.indexOf(w) >= 0; }); });
+      m = m.slice().sort(function (a, b) { return String(a.name).localeCompare(String(b.name), 'en', { sensitivity: 'base' }); });
+      list.innerHTML = m.slice(0, 30).map(function (l) {
+        var bk = bookedFor(l);
+        return '<button type="button" class="pick" data-cp="' + esc(l.id) + '"' + (bk ? ' disabled' : '') + '><span class="pick-name">' + esc(l.name) + '</span><span class="pick-what">' + esc(l.trade) + ' · ' + esc(placeOf(l)) +
+          (bk ? ' · already booked ' + esc(whenShort(bk)) : '') + '</span></button>';
+      }).join('') + (m.length > 30 ? '<p class="small">' + (m.length - 30) + ' more: type a name to find them.</p>' : '') + (m.length ? '' : '<p class="small">Nothing matches that.</p>');
+    }
+    draw();
+    q.addEventListener('input', draw);
+    list.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-cp]'); if (!b || b.disabled) return; var l = LEAD[b.getAttribute('data-cp')]; if (l) openBooking(l, reloadCal); });
+  }
 
   window.addEventListener('hashchange', route);
   if (!DEMO && TOKEN) startLive(); else route();
