@@ -3023,7 +3023,12 @@
   }
   function loadPayouts(force) {
     if (DEMO || !TOKEN || PAYOUTS_LOADING || (PAYOUTS && !force)) return;
-    if (MONEY && MONEY.account_state === 'none') { PAYOUTS = { ok: true, transfers: [], none: true }; return; }
+    if (MONEY && MONEY.account_state === 'none') {
+      // no payout account yet, so nothing to ask Stripe; still redraw, or the box stays on "Loading" (seen live 2026-10-07)
+      PAYOUTS = { ok: true, transfers: [], none: true };
+      var bx0 = document.getElementById('payoutsBox'); if (bx0) bx0.innerHTML = payoutsHtml();
+      return;
+    }
     PAYOUTS_LOADING = true;
     api('payout_status').then(function (d) {
       PAYOUTS_LOADING = false; if (d.signedOut) return;
