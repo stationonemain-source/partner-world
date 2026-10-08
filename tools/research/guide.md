@@ -27,7 +27,7 @@ You find and close clients, and you look after the clients in your book:
 - Support is Station's. If a client brings you a question or a problem (technical, their account, billing or a change), you tell them Station will handle it and pass it to Station the same business day, without trying to fix it yourself. You tell Station promptly if a client wants to cancel, complains, or raises a refund, dispute or legal issue.
 - You log every call, and keep your notes and lead status current in Partner World.
 
-You don't build, fix, set up or host anything. When a client or lead wants a website, you request it from Station (see Websites, demos and mock-ups). You don't take payments, sign anything for Station, set prices or discounts, or promise results, custom work or timelines Station hasn't approved. You're an independent contractor, not an employee, and partner status is invitation only.
+You don't build, fix, set up or host anything. When a client or lead wants a website, you request it from Station (see Websites, demos and mock-ups). You don't take payments, sign anything for Station, set prices or discounts, or promise results, custom work or timelines Station hasn't approved. You're an independent contractor, not an employee, and there's no application form: you request an account in Partner World and Station approves it before you can sign in.
 
 ### A 30-second pitch
 
