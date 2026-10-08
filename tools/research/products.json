@@ -1,0 +1,665 @@
+{
+ "_about": "Station product playbook — the ONE source for what partners sell, what to say, and what has to be set up by hand after a purchase. Read by the Partner portal Products tab (same origin) and by n8n alert workflows over HTTPS. DRAFT 2026-08-11 — pending Circle's review before partners are pointed at it.",
+ "_pricing_note": "2026-10-04 Collections catalogue (Circle approved): three collections (Answer $297, Get Found $497, Follow Up $427) and three plans (Core $1,297, Pro $2,197, Max $2,797; internal key 'custom' = Max). Revive is $197/mo. Echo has no setup fee. Echo extra location $197/mo, Repute extra location $177/mo. Every collection and plan includes a free Station-built website (built after the first paid month; $500 to keep it on leaving). Prices are Stripe-verified (lookup keys plan_*, collection_*, revive_month, repute_location_month). Verified 2026-09-21 against the live product pages in this repo (each page's JSON-LD offer, meta description, tier cards and window.STATION_CATALOG, plus the homepage bundle cards) — NOT against Stripe. Changed since the 2026-09-01 file: Slate $97 -> $59 (1,000 reminders) with Busy $147 -> $97 (2,500); Radar $197 -> $297, Radar Pro $497 added, and Radar described as what it is (B2B prospecting), not competitor watching; Echo $147 -> $247 (setup $297 holds) with Multi-location $197/location added; Revive is $497 PER QUARTER (was one-time); Dispatch Managed $397 added; Marquee Managed $597 added; Repute Multi-location $397/location added; Pursuit Busy $347 added and Pursuit allowance now 2,500 texts + 15,000 emails; allowances raised for Greet (250/750/1,750), Lineback (1,500/5,000), Frontdesk Standard (750 min) and Dial (1,000 texts); the website is Custom only (priced to the project after a free demo; Premium was retired 2026-09-23) and storefront_enterprise ($10,000) is retired and removed; bundles: Pro $1,500 -> $1,395, Core and Custom unchanged. Tap is $47. Mobile App is free and not separately sellable. Do not copy prices from pipeline/catalog.py or any other file: station.solutions is the only authority.",
+ "_trial": "14-day free trial on single products and the three collections, on every recurring price except the Core, Pro and Max plans. Plans bill today and carry a 30-day money-back on the first paid month. Websites never trial.",
+ "updated": "2026-10-04",
+ "products": [
+  {
+   "sku": "storefront_custom",
+   "name": "Custom website",
+   "plain": "A bespoke website, designed from scratch",
+   "price": "Priced to the project, after a free demo (no published price)",
+   "mrr": 0,
+   "setup": 0,
+   "selling_points": [
+    "Designed from nothing to their brand — no template underneath it.",
+    "Scroll animation and custom art direction, the kind of site that makes a small firm look established.",
+    "They see a free demo of their own site within 2–3 business days before paying anything."
+   ],
+   "setup_actions": [
+    "Do not quote a number: the Custom website has no published price. Send them to station.solutions/custom/ (about 5 minutes of questions); we build a free demo by hand and email it within 2–3 business days. Nothing is charged until they say yes.",
+    "Book a proper brand call: colours, tone, who they want to look better than.",
+    "Get logo files (vector if it exists) and any brand guide.",
+    "Agree the page list in writing before design starts — scope creep is what makes custom builds lose money.",
+    "Set the review checkpoint at first design, not at the end."
+   ],
+   "call_script": {
+    "opener": "You clearly care how the business comes across — was the current site a compromise, or is it what you actually wanted?",
+    "discovery": "If budget were not the issue, what would you want someone to feel in the first three seconds on your site?",
+    "pitch": "Then the template route is not for you. Custom is built from scratch to your brand and is priced by evaluation: I do not quote a number until we have talked, and nothing is charged before that. After it's built, Station quotes hosting and care for your business, or you can run the site yourself.",
+    "objection": "\"What does it cost?\" — It depends on the scope, so it is priced to the project, and they see a free demo of their own site before anything is charged. Custom is a designer starting from your brand with a blank page. If you want to look like the most established firm in your market, that is the difference.",
+    "close": "I can put two directions in front of you before you commit a penny. Want me to?"
+   },
+   "email_script": {
+    "subject": "a proper site for {business}",
+    "body": "Hi {first_name},\n\nQuick thought about {business} online.\n\nYou are clearly the more established option in your market, but the website is not saying that yet. Templates can only take you so far — at some point the site has to be designed around your brand rather than fitted into someone else's layout.\n\nThat is our custom build: designed from scratch and priced by evaluation after a short call, with hosting and care quoted alongside it.\n\nHappy to mock up a direction so you can see it rather than imagine it. Want me to?"
+   }
+  },
+  {
+   "sku": "greet",
+   "name": "Greet",
+   "plain": "AI chat on their website that answers and captures every visitor",
+   "price": "$79/mo (250 chats) · $149 busy (750 chats) · $249 high volume (1,750 chats)",
+   "mrr": 79,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "250 chats",
+     "mrr": 79
+    },
+    {
+     "key": "busy",
+     "label": "busy",
+     "mrr": 149
+    },
+    {
+     "key": "high",
+     "label": "high volume",
+     "mrr": 249
+    }
+   ],
+   "selling_points": [
+    "Answers at 11pm on a Sunday, which is when half of website visitors actually browse.",
+    "Qualifies before it hands over, so they stop fielding tyre-kickers personally.",
+    "Every conversation becomes a contact with a name and a number, even the ones that do not book."
+   ],
+   "setup_actions": [
+    "Install the chat loader on their website — if Station did not build the site, you need their site editor access or their developer.",
+    "Review and customise the greeting (greet_greeting) so it sounds like their business, not a generic bot.",
+    "Write the answers to their five most common questions — prices, areas covered, hours, what they do not do.",
+    "Set the escalation path: which number or inbox a hot chat gets handed to.",
+    "Send one test chat yourself before telling them it is live."
+   ],
+   "call_script": {
+    "opener": "When someone lands on your site late at night with a question, what happens?",
+    "discovery": "How many of those do you think just close the tab and try the next firm?",
+    "pitch": "Greet answers them there and then, qualifies them, and drops the name and number into your list. $79 a month.",
+    "objection": "\"People hate chatbots.\" — They hate useless ones. This one knows your prices, your areas and your hours, and it hands a real buyer straight to you. The alternative is nobody answering at all.",
+    "close": "Let me switch it on and you can watch the first week of conversations. If it catches nothing, turn it off."
+   },
+   "email_script": {
+    "subject": "who answers your website at 11pm?",
+    "body": "Hi {first_name},\n\nHonest question about {business}: when someone is on your site late in the evening with a question, what happens to them?\n\nMost of the time they close the tab and try whoever answers first. That is a lead you paid to get and never knew about.\n\nGreet sits on your site and answers them — your prices, your areas, your hours — qualifies them, and saves the name and number even if they do not book. $79/month.\n\nWant me to switch it on for a week so you can see what it catches?"
+   }
+  },
+  {
+   "sku": "slate",
+   "name": "Slate",
+   "plain": "Customers book themselves, and reminders make sure they turn up",
+   "price": "$59/mo (1,000 reminders) · $97 busy (2,500 reminders)",
+   "mrr": 59,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "1,000 reminders",
+     "mrr": 59
+    },
+    {
+     "key": "busy",
+     "label": "busy",
+     "mrr": 97
+    }
+   ],
+   "selling_points": [
+    "Kills the back-and-forth — they pick a slot from real availability instead of six texts agreeing a time.",
+    "Reminders cut no-shows, and a no-show is a slot they can never sell again.",
+    "Their calendar fills while they are working, not while they are answering the phone."
+   ],
+   "setup_actions": [
+    "List their services with real durations — a booking system with wrong durations double-books people.",
+    "Set genuine working hours, including the days they do not want bookings.",
+    "Connect their actual calendar (Google or Outlook) so availability is real and not aspirational.",
+    "Customise the reminder wording (slate_reminder_sms and slate_reminder_email).",
+    "Book a test appointment yourself and confirm the reminder arrives."
+   ],
+   "call_script": {
+    "opener": "How does someone book you at the moment — do they ring, or is there a bit of back-and-forth?",
+    "discovery": "And how often does someone just not turn up?",
+    "pitch": "Slate lets them pick from your real availability, then reminds them so they show. $59 a month.",
+    "objection": "\"I like to speak to them first.\" — Then we only open slots for a short intro call and you qualify there. You are not giving up control, you are giving up the six texts it takes to agree a time.",
+    "close": "Give me your services and hours and I will have it live today. Book yourself in and see how it feels."
+   },
+   "email_script": {
+    "subject": "the six texts it takes to book you",
+    "body": "Hi {first_name},\n\nSmall thing that quietly costs {business} money.\n\nEvery booking that takes a few texts to arrange is time you are not billing for — and every no-show is a slot you can never sell again.\n\nSlate lets customers pick from your real availability, then texts and emails them a reminder so they actually turn up. $59/month.\n\nSend me your services and hours and I will have it running today. Want to?"
+   }
+  },
+  {
+   "sku": "lineback",
+   "name": "Lineback",
+   "plain": "Every missed call gets a text back within seconds",
+   "price": "$197/mo (1,500 texts) · $297 busy (5,000 texts)",
+   "mrr": 197,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "1,500 texts",
+     "mrr": 197
+    },
+    {
+     "key": "busy",
+     "label": "busy",
+     "mrr": 297
+    }
+   ],
+   "selling_points": [
+    "A missed call is usually a lost job — the caller rings the next name on the list within two minutes.",
+    "The text lands while they still want the thing, and it moves them into a conversation the client can answer later.",
+    "Includes the number, so nothing has to change about how they work."
+   ],
+   "setup_actions": [
+    "Decide the number: use their existing one, or assign a new Station number and forward it.",
+    "Set the missed-call text-back message in GHL — Settings → Phone System → Voice → Voicemail & Missed Call TextBack → Customize. This is the step that actually sends the text; the portal field alone does not.",
+    "Review the wording with the client (lineback_text) so it sounds like them.",
+    "Ring their number, let it go unanswered, and confirm the text arrives. Do not skip this."
+   ],
+   "call_script": {
+    "opener": "Roughly how many calls do you miss in a normal week — on a job, driving, that sort of thing?",
+    "discovery": "When you miss one, do you tend to get it back, or do they go elsewhere?",
+    "pitch": "They go elsewhere, usually within about two minutes. Lineback texts them the second you miss the call, so the conversation stays with you and you answer when you are free. $197 a month.",
+    "objection": "\"I ring them back at the end of the day.\" — By then they have already booked someone. The text is what buys you the hours until you are free.",
+    "close": "Work out what one job is worth to you. If it catches one a month it has paid for itself several times. Shall we switch it on?"
+   },
+   "email_script": {
+    "subject": "the calls you miss on a job",
+    "body": "Hi {first_name},\n\nWhen {business} misses a call — on a job, driving, hands full — what usually happens to that person?\n\nThey ring the next name on the list, normally within a couple of minutes. You never even know it happened.\n\nLineback sends them a text the moment you miss the call, so the conversation stays with you and you reply when you are free. $197/month, number included.\n\nWhat is one job worth to you? If it saves one a month the maths is not close. Worth a look?"
+   }
+  },
+  {
+   "sku": "frontdesk",
+   "name": "Frontdesk",
+   "plain": "An AI receptionist that answers every call 24/7 and books the job",
+   "price": "$397/mo (750 min) · $597 busy (1,200 min) · $897 high volume (2,500 min)",
+   "mrr": 397,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "750 min",
+     "mrr": 397
+    },
+    {
+     "key": "busy",
+     "label": "busy",
+     "mrr": 597
+    },
+    {
+     "key": "high",
+     "label": "high volume",
+     "mrr": 897
+    }
+   ],
+   "selling_points": [
+    "Answers every call, day or night, without hiring anyone.",
+    "Books straight into the calendar rather than taking a message nobody actions.",
+    "Cheaper than a part-time receptionist and it never has a day off."
+   ],
+   "setup_actions": [
+    "Write and review the greeting (frontdesk_greeting) — this is the first thing every caller hears.",
+    "Set the after-hours behaviour: take the message, capture name, number and need, promise a callback, text the owner.",
+    "Define the limits explicitly (frontdesk_not_allowed): no firm quotes on custom work, no same-day promises unless the calendar shows it, never discuss other customers.",
+    "Set up call forwarding from their real number — nothing works until this is done.",
+    "Connect the booking calendar so it can actually book rather than just talk.",
+    "Ring it yourself and try to book, then try to trip it up. Fix what it gets wrong before handover."
+   ],
+   "call_script": {
+    "opener": "Who answers the phone when you are with a customer?",
+    "discovery": "What would a full-time person on the phones cost you? And what happens to the calls that come in at 8pm?",
+    "pitch": "Frontdesk answers all of them, around the clock, and books straight into your calendar. $397 a month — a fraction of a part-time wage.",
+    "objection": "\"Customers will know it is not a person.\" — Some will. They mind far less than ringing out to nobody. And it is trained on your prices, your services and what it is not allowed to promise.",
+    "close": "Give me your greeting and your hours and I will have it answering today. Ring it yourself before we tell a single customer."
+   },
+   "email_script": {
+    "subject": "who answers when you are with a customer?",
+    "body": "Hi {first_name},\n\nWhen {business} is mid-job and the phone goes, where does that call end up?\n\nVoicemail, mostly — and most people do not leave one. They just try the next firm.\n\nFrontdesk answers every call 24/7, handles the usual questions, and books straight into your calendar. $397/month, which is well under a part-time wage.\n\nI can have it answering today, and you can ring it yourself before any customer does. Want to try it?"
+   }
+  },
+  {
+   "sku": "pursuit",
+   "name": "Pursuit",
+   "plain": "Every lead followed up by text and email until they reply or book",
+   "price": "$247/mo (2,500 texts + 15,000 emails) · $347 busy (6,000 texts + 40,000 emails)",
+   "mrr": 247,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "2,500 texts + 15,000 emails",
+     "mrr": 247
+    },
+    {
+     "key": "busy",
+     "label": "busy",
+     "mrr": 347
+    }
+   ],
+   "selling_points": [
+    "Most businesses follow up once and quietly give up; the booking usually comes on the third or fourth touch.",
+    "It runs whether or not the client remembers, which is the entire point.",
+    "It stops the moment someone replies, so nobody gets pestered."
+   ],
+   "setup_actions": [
+    "Review the five-text and five-email sequence with the client (pursuit_sms_1..5, pursuit_email_1..5) and reword anything that does not sound like them.",
+    "Confirm who the messages come from — name and number the customer will recognise.",
+    "Check the sequence stops on reply, and that the client knows replies land in their conversations.",
+    "Confirm pursuit_auto is on, then push a test lead through and watch the first message fire."
+   ],
+   "call_script": {
+    "opener": "When someone enquires and does not reply to your first message, what happens next?",
+    "discovery": "Be honest — how many times do you chase before you let it go?",
+    "pitch": "Almost everyone stops at one. The booking usually lands on the third or fourth. Pursuit does the chasing by text and email until they answer or book, then stops. $247 a month.",
+    "objection": "\"I do not want to annoy people.\" — Nor do we. It stops dead the moment they reply, and the last message gives them an easy way out. Five polite touches over two weeks is not pestering, it is following up.",
+    "close": "You are already paying to get those leads. Let it work the ones you have been letting go."
+   },
+   "email_script": {
+    "subject": "the leads you chased once",
+    "body": "Hi {first_name},\n\nA question about how {business} handles enquiries.\n\nWhen someone gets in touch and then goes quiet, how many times do you chase? For almost everyone the honest answer is once — and the booking usually comes on the third or fourth attempt.\n\nPursuit follows up by text and email until they reply or book, then stops immediately. $247/month.\n\nYou are already paying to get those leads. Worth working the ones you have?"
+   }
+  },
+  {
+   "sku": "repute",
+   "name": "Repute",
+   "plain": "Asks every happy customer for a review, and replies to the ones that come in",
+   "price": "$197/mo · each extra location $177/mo",
+   "mrr": 197,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "standard",
+     "mrr": 197
+    },
+    {
+     "key": "multi",
+     "label": "each extra location",
+     "mrr": 177
+    }
+   ],
+   "selling_points": [
+    "Reviews are the first thing a stranger checks, and the business with more of them wins the call.",
+    "The ask goes out every time, instead of only when the client remembers to be brave.",
+    "Replies get handled so the profile looks alive, including the awkward ones."
+   ],
+   "setup_actions": [
+    "Connect their Google Business Profile and confirm the review link resolves to the right listing.",
+    "Review the request wording (repute_request_sms and repute_request_email).",
+    "Agree the reply tone (repute_reply_tone) — warm, brief, first person, never defensive.",
+    "Decide whether auto-reply is on, and agree that anything below three stars gets a human first.",
+    "Send yourself a request and click the link to confirm it lands on their real review page."
+   ],
+   "call_script": {
+    "opener": "How many Google reviews have you got, and how do they compare to the firm you lose work to?",
+    "discovery": "How do you ask for them at the moment?",
+    "pitch": "Repute asks every customer automatically at the right moment and handles the replies. $197 a month.",
+    "objection": "\"I do not like asking.\" — That is exactly why it should not be you asking. Happy customers say yes when someone else does it for them.",
+    "close": "Where would you be in six months at a few reviews a week instead of one every few months? Let us start this week."
+   },
+   "email_script": {
+    "subject": "your reviews vs theirs",
+    "body": "Hi {first_name},\n\nI had a look at {business} on Google next to a couple of the firms you are up against.\n\nThe work is not the problem. The review count is — and that is the first thing a stranger checks before they ring anyone.\n\nRepute asks every customer at the right moment, and handles the replies so the profile looks looked-after. $197/month.\n\nMost people are glad to leave one, they just need asking. Want me to start this week?"
+   }
+  },
+  {
+   "sku": "map",
+   "name": "Echo",
+   "plain": "Their Google listing managed properly so they show up in the local map results",
+   "price": "$247/mo, no setup fee · each extra location $197/mo",
+   "mrr": 247,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "standard",
+     "mrr": 247
+    },
+    {
+     "key": "multi",
+     "label": "each extra location",
+     "mrr": 197
+    }
+   ],
+   "selling_points": [
+    "The map pack is where local buying decisions actually happen, above the website results.",
+    "Most listings are half-finished — wrong categories, no photos, no posts — and that is why they rank below competitors.",
+    "Managed monthly, because Google rewards a listing that keeps moving."
+   ],
+   "setup_actions": [
+    "Confirm they own and have verified the listing — if not, verification comes first and can take days by post.",
+    "Get management access to the Google Business Profile (do not ask for their password; use the proper invite).",
+    "Fix the fundamentals: exact categories, service areas, hours including holidays, full description.",
+    "Collect at least ten real photos — listings with photos get materially more calls.",
+    "Check the name, address and phone match their website exactly; mismatches suppress ranking."
+   ],
+   "call_script": {
+    "opener": "Search your own trade plus your town on your phone — where do you come up in the map results?",
+    "discovery": "Do you know who is above you, and can you think of a reason they should be?",
+    "pitch": "Usually it is not that they are better, it is that their listing is complete and yours is half-filled. Echo fixes that and keeps it active. $297 to set up, $247 a month.",
+    "objection": "\"I already have a Google listing.\" — Most people do. Having one and having one that ranks are very different things. Let me show you what is missing from yours.",
+    "close": "Let me audit the listing for free and show you exactly what is costing you the position. If it turns out yours is perfect, I will say so."
+   },
+   "email_script": {
+    "subject": "where {business} shows up on the map",
+    "body": "Hi {first_name},\n\nTry this on your phone: search your trade and your town, and see where {business} lands in the map results.\n\nIf you are below firms you know you are better than, it is usually not the work — it is that their listing is complete and yours is not. Categories, photos, hours, activity. Google reads all of it.\n\nEcho sorts that out and keeps the listing active. $297 to set up, $247/month.\n\nHappy to audit yours for nothing and tell you what is missing. Want me to?"
+   }
+  },
+  {
+   "sku": "dispatch",
+   "name": "Dispatch",
+   "plain": "Email marketing to their customer list, self-serve or fully managed",
+   "price": "$94/mo self-serve · $397 managed (we write and send four campaigns a month)",
+   "mrr": 94,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "self-serve",
+     "mrr": 94
+    },
+    {
+     "key": "managed",
+     "label": "managed, 4 campaigns a month",
+     "mrr": 397
+    }
+   ],
+   "selling_points": [
+    "Their past customers are the cheapest work they will ever get — they already trust them.",
+    "One email to the list beats a month of chasing strangers.",
+    "Self-serve, so they send when they want without waiting on anyone.",
+    "On Managed ($397/mo) we plan, write and send four campaigns a month for them; they approve before anything sends and never have to type a word."
+   ],
+   "setup_actions": [
+    "Verify their sending domain, or emails land in spam and the whole thing looks broken.",
+    "Set the from-name (dispatch_from_name) to the business name customers will recognise.",
+    "Import the customer list and check consent — only people who gave them their details, no bought lists.",
+    "Confirm the unsubscribe link works and their postal address is on the footer. This is legally required.",
+    "Send one email to yourself and check it in Gmail, not just the preview."
+   ],
+   "call_script": {
+    "opener": "How many past customers have you got email addresses for?",
+    "discovery": "When did you last send them anything?",
+    "pitch": "That list is the cheapest work you will ever get. Dispatch lets you email them properly whenever you want. $94 a month.",
+    "objection": "\"I do not want to spam my customers.\" — One useful email a month is not spam. Spam is what happens when you buy a list. These are people who already paid you.",
+    "close": "Let us get the list in and send one email this month. If it brings you a single job it has paid for the year."
+   },
+   "email_script": {
+    "subject": "the list you are sitting on",
+    "body": "Hi {first_name},\n\nHow many past customers does {business} have email addresses for?\n\nWhatever the number, that is the cheapest work available to you — they already know you and already paid you once. Most businesses never email them.\n\nDispatch lets you send to that list properly, whenever you like, without landing in spam. $94/month.\n\nOne useful email a month is usually all it takes. Worth setting up?"
+   }
+  },
+  {
+   "sku": "revive",
+   "name": "Revive",
+   "plain": "A six-touch win-back campaign to bring back customers who have gone quiet",
+   "price": "$197/mo · first win-back wave in month one, then a fresh wave every quarter (up to 5,000 contacts, cancel any time)",
+   "mrr": 197,
+   "setup": 0,
+   "selling_points": [
+    "Fastest money in the whole catalogue — these people already bought once.",
+    "$197 a month with no lock-in, cancel any time, so it is an easy first yes.",
+    "Usually pays for itself before the sequence has finished sending."
+   ],
+   "setup_actions": [
+    "Get the list of past customers with the date they last bought.",
+    "Check consent — these must be their own customers, not a bought list.",
+    "Agree the offer. A reactivation campaign with nothing to say does not work; there needs to be a reason to come back.",
+    "Review the six-email sequence (revive_email_1..6) and reword it in their voice.",
+    "Confirm where replies and bookings land before it sends."
+   ],
+   "call_script": {
+    "opener": "How many customers have you not heard from in over a year?",
+    "discovery": "Any reason they left, or did it just drift?",
+    "pitch": "Then they are the easiest work available. Revive scrubs the list and runs a six-touch win-back campaign to them with a reason to return. $197 a month, up to 5,000 contacts, cancel any time.",
+    "objection": "\"They have probably gone elsewhere.\" — Some have. Most just drifted and have not thought about you. That is a reminder problem, not a loyalty problem.",
+    "close": "Send me the list and I will tell you how many are worth going back to before you commit."
+   },
+   "email_script": {
+    "subject": "the customers who drifted",
+    "body": "Hi {first_name},\n\nHow many of {business}'s customers have you not heard from in a year or more?\n\nMost of them did not leave unhappy — they just drifted and have not thought about you since. That is a reminder problem, and it is the easiest money in the business.\n\nRevive scrubs that list and runs a six-touch win-back campaign with a real reason to return. $197 a month, up to 5,000 contacts, cancel any time.\n\nSend me the list and I will tell you how many are worth chasing before you spend anything. Deal?"
+   }
+  },
+  {
+   "sku": "radar",
+   "name": "Radar",
+   "plain": "Finds the businesses they want as customers, audits each one, and reaches out for them",
+   "price": "$297/mo (5 new prospects a week) · $497 pro (20 new prospects a week)",
+   "mrr": 297,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "5 prospects a week",
+     "mrr": 297
+    },
+    {
+     "key": "pro",
+     "label": "pro, 20 prospects a week",
+     "mrr": 497
+    }
+   ],
+   "selling_points": [
+    "The audit does the talking: they open with something specific and true about the prospect's own listing or website, not a cold pitch.",
+    "Five new audited prospects every week (twenty on Pro), so the pipeline keeps filling whether or not they remember to prospect.",
+    "Outreach goes out from their Station account, so every reply lands in the same inbox as everything else.",
+    "Best for trades chasing commercial accounts and B2B services. If that is not the client, do not sell it."
+   ],
+   "setup_actions": [
+    "Agree who they want as customers: the trade or type of business (property managers, general contractors, restaurants, offices), the area and the size. Standard covers three trade targets, Pro covers six.",
+    "Confirm the area and targets with the client before the first weekly sweep runs.",
+    "Review the outreach wording with the client so it sounds like them. Email carries who they are and an opt-out, and texting only goes to people who have consented.",
+    "Send the first audit report yourself and walk them through it, or it becomes a PDF nobody opens."
+   ],
+   "call_script": {
+    "opener": "Who are the customers you would love to have but have no way of getting in front of?",
+    "discovery": "How do you find new business or commercial accounts at the moment, and when did you last go looking?",
+    "pitch": "Radar searches any area for the kind of business you want as a customer, audits each one's marketing, and reaches out under your name. Five new audited prospects a week. $297 a month.",
+    "objection": "\"I am no salesman.\" — You do not need to be. The audit does the talking: you are pointing out something specific about their listing or website, not pitching. Helpful beats slick.",
+    "close": "Tell me the trade and the area and I will show you a sample audit report before you decide."
+   },
+   "email_script": {
+    "subject": "the customers you have not met yet",
+    "body": "Hi {first_name},\n\nHow does {business} find new commercial or business customers at the moment?\n\nFor most trades the honest answer is word of mouth and hope. The firms that win the bigger accounts are the ones that turn up prepared.\n\nRadar searches an area for exactly the kind of business you want, audits each one — their listing, reviews and website — and reaches out under your name, five new prospects a week. The audit does the talking, so you are pointing out something specific rather than pitching. $297/month.\n\nWant me to send you a sample audit report so you can see what it looks like?"
+   }
+  },
+  {
+   "sku": "dial",
+   "name": "Dial",
+   "plain": "A proper business number with texting",
+   "price": "$47/mo (1,000 texts)",
+   "mrr": 47,
+   "setup": 0,
+   "selling_points": [
+    "Their personal mobile stops being the business line — work stays at work.",
+    "Customers can text the business, which many now prefer to ringing.",
+    "Cheapest way into the system, and everything else plugs into it later.",
+    "If they ever sell or hand over the business, the number goes with it rather than being their personal mobile."
+   ],
+   "setup_actions": [
+    "Choose the number, or port their existing one. Porting takes days and needs their current provider's account details — start it early.",
+    "Set forwarding so calls reach the right phone.",
+    "Record or write the voicemail greeting.",
+    "Text the number and ring it, and confirm both land where expected."
+   ],
+   "call_script": {
+    "opener": "Is the number on your van and your website your personal mobile?",
+    "discovery": "Does that mean you are answering work calls on a Sunday?",
+    "pitch": "Dial gives the business its own number with texting, and forwards wherever you want. $47 a month.",
+    "objection": "\"Everyone already has my mobile.\" — They do, and it works today. But the day you take on help, or want a weekend, the business number is what makes that possible. And it is yours to keep if you ever sell.",
+    "close": "It is $47. Let us get the business off your personal phone this week."
+   },
+   "email_script": {
+    "subject": "is your van number your personal mobile?",
+    "body": "Hi {first_name},\n\nSimple one. Is the number on {business}'s van and website your own mobile?\n\nIt works — until you want a weekend off, or take someone on, or decide to sell up. Then it is a problem, because the business line is your personal phone.\n\nDial gives the business its own number with texting, forwarded wherever you like. $47/month.\n\nSmall thing, but it is the one that makes everything else possible later. Want it sorted this week?"
+   }
+  },
+  {
+   "sku": "tap",
+   "name": "Tap",
+   "plain": "Taking payments, in person and online",
+   "price": "$47/mo + card rates",
+   "mrr": 47,
+   "setup": 0,
+   "selling_points": [
+    "Getting paid on the spot beats invoicing and waiting three weeks.",
+    "Card, tap and online links all in one place, with the money tracked.",
+    "Cheap enough that one invoice paid faster covers the year."
+   ],
+   "setup_actions": [
+    "Connect their Stripe account, or create one. This needs their bank details and ID — they must do this part themselves, never handle it for them.",
+    "Set up their products and prices so the totals are right at the till.",
+    "Configure tax settings for their area.",
+    "Take one real test payment and refund it, and confirm it reaches their bank."
+   ],
+   "call_script": {
+    "opener": "How do you get paid at the moment — invoice, cash, card?",
+    "discovery": "How long does an invoice usually take to actually land?",
+    "pitch": "Tap lets you take it on the spot, in person or by a link. $47 a month.",
+    "objection": "\"My bank charges less.\" — Maybe on the rate. But this is card, tap and online links in one place with the money tracked against the customer. The saving is the chasing you stop doing.",
+    "close": "What are you owed right now? Get paid on the day instead and this pays for itself immediately."
+   },
+   "email_script": {
+    "subject": "how long do your invoices take to land?",
+    "body": "Hi {first_name},\n\nWhen {business} finishes a job, how do you get paid — and how long does it actually take?\n\nIf the answer involves invoicing and then chasing, that is weeks of your money sitting with someone else.\n\nTap lets you take payment on the spot, by card or a link, with everything tracked. $47/month.\n\nWhat are you owed right now? Getting even one of those paid on the day covers the cost. Worth a look?"
+   }
+  },
+  {
+   "sku": "marquee",
+   "name": "Marquee",
+   "plain": "Social posts, ads and a brand board, self-serve or managed for them",
+   "price": "$197/mo self-serve · $597 managed (12 posts a month and ads run for you, ad spend extra)",
+   "mrr": 197,
+   "setup": 0,
+   "from_tier": true,
+   "plans": [
+    {
+     "key": "base",
+     "label": "self-serve",
+     "mrr": 197
+    },
+    {
+     "key": "managed",
+     "label": "managed, 12 posts a month + ads",
+     "mrr": 597
+    }
+   ],
+   "selling_points": [
+    "Their profiles stop looking abandoned, which is what a stranger checks after the reviews.",
+    "Posting keeps happening in a busy week, which is exactly when it normally stops.",
+    "Self-serve, so they can still post their own jobs whenever they want.",
+    "On Managed ($597/mo) we make twelve posts a month, build and run the ads and send monthly numbers. Ad spend is theirs, on their own card with a cap they set; managed ads above $2,000/mo of spend add 10% of spend."
+   ],
+   "setup_actions": [
+    "Connect their social accounts — they must authorise this themselves; never ask for their passwords.",
+    "Agree the brand voice and what is off-limits.",
+    "Collect a batch of real job photos to work from. Stock images look like stock images.",
+    "Set the posting schedule and confirm the first week's posts with them before anything goes out."
+   ],
+   "call_script": {
+    "opener": "When did you last post anything on your business social accounts?",
+    "discovery": "If someone checks you out there before ringing, what do they find?",
+    "pitch": "Marquee keeps it posting properly. $197 a month, and you can still put your own jobs up whenever you like.",
+    "objection": "\"Social media does not bring me work.\" — Directly, often not. But it is the second thing people check after your reviews, and a profile that stopped two years ago makes them wonder if you are still going.",
+    "close": "Send me ten photos of recent jobs and I will show you the first week before anything is posted."
+   },
+   "email_script": {
+    "subject": "your socials stopped two years ago",
+    "body": "Hi {first_name},\n\nI had a look at {business} on social before getting in touch.\n\nThe last post is a while back. On its own that does not lose you work — but it is the second thing someone checks after your reviews, and a profile that went quiet makes people wonder whether you are still trading.\n\nMarquee keeps it posting properly, and you can still add your own jobs whenever you want. $197/month.\n\nSend me ten photos of recent work and I will show you the first week before anything goes live. Want to?"
+   }
+  },
+  {
+   "sku": "mobileapp",
+   "name": "Mobile App",
+   "plain": "A branded mobile app, included free with every product",
+   "price": "Free — included, not sold separately",
+   "mrr": 0,
+   "setup": 0,
+   "selling_points": [
+    "It is free, so it is a genuine sweetener rather than an upsell.",
+    "Their business on a customer's home screen is real staying power.",
+    "Good closing gift — mention it when they are almost there."
+   ],
+   "setup_actions": [
+    "Collect the app name, icon and brand colours.",
+    "Confirm which features they want visible.",
+    "Set expectations on store review time — this is out of Station's hands and takes as long as it takes."
+   ],
+   "call_script": {
+    "opener": "Use this as a closer, not an opener.",
+    "discovery": "—",
+    "pitch": "And the branded mobile app comes with it at no extra cost — your business on their home screen.",
+    "objection": "\"What is the catch?\" — None. It ships with every product. We do not sell it separately.",
+    "close": "Shall I get that included when I set the rest up?"
+   },
+   "email_script": {
+    "subject": "included with that — the app",
+    "body": "Hi {first_name},\n\nOne thing I did not mention: the branded mobile app is included at no extra cost with what we talked about.\n\nYour business, your icon, on your customers' home screens. We do not sell it separately — it just comes with it.\n\nWant me to include it when I set the rest up?"
+   }
+  }
+ ],
+ "bundles": [
+  {
+   "key": "answer",
+   "name": "Answer",
+   "mrr": 297,
+   "setup": 0,
+   "kind": "collection",
+   "plain": "Never miss a customer: missed-call text-back (Lineback), website chat (Greet), online booking and reminders (Slate), a business number with texting (Dial) and card payments (Tap), plus a free Station-built website. Worth $382/mo bought one by one. Add the AI receptionist for +$297/mo. 14-day free trial from go-live."
+  },
+  {
+   "key": "getfound",
+   "name": "Get Found",
+   "mrr": 497,
+   "setup": 0,
+   "kind": "collection",
+   "plain": "Be the obvious choice on Google: Google profile managed (Echo, no setup fee), review requests and replies (Repute) and social posting (Marquee), plus a free Station-built website. Worth $641/mo bought one by one. 14-day free trial from go-live."
+  },
+  {
+   "key": "followup",
+   "name": "Follow Up",
+   "mrr": 427,
+   "setup": 0,
+   "kind": "collection",
+   "plain": "Turn leads and old customers into jobs: lead follow-up (Pursuit), win-back campaigns (Revive) and email campaigns (Dispatch), plus a free Station-built website. Worth $538/mo bought one by one. 14-day free trial from go-live."
+  },
+  {
+   "key": "core",
+   "name": "Core",
+   "mrr": 1297,
+   "setup": 0,
+   "kind": "plan",
+   "plain": "Every product at its Standard tier, including the AI receptionist, plus a free Station-built website. Worth $1,899/mo bought one by one. Billed today, 30-day money-back on the first paid month."
+  },
+  {
+   "key": "pro",
+   "name": "Pro",
+   "mrr": 2197,
+   "setup": 0,
+   "kind": "plan",
+   "plain": "Every product at its busy tier, with social posts and email campaigns written and run by Station, plus a free Station-built website. Worth $3,072/mo bought one by one. Billed today, 30-day money-back on the first paid month."
+  },
+  {
+   "key": "custom",
+   "name": "Max",
+   "mrr": 2797,
+   "setup": 0,
+   "kind": "plan",
+   "plain": "Every product at its top tier, social and email done for you, priority support and a quarterly review call, plus a custom-designed website. Worth $3,472/mo bought one by one before the website. Billed today, 30-day money-back on the first paid month."
+  }
+ ],
+ "_machine_prices": "mrr/setup are the machine-readable mirror of each product's `price` string (base tier where a product has tiers, flagged from_tier and enumerated in `plans`). The Partner portal totals a client's stacked products from these and the engine reads the same file — change the string and the numbers together. Plan keys must not contain '-': a client's tier is stored as the tag sku-<sku>-<plan>. Bundles carry no setup fee. Tiers that are not volume steps use these keys: `pro` (Radar), `multi` (Echo, Repute: the plan mrr is the price of EACH EXTRA location), `managed` (Dispatch, Marquee). Revive is $197/mo (since 2026-10-04), an ordinary monthly price. storefront_custom has no published price (priced to the project after a free demo), so its `setup` and `mrr` are 0 because the build is priced to the project and hosting & care is quoted by Station for each client.",
+ "_retired_skus": {
+  "storefront_enterprise": "Storefront Enterprise ($10,000 build + monthly care) was retired in the 2026-09-16 pricing rewire: archived in Stripe and refused by checkout. Removed from `products` on 2026-09-21 so it no longer shows in the Products tab or the add-client picker. Do not re-add without a live page selling it.",
+  "storefront": "Storefront Premium ($500 build + monthly care) was retired 2026-09-23 by Circle: Station sells only the Custom website (priced to the project, free demo first). It will be replaced by a referral to Circle's separate design-your-own-website business. Removed from `products` and archived in Stripe the same day. Do not re-add."
+ }
+}
