@@ -547,7 +547,7 @@ window.PW={
 ],
 "about": [
 "<ul class=\"ticks\"><li><b>Answer, $297 a month:</b> missed-call text-back (Lineback), website chat (Greet), online booking and reminders (Slate), a business number with texting (Dial) and card payments (Tap). They’re worth $382 a month separately. Add the AI receptionist (Frontdesk, 750 minutes) for $297 a month more. It’s $397 on its own.</li></ul>",
-"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
+"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
 "If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
@@ -590,7 +590,7 @@ window.PW={
 ],
 "about": [
 "<ul class=\"ticks\"><li><b>Get Found, $497 a month:</b> Google profile managed (Echo), review requests and replies (Repute) and social posting self-serve (Marquee). They’re worth $641 a month separately.</li></ul>",
-"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
+"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
 "If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
@@ -633,7 +633,7 @@ window.PW={
 ],
 "about": [
 "<ul class=\"ticks\"><li><b>Follow Up, $427 a month:</b> lead follow-up (Pursuit), win-back campaigns (Revive) and email campaigns self-serve (Dispatch). They’re worth $538 a month separately.</li></ul>",
-"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
+"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
 "If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
@@ -676,7 +676,7 @@ window.PW={
 ],
 "about": [
 "<ul class=\"ticks\"><li><b>Core, $1,297 a month:</b> every product at its Standard tier, including Frontdesk at 750 minutes, plus a free Station-built website. It’s worth $1,899 a month separately.</li></ul>",
-"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
+"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
 "If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
@@ -719,7 +719,7 @@ window.PW={
 ],
 "about": [
 "<ul class=\"ticks\"><li><b>Pro, $2,197 a month:</b> every product at its busy tier (Greet 750 chats, Lineback 5,000 texts, Frontdesk 1,200 minutes, Slate 2,500, Pursuit 6,000 texts and 40,000 emails). Station writes and runs the social posts (12 a month plus ads) and the email campaigns (4 a month). It also includes a free Station-built website. It’s worth $3,072 a month separately.</li></ul>",
-"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
+"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
 "If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],
@@ -762,7 +762,7 @@ window.PW={
 ],
 "about": [
 "<ul class=\"ticks\"><li><b>Max, $2,797 a month:</b> every product at its top tier (Greet 1,750 chats, Frontdesk 2,500 minutes), with social and email done for the client, priority support and a quarterly review call, plus a custom-designed website. It’s worth $3,472 a month before the website. Max was called Custom before 2026-10-04. The word Custom now only means a quoted custom website.</li></ul>",
-"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.",
+"If a client outgrows one product, they upgrade just that product for the difference. An <b>extra location pack</b> (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.",
 "Every collection and plan includes a Station-built website of up to 5 pages. Station builds it after the client’s first paid month clears, never during a trial. The draft arrives within 5 business days, and the client gets two rounds of changes. Hosting and small text changes are included while they’re subscribed.",
 "If they cancel, they keep their domain, words and photos. The site comes off Station hosting at the end of the paid period, unless they take a quoted hosting &amp; care plan or pay a one-time $500 to keep the built site. Neither the $500 nor hosting &amp; care earns commission. A custom (bespoke) website is still quoted separately at station.solutions/custom/."
 ],

@@ -1,6 +1,6 @@
 # Station Partner Guide
 
-This is the working guide for Station partners: what we sell, how you earn, how to use your portal, and what to say to leads and clients. Look up the situation you're in and use the answer. If the answer is "ask Station," email main@station.solutions.
+This is the working guide for Station partners: what we sell, how you earn, how to use Partner World, and what to say to leads and clients. Look up the situation you're in and use the answer. If the answer is to check with Station, use **Message Station** in Partner World or email main@station.solutions.
 
 Two things always win over this guide. Your signed **Station Partner Agreement** wins on money, rules, and your relationship with Station. The live website **station.solutions** wins on every price. If this guide disagrees with either one, follow them and tell Station so the guide can be fixed.
 
@@ -23,11 +23,11 @@ Radar is the exception. It's built only for trades and services that want commer
 You find and close clients, and you look after the clients in your book:
 
 - You introduce Station, answer questions, and help the owner pick the right product.
-- You're the first contact for upsells and general account questions, and you reply within about two business days.
-- You pass technical problems, billing questions, cancellations, complaints and refund requests to Station quickly.
-- You keep your notes and lead status current in the portal.
+- You talk with the clients in your book, including about adding Station products at published prices.
+- Support is Station's. If a client brings you a question or a problem (technical, their account, billing or a change), you tell them Station will handle it and pass it to Station the same business day, without trying to fix it yourself. You tell Station promptly if a client wants to cancel, complains, or raises a refund, dispute or legal issue.
+- You log every call, and keep your notes and lead status current in Partner World.
 
-You don't build, fix, set up or host anything. You don't take payments, sign anything for Station, set prices or discounts, or promise results, custom work or timelines Station hasn't approved. You're an independent contractor, not an employee, and partner status is invitation only.
+You don't build, fix, set up or host anything. When a client or lead wants a website, you request it from Station (see Websites, demos and mock-ups). You don't take payments, sign anything for Station, set prices or discounts, or promise results, custom work or timelines Station hasn't approved. You're an independent contractor, not an employee, and partner status is invitation only.
 
 ### A 30-second pitch
 
@@ -37,19 +37,20 @@ Lead with their problem, not the product list.
 
 ## How you earn
 
-This section follows your Partner Agreement (version 5) and its plain-English summary. Where they differ from this guide, the agreement controls.
+This section follows your Partner Agreement and its plain-English summary. Where they differ from this guide, the agreement controls.
 
 ### The rate
 
-You earn a flat **40%** of the recurring subscription fees each client in your book actually pays Station. It keeps coming every month they stay a paying client, for as long as the client stays in your book and your agreement stays in effect. There's no bounty, no setup bonus and no tiers.
+You earn a flat **40%** of what each client in your book pays Station: for a website, 40% of the setup fee, once; for everything else, 40% of every payment while they stay. Paid once the client's payment clears, for as long as the client stays in your book and your agreement stays in effect. Hosting & care earns nothing. There's no bounty and no tiers.
 
 ### What the 40% is calculated on
 
-Your commission is calculated on **Commissionable Revenue**: the recurring subscription fees a client has actually paid and that have cleared, after refunds, chargebacks, credits and discounts. It is never calculated on a list price, a quote or a projection, and card-processing fees aren't deducted.
+Your commission is calculated on **Commissionable Revenue**: the subscription fees a client has actually paid and that have cleared (hosting & care excepted), plus a website's one-time setup fee, after refunds, chargebacks, credits and discounts. It is never calculated on a list price, a quote or a projection, and card-processing fees aren't deducted.
 
 It does **not** include:
 
-- One-time fees: onboarding fees, website build fees, the one-time $500 fee to keep a built site, and other single purchases. The free Station-built website that comes with a collection or plan earns nothing either.
+- Hosting & care (the monthly subscription that keeps a website online).
+- Other one-time fees: onboarding fees, the one-time $500 fee to keep a built site, and other single purchases. The free Station-built website that comes with a collection or plan has no setup fee, so it earns nothing either.
 - Taxes.
 - Amounts Station charges only to recover a third-party cost.
 - Anything not yet paid and cleared.
@@ -63,7 +64,7 @@ A client is in your **book of business** when either:
 1. You personally close the client and Station accepts the order, or
 2. Station assigns you a lead or client, and that client becomes a paying client.
 
-Station records the assignment in the portal. A row Station hasn't accepted doesn't put a client in your book. When you close someone, add them with **Add client** in Book of business and email Station so they can be accepted.
+Station records the assignment. A business Station hasn't accepted doesn't put a client in your book. When you close someone, mark them **Won** in Calls (add the business first if it isn't on your list), send them your link so their signup is credited to you, and tell Station with **Message Station** so the order can be accepted.
 
 Your book records who services each account and who earns commission on it. It isn't ownership. Every client signs with Station, is billed by Station, and stays Station's client. Each client has exactly one partner at a time.
 
@@ -71,9 +72,9 @@ These are never eligible: you, fake or shell businesses, and any business that y
 
 ### How referrals are tracked
 
-Your referral link is on your portal Dashboard and looks like station.solutions/?ref=yourcode. The code works on any station.solutions page, so you can send a product page too, for example station.solutions/frontdesk/?ref=yourcode.
+Your referral code is your partner code. Every product's cheat sheet in Products has **Your link** with a **Copy** button, for example station.solutions/frontdesk/?ref=yourcode, and Interested and Won cards in Calls have **Copy link** for the product you pitched. The code works on any station.solutions page, so station.solutions/?ref=yourcode works too.
 
-The site remembers your code in that visitor's browser for 30 days and carries it to checkout, but it won't follow them to another device. Station's records decide attribution, including between two partners. To protect your credit, log every business on your Leads sheet and tell Station when someone is ready to buy.
+The site remembers your code in that visitor's browser for 30 days and carries it to checkout, but it won't follow them to another device. Station's records decide attribution, including between two partners. To protect your credit, log every call in Calls (add any business you found yourself), send your link every time, and mark them **Won** when they're buying.
 
 ### Trials, prepayments and timing
 
@@ -87,13 +88,13 @@ The site remembers your code in that visitor's browser for 30 days and carries i
 
 **Nothing is paid until your tax form is on file.** U.S. persons need IRS Form W-9, and non-U.S. individuals need Form W-8BEN. Commission can build up before that, but no payout is made.
 
-Upload it in the **Tax form** part of **How you get paid** (under **Get set up**) as a PDF, JPG or PNG under 5MB. Until it's on file, your Dashboard shows a reminder line that takes you there. The card links to the official IRS form, which you can fill in and sign in your browser. Don't email it, because it carries your Social Security number.
+Upload it on the **Money** tab with **Upload my tax form**, as a PDF, JPG or PNG under 5 MB. Until it's on file, Home and Money count it as a setup step left before Station can pay you. Partner World's upload takes the W-9; if you're outside the U.S., email Station before you start. Don't email the form itself, because it carries your Social Security number.
 
 Station issues a Form 1099 where the law requires. Your income and self-employment taxes are your own responsibility.
 
 ### How the money reaches you
 
-Station pays partners through Stripe. In **How you get paid**, press **Set up payouts with Stripe**. It opens your own Stripe Express setup, where you type your bank details on Stripe's site. Station never sees or stores them. Once it's started, the button reads **Open my Stripe setup link**: the link stays yours, so use it any time to finish or check your setup. The card shows what Stripe still needs (for example a bank account or Stripe's terms). Stripe's own identity check doesn't replace your W-9. Keep your payout details correct; Station isn't responsible for money sent to details you provided.
+Station pays partners through Stripe. On the **Money** tab, press **Set up payouts with Stripe**. It opens your own Stripe setup, where you type your bank details on Stripe's site. Station never sees or stores them. If you stop partway, the button reads **Finish setting up payouts** and takes you back. Money lists anything Stripe still needs (for example a bank account), says when Stripe is checking your details, and shows **✓ Ready** once you're set up. Stripe's own identity check doesn't replace your W-9. Keep your payout details correct; Station isn't responsible for money sent to details you provided.
 
 ### Refunds, chargebacks and cancellations
 
@@ -103,7 +104,7 @@ Station pays partners through Stripe. In **How you get paid**, press **Set up pa
 
 ### Statements
 
-If you think a payout statement is wrong, tell Station in writing within 60 days. Station's payment records control. Treat the monthly figures in your portal as a guide; you're paid on what actually clears.
+If you think a payout statement is wrong, tell Station in writing within 60 days. Station's payment records control. Treat the figures in Partner World as a guide; you're paid on what actually clears.
 
 ### Reassignment, and if the agreement ends
 
@@ -113,121 +114,121 @@ Either side can end the agreement at any time by email. You're paid on payments 
 
 For 12 months afterwards, you agree not to encourage clients you dealt with through Station to cancel, not to move them to a competing product, and not to steer Station prospects to a competitor. You can still work in your field. Station can change the rate or terms only going forward, with 30 days' written notice.
 
-## Your portal, tab by tab
+## Partner World, tab by tab
 
-Your portal is at station.solutions/partners/.
+Partner World is at partners.station.solutions. The old partner portal at station.solutions/partners/ is retired and now forwards to Partner World, where you sign in with the same email and password.
 
 ### Signing in
 
-- **Sign in** with your email and password.
-- **Activate invite** is for invited partners setting a password the first time. Enter your referral code, the email Station has on file, and a password of at least 10 characters. You can only do this once.
-- There's no reset button. If you forget your password, email main@station.solutions.
+- **Sign in** with your email and password. On a computer other people use, tick **This is a shared computer** so you aren't kept signed in.
+- **First time here? Activate your invite** is for invited partners setting a password the first time. Enter your partner code (it's in your invite email), the email Station has on file, and a password of at least 10 characters. You can only do this once.
+- There's no reset button. If you forget your password, email main@station.solutions. Once Station has reset it, use **First time here?** to set a new one.
+- When you sign in on a device for the first time, or after you've signed out, a 1-minute check asks six questions on the rules that matter most. A wrong pick just means you try again.
 
-Once you're signed in, you'll see seven tabs: **Dashboard, Leads, Book of business, Calendar, Products & scripts, How you get paid** and **Support**.
+Once you're signed in, you'll see six tabs: **Home, Products, Calls, Clients, Money** and **Help**. Partner Leads also see **Team**. At the top, **AA** makes the text bigger, and **Earned so far** opens Money.
 
-### Dashboard
+### Home
 
-- **Today** is three tiles at the top, and each one opens the place it's about.
-- The **leads to call** tile counts your Not called yet plus To call leads and opens Leads. On a phone it opens straight into Calling mode.
-- The **money** tile shows what's on hold and when it's due to be released, what's ready (and how far it is from the $50 minimum), what's waiting on you, what you've been paid to date when nothing is waiting, or "No commission yet". It opens How you get paid.
-- The **new messages** tile counts replies from the Station team you haven't opened yet. It opens Message Station.
-- If your tax form isn't on file yet, a line under the tiles says **Upload your tax form to get paid** and takes you to How you get paid.
-- **Message Station** is your thread with the Station team (see below).
-- **Your referral link** has a **Copy link** button.
-- **Your numbers** shows Clicks, Referral leads (people who came through your link and filled in a form), Clients, and Commission per month.
-- **Your current payout rate** shows the Partner track at 40% recurring.
-- **Alerts in your Discord** is optional: alerts for add-ons and change requests, purchases, the setup steps when a client buys, and new leads. Join the private Station channel (then enter your lowercase Discord handle), or paste a webhook link from your own server; the portal sends a test message when you save. You still reply to clients in the portal.
+- **Your next call** is the business to call next, what to pitch and the line to open with, plus **Start calling** (outside calling hours it reads **See my list**). When a call-back is up, it says **Call-back due now** or **Call-back overdue**. The line beside the button counts call-backs due now, businesses to call today, and the ones you tried today that come back tomorrow.
+- If Station hasn't sent you any businesses yet, Home says so and offers **Ask for my first businesses**. When every business from Station has an outcome, it offers **Ask for my next batch**.
+- **Your Partner Lead** appears if Station has given you one: their name, your training level and what comes next, and their latest notes to you.
+- **Earned so far** is what's ready plus what's on hold, and it says how many setup steps are left before Station can pay you. It opens Money.
+- **Today** counts the calls you've logged, your conversations, and the businesses that were interested or won. Before your first call, this spot points you to the Answer collection to learn first.
+- Below that: **See all products**, **Found a business yourself?** (add one to your list) and **Who buys? Ten real buyers**.
 
-### Message Station
+### Products
 
-Message Station is on your Dashboard. It goes to the Station team, which is people, not Ask Station.
+- Every product, collection and plan Station sells, with what you earn per paying client each month. The custom website shows "You earn 40% of the setup fee, once." Filters: **Everything**, **Easiest**, **Top pay**, **Collections** and **Plans**. What you earn is arithmetic, not a forecast or a promise.
+- Each product opens a **cheat sheet**: who it's for, who buys it, what to open with, what to say if they ask the price, the close, the push-back you'll hear most, and **Your link** with a **Copy** button. Under **Everything else** are the full script (**Copy the whole script**), answers to push-back, what to do when they say yes, why they buy it, price details, and more about the product.
+- **Start calling for [product]** at the bottom of a cheat sheet pitches that product to every business in Calls for the rest of the day. **Use each business's best fit** in Calls switches back.
+- **Who buys** (linked from Products and Home) describes ten kinds of owner, what each is probably feeling when you call, words that work, and the habits that win the call.
+- If a price here ever differs from station.solutions, quote the site and tell Station.
 
-- Type your message and press **Send**. It arrives in Station's inbox straight away, as an email from you.
-- Station replies by email. The reply lands in your email and shows in the same thread here.
-- You can send up to 20 messages a day. If something can't wait, email main@station.solutions.
-- Use it for anything about your account, your leads, your pay, or a client. Don't send tax forms or bank details here.
+### Calls
 
-### Leads
+This is your list: the businesses Station sends you and the ones you add yourself, one per screen. You, Station and your Partner Lead (if you have one) can see it; other partners can't.
 
-This is your working sheet of every business you're talking to: the leads Station sends you and the ones you add yourself. No other partner can see it.
+**Where businesses come from:** only two places. Station sends you businesses in batches. And you can add any business you come across yourself, with **Found a business yourself?** on Home or **+ Add a business you found yourself** at the end of Calls. Partners don't search for or pull leads; that's Station's job.
 
-**Where leads come from:** only two places. Station finds businesses and sends them to you, a set number at a time, from the area Station has set for you. And you can add any business you come across yourself with **Add lead**. Partners don't search for or pull leads; that's Station's job.
+- **Order:** call-backs that are due come first, then Interested businesses, then Station's new businesses and ones to try again, then your own, then finished ones. Businesses you tried today go to the back.
+- **At the top:** how many you've called, how many new are left, and **Due now**, which lists every call-back from 15 minutes before its time and marks it **Overdue** two hours after. Tap a name to jump to its card.
+- **Each card** shows the business, trade, city and rating, their local time and whether it's OK to call, what to pitch and the line to open with, **Why them**, and your lines (who you are, the opener, what it does, the price answer and the close). **Change** picks a different product for that business, and **Pitch [product] instead (best fit)** goes back to the best fit. The **Sale** tag is what you'd earn a month if they buy it.
+- **Yours till** a date is on every business Station sends. It's yours for 14 days, and every call you log on it gives you another 14 days from that call. If 14 days go by without a call logged, it goes back to Station's shared list so another partner can call it. Businesses you added are tagged **Your lead** and stay until you remove them.
+- **Calling:** **Call now** (on a computer, **Call**) opens **Ready to call**: your lines and a reminder to use speaker somewhere private, then the phone. Never record a call. When you come back to the app, **How did it go?** opens by itself (or press **I've hung up**). On a phone, after a few calls you can choose to skip the Ready card.
+- **Calling hours:** 9 am to 8 pm, Monday to Saturday, in the business's own time zone. Outside those hours the call button is off and says when calls open. Partner World needs the business's state to know its time zone; without one the button reads **Add their state to call**.
+- **How did it go?** Press **No answer**, **Voicemail**, **Bad lead** (wrong number, closed, or not a fit) or **Talked to them**. After Talked to them, pick **Interested**, **Call back**, **Not interested**, **Do not call** or **Won: they're buying**. The note box is optional, and **What do these buttons mean?** explains each one.
+- **Call back** asks for the day (Tomorrow, In 2 days, Next week, or the day they said) and then the time, in your own time. If they're in another time zone, each time also shows theirs, and only times inside their calling hours can be picked. **Later today** sets it for three hours from now, and is only offered when that's still inside their calling hours.
+- **Interested** always needs a next step: **Set a call-back time**, or **Book a call** on your own booking calendar. If a call is already booked, that's the next step.
+- **No answer** and **Voicemail** bring a business back tomorrow, and the card shows **✓ Tried today** until then. Nobody gets called twice in one day. **Voicemail?** on the card has a line to leave.
+- **Undo:** press **Undo** at the bottom of the screen right after a save (on a computer, U also works). A result goes to Station once its Undo has gone.
+- **Interested and Won cards** ask for their email and give you **Write them an email** and **Copy link**, your referral link for what you pitched. Send the link every time: signing up from it is what credits the sale to you.
+- **Won** on a business Station sent you goes to Station to check. Money lists it under **Wins Station is checking** until Station confirms it and matches it to their signup, and the client shows under Money once they pay. **Marked Won by mistake? Change it** works until Station confirms the win; after that, email main@station.solutions.
+- **Do not call** and **Bad lead** close the card. On a business Station sent you, Station locks them once it has them: if you marked one by mistake, email main@station.solutions. Other closed results have **Change this**.
+- **Notes:** **Add a note** on any card, with business facts only (for example, "ask for Maria after 2"). Notes are kept at Station, and earlier ones stay readable under the box.
+- **Book a call** appears once you've talked to them and they're Interested or want a call back. It shows open times on your own booking calendar for the next 7 days, in your time. Pick one and press **Book it**: Station emails you the details, and the card shows **Call booked** with the time. You call them from your own phone then. Until Station has set up your booking calendar, the button says so; set a call-back time instead.
+- **Write them an email** (on a Call back card, **Email them**) writes to them through Station, from your Station sending address. It stays off until Station finishes setting up partner email for you, and the box says so. Your first email to a business can't carry a link: ask a question, then send the link once they answer. Station adds your name, Station's postal address and an unsubscribe line, and their replies come back to Station and show under the email button. The box shows how many you've sent today against your daily limit.
+- **Ask for my next batch:** when every business Station sent you has an outcome, ask at the end of Calls or on Home. Before Station has sent you any, it reads **Ask for my first businesses**. Businesses you added yourself never hold this up. Station reviews every request, and the new businesses show up in Calls.
+- **Adding your own:** the form asks for the business name, their phone and their state (so Partner World knows their time), plus, if you have them, the city, kind of business, why they might need Station, what to pitch, their email (only if they gave it to you) and website. Only businesses you found yourself: never one another partner gave you, and never one that asked not to be called. Station checks every business you add and tells you if it can't be yours. Your own cards have **Edit** and **Remove**; to get a removed one back, email main@station.solutions.
+- **On a computer,** keys move you through the list: J next, K back, C call, L how did it go, 1 to 4 for the first outcomes, U undo. A wide screen shows your lines beside the card.
+- **If your connection drops,** your results wait in that browser and send by themselves as soon as Station answers. A line at the top says how many haven't reached Station yet.
 
-- **The three bubbles** at the top count your sheet, and pressing one filters the sheet to it (press it again to see every row).
-- **Leads** is every open lead: not archived, and not Won, Not interested, Bad lead or Do not call.
-- **Not called yet** is the open leads you haven't called and haven't given a status.
-- **To call** is the leads to call again today: a Call back whose day has come, or a No answer or Voicemail from an earlier day. A lead you tried today comes back tomorrow.
-- **Leads from Station** carry a **◆ From Station** badge with the days left on the lead. Station sends leads from the area and trades it has set for you, and the line under the bubbles shows them (for example "Station sends leads from Tulsa, OK · roofing, plumbing").
-- **Ask Station for more leads:** Station sends a set number of leads at a time. When you've called every lead Station sent you, press **Ask Station for more leads** and Station gets the request. Until then the button reads **Call your N remaining leads first**. After you ask, it shows **Asked** with the date. Leads you add yourself never hold this up.
-- **Call** (on each open row with a phone number) opens the call panel. On a phone it fills the screen as **Calling mode**. **Start calling** walks every Not called yet lead first, then every To call lead, and **Next lead** moves on.
-- The call panel shows the business, city, trade and rating, **What to say** (the gap, the pitch and price, and your last tries), and how many days are left on the lead.
-- **Calling hours:** the panel shows the business's local time and **OK to call now**, or when you can call. Calls are only for 9 am to 8 pm, Monday to Saturday, in the business's own time zone, and outside those hours the call button is switched off. If a lead has no state, the panel can't tell its time zone and asks you to check their local time before calling.
-- **What happened?** Press **No answer**, **Voicemail**, **Bad lead** (wrong number, closed, or not a fit) or **Talked to them**. After Talked to them, pick **Interested**, **Call back** (with the day), **Not interested**, **Do not call** or **Won — they're buying**.
-- The one-line **note** in the call panel is saved with the call, and Station sees it.
-- **Won** on a lead Station sent tells Station straight away. Station checks it and accepts it; it joins your book as a client when they pay. For a business you found yourself, add them with **Add client** in Book of business and email Station.
-- **Bad lead** is how you hand a lead back: wrong number, closed, or not a fit. There's no separate give-back button, and leads Station sent you can't be archived by hand. Mark them Bad lead or call them, and Station takes its leads back itself.
-- **Add lead:** the business, contact details, the gap (what's costing them work) and the product you're pitching. A phone or an email is enough to start, and **Look it up** can fill in details.
-- **Status:** New, Called, No answer, Voicemail, Interested, Call back, Demo sent, Won, Not interested, Bad lead or Do not call. Choosing **Call back** asks for the day. If a status can't be saved, the sheet puts the old one back and says why.
-- **Follow up:** set a date on each row. The **Due** filter shows who to contact today.
-- **Notes:** a running journal on each row.
-- **Filters:** All, Open, Due, Interested (includes Call back), Won, Closed (Not interested, Bad lead, Do not call) and Archived, plus a search box. The **Calls** column shows how many times you've called, the day of the last try and how it went (for example "2 · Tue · no answer").
-- **Edit** changes anything on a lead. **Archive** sets a row aside, and **Restore** brings it back. Nothing is ever deleted. Leads from Station have no Archive button, and one that Station took back or that ran out of days can't be restored.
-- **Request website** asks Station to build that business a website. A person picks it up; nothing is automatic. The row then shows **Website requested**. It changes to **Website ready** with a **Copy link** button once the site is built. If Station declines, it shows **Station passed** with a reason, and you can **Ask again**.
-- How long rows stay: **Leads Station sends** 30 days from your last call, or 14 days once closed (60 days once Won). **Rows you add** stay a year. After that a row moves to your archive.
-- There's an **Export CSV** button. Your agreement says not to copy lead or client details out of Station's systems into a personal spreadsheet, list or CRM, so don't use exports without asking Station.
+Never tell an owner they're losing a specific amount.
 
-The estimated dollar figures are conversation starters, not facts. Never tell an owner they're losing a specific amount.
+### Clients
 
-### Book of business
+Your conversations with the clients in your book. A client shows up here once a business you brought in is paying Station. Clients aren't added here: a business you close joins your book when Station accepts it (see What counts as your client).
 
-This tab lists every client assigned to you. No other partner can see them.
+- Each client shows their latest message and how many are new. Open one to read the whole conversation.
+- **Send email** replies by email from Station, with your name in the subject. Station keeps the thread and sees every message. There's no texting, because Station doesn't currently have its own texting number.
+- If Station has no email for a client yet, Send email stays off. Message Station to add one.
+- The rule on this tab: talk with your clients here, including about adding Station products at published prices. If a client brings you a question or a problem (technical, their account, billing or a change), tell them Station will handle it and pass it to Station the same business day with **Message Station**; don't try to fix it yourself. Tell Station promptly if a client wants to cancel, complains, or raises a refund, dispute or legal issue.
+- **Hosting & care** is quoted by Station for each client, never set by you. If a client wants Station to host and look after their site, tell Station what they need with **Message Station**.
 
-- **Totals:** Clients in book, Their spend per month, Your cut per month and Your rate.
-- **Columns:** Client, Email, Phone, On (their collection, plan or products), They pay per month, Your cut per month, Client since, Standing and Work. Standing shows **Inside 60d** for newer clients and **Established** after that.
-- **Filters:** Answer, Get Found, Follow Up, Core, Pro, Max, À la carte and Inside 60d.
-- **Add client** is for a client you closed yourself. Enter their details, pick their collection or plan if they have one (the picker offers Answer, Get Found, Follow Up, Core, Pro and Max), and tick every product they pay for. To record an upsell, add the same client again with the new product ticked. Email Station too.
-- **Working a client:** click the client's name, or **Open** in the Work column. A panel opens with their live message history with Station, a reply box and **Book a call**. Use **Email** for replies. Station doesn't currently have its own texting number, so check with Station before relying on the Text option.
-- **Hosting & care** is quoted by Station for each client, never set by you. If a client wants Station to host and look after their site, press **Message Station** (the link just above the reply box) and say what they need.
-- **Note** keeps your record of the relationship.
+### Money
 
-### Calendar
+Your money, from Station's payment records, which decide what you're paid.
 
-Book calls here: an intro or support call for yourself, or a call for one of your clients or leads.
+- **Earned** is what's ready for your next payout. Its note says where it stands: ready, waiting on your setup steps, or under the $50 minimum (smaller amounts roll forward). **On hold** is money Station is holding: a new client's first payment can be held up to 30 days after it clears. **Paid to date** is what Station has paid you. **Earned so far**, on Home and at the top of every screen, is Earned and On hold added together.
+- **Two setup steps** come before Station can pay you, and Money shows how many are left.
+- **1. Your tax form:** **Upload my tax form** takes an IRS Form W-9 as a PDF, JPG or PNG under 5 MB. It then reads "Uploaded. Station is checking it," and **✓ Received** once Station has it. Outside the U.S.? Email Station before you start.
+- **2. Your payout account:** **Set up payouts with Stripe** opens your own Stripe setup, where you type your bank details on Stripe's site; Station never sees them. If you stop partway, the button reads **Finish setting up payouts**. While Stripe checks your details it says so, and anything Stripe still needs is listed. Once it's done, the step shows **✓ Ready**.
+- **Your clients** lists your commission lines: the client, what they're on, what they paid, what you earn, and **Where it stands**. **Wins Station is checking** lists the businesses Station sent you that you marked Won and Station hasn't confirmed yet.
+- Below that: an example with two sample clients (not your money), the steps from a yes to your first payout, what one paying client is worth, and **How you get paid**, the main points of your agreement.
 
-1. Choose **Who is this call for?** A lead needs an email or phone first.
-2. Choose **Which call?** "(yours)" marks your own calendar. If none is assigned to you, you'll see Station's shared calendars; ask Station for your own.
-3. Pick a date, press **Find times**, and choose a slot. Bookings show on the month grid.
-
-The client or lead gets a confirmation email with a video-call link. You get the details by email (and Discord, if on). A booking can take a few minutes to show everywhere.
-
-### Products & scripts
-
-Each product card shows its price, a plain description, **Why they buy it**, a setup list, and **Show call & email script** (a phone script and an email you can copy). If a price here ever differs from station.solutions, quote the site and tell Station. The setup list describes what happens after a sale and what the client will be asked for; Station does that work.
-
-### How you get paid
-
-Four parts. Your money, the payout log and your payout account are read live from Stripe:
-
-1. **Get set up.** Your Stripe payout account (**Set up payouts with Stripe**, then **Open my Stripe setup link**, a link that stays yours), your **Tax form** upload, and your Partner Agreement. You type your bank details on Stripe's site; Station never sees or stores them.
-2. **Your money.** **On hold** (with the earliest release date), **Ready for your next payout** (it reads **Waiting on you** when cleared money is waiting on your tax form or Stripe setup), **Paid to date**, and **Next payout**. Station pays once the client's payment clears and at least $50 is ready.
-3. **Payout log.** Every commission line, with what the client paid, your 40%, and where it stands, plus your last 10 payouts from Station and, for payouts from the last 60 days, whether each is on its way to your bank or in it.
-4. **How your pay works.** The short version of sections 7 to 9 of your agreement, a worked example, and any special terms Station agreed with you. Questions go to **Message Station**.
-
-What the statuses in the payout log mean:
+What the statuses under **Where it stands** mean:
 
 - **Waiting for the client's payment to settle:** the card payment hasn't reached Station's account yet.
 - **On hold until** a date: a new client's first payment is held for 30 days after it clears, which is the refund and chargeback window. Renewals aren't held.
 - **Waiting on you: Stripe setup** or **Waiting on you: tax form:** it's earned, and it's paid once you finish that step.
 - **Ready for your next payout.**
-- **Sent to your Stripe account** with the date: Station has paid it into your Stripe account. Stripe pays your Stripe balance to your bank on your account's payout schedule, and the line moves on when it does. A payout you start yourself from your Stripe dashboard can't be followed here, so those lines stay at this step; your Stripe dashboard shows them. If the log couldn't check with Stripe just now, it says so under the list.
+- **Sent to your Stripe account** with the date: Station has paid it into your Stripe account. Stripe pays your Stripe balance to your bank on your account's payout schedule, and the line moves on when it does. A payout you start yourself from your Stripe dashboard can't be followed here, so those lines stay at this step; your Stripe dashboard shows them.
 - **On its way to your bank** with the date Stripe expects it to arrive: Stripe has started paying it out to your bank.
 - **In your bank** with the date: Stripe has marked the payout to your bank as paid. Some banks show it a day later. If a bank payout fails, the line goes back to **Sent to your Stripe account**, the money waits in your Stripe balance, and your Stripe dashboard shows what to fix (usually your bank details).
-- **Paid to your Stripe account** with the date: an older line. The log follows each payout to your bank for 60 days (your last 10 payouts from Station at most); after that the line keeps the day Station paid it, and your Stripe dashboard lists every payout to your bank.
+- **Paid to your Stripe account** with the date: an older line. Station follows each payout to your bank for 60 days (its last 10 payouts to you at most); after that the line keeps the day Station paid it, and your Stripe dashboard lists every payout to your bank.
 - **Reversed:** the client's payment was refunded or disputed.
 
-### Support
+### Help
 
-This guide, searchable, plus **Ask Station**: type any question (how to answer a client, what a product does, how you get paid) and get an answer drawn from this guide and the live product list. Ready-to-send replies have a **Copy** button. Ask Station has a daily limit of 40 questions, and the Station team reads the questions so the guide keeps getting better. If an answer doesn't fit your situation, email main@station.solutions.
+- **Message Station** is at the top (see below).
+- Then: who Station is, a **Bigger text** switch, **The rules, in one breath**, **How a call works** (with **Show me the tour again** and **What the buttons mean**), your 30-second pitch, **See who buys**, and **Retake the check**.
+- **Your account** shows the name and partner code you're signed in with, and **Sign out**. If some of your saves haven't reached Station yet, Sign out warns you first, because signing out deletes them from that browser.
+
+### Message Station
+
+Message Station is at the top of the Help tab. It goes to the Station team, which is people.
+
+- Type your message and press **Send to Station**. It reaches the team by email.
+- Station's replies show in the same thread on Help.
+- Use it for anything about your account, your leads, your pay or a client, and to pass on a client's question or problem the same business day. If something can't wait, email main@station.solutions.
+- Don't send tax forms or bank details here.
+
+### Team (Partner Leads)
+
+If Station has made you a Partner Lead, you also see a **Team** tab. Station assigns the partners on your team.
+
+- The top shows your team's calls today and this week, conversations this week, and wins. Each partner shows their training level, their numbers, and flags such as **Quiet**, **Asked for more** and **Won waiting for Station**.
+- Open a partner to see their list (read-only), record their training level (Not started, Ready, Working, Closer or Coach) and the steps they've done, and send coaching notes. They see your two latest notes on their Home.
+- There's no money on the Team tab.
 
 ## What we sell
 
@@ -349,7 +350,7 @@ Collections and plans have no setup fee. Each one includes a free Station-built 
 - **Pro, $2,197 a month:** every product at its busy tier (Greet 750 chats, Lineback 5,000 texts, Frontdesk 1,200 minutes, Slate 2,500, Pursuit 6,000 texts and 40,000 emails). Station writes and runs the social posts (12 a month plus ads) and the email campaigns (4 a month). It also includes a free Station-built website. It's worth $3,072 a month separately.
 - **Max, $2,797 a month:** every product at its top tier (Greet 1,750 chats, Frontdesk 2,500 minutes), with social and email done for the client, priority support and a quarterly review call, plus a custom-designed website. It's worth $3,472 a month before the website. Max was called Custom before 2026-10-04. The word Custom now only means a quoted custom website.
 
-If a client outgrows one product, they upgrade just that product for the difference. An **extra location pack** (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Ask Station before offering a yearly plan.
+If a client outgrows one product, they upgrade just that product for the difference. An **extra location pack** (Google profile, reviews and a missed-call text-back line for one more location) is $397 a month. Check with Station before offering a yearly plan.
 
 ### The free website
 
@@ -361,7 +362,7 @@ If they cancel, they keep their domain, words and photos. The site comes off Sta
 
 ### The first reply
 
-Reply to new leads and client messages as soon as you reasonably can. Your agreement expects client replies within two business days, and a warm lead deserves faster.
+Reply to new leads and client messages as soon as you reasonably can; a warm lead deserves a fast answer. When a client's message is a question or a problem, tell them Station will handle it and pass it to Station the same business day.
 
 A good first reply thanks them, asks one or two questions and offers a next step:
 
@@ -381,13 +382,13 @@ Pick two or three:
 
 Match their answer to one product first. A client who sees one product working adds more later.
 
-### Booking a call through the portal
+### Booking a call
 
-Put the business on your Leads sheet with an email or phone, then use the Calendar tab (or **Book a call** in a client's workspace), and add a note saying what the call is about. Prospects can also book Station's free 15-minute intro call at station.solutions/book/, or get a free audit at station.solutions/audit/.
+Put the business on your list in Calls (add it yourself if Station didn't send it). Once you've talked and they're Interested or want a call back, press **Book a call** on their card, pick a time on your own booking calendar, and add a note saying what the call is about. Station emails you the details, and you call them from your own phone at that time. Until Station has set up your booking calendar, set a call-back time instead. Prospects can also book Station's free 15-minute intro call at station.solutions/book/, or get a free audit at station.solutions/audit/.
 
 ### Websites, demos and mock-ups
 
-The owner fills in station.solutions/custom/, and Station builds a free demo by hand within 2 to 3 business days. You can also press **Request website** on their lead row; a person at Station picks it up, with no published timeline, so don't promise a date. Send a demo only to someone who asked for it or agreed to receive it. You can share the portfolio at station.solutions/portfolio/, but don't call any site in it a client or reference unless Station says so. Radar's page has a sample audit report.
+You never build a website; you request one from Station. Send the owner your link from the Custom website cheat sheet (station.solutions/custom/?ref=yourcode), so the demo is credited to you, and mark the call **Interested**. The owner answers the questions there, and Station builds a free demo by hand within 2 to 3 business days and quotes the project. Mark it **Won** only when Station tells you they've said yes. Send a demo only to someone who asked for it or agreed to receive it. You can share the portfolio at station.solutions/portfolio/, but don't call any site in it a client or reference unless Station says so. Radar's page has a sample audit report.
 
 ### Follow-up cadence
 
@@ -499,9 +500,9 @@ Then email Station. **Don't say:** "yes, we can," or give a price or timeline.
 
 **When:** they want a person, or someone at Station.
 
-> Of course. I'm happy to get on a call myself, or I can book you a call with Station. Would [time options] work? You can also email Station at main@station.solutions.
+> Of course. I'm happy to get on a call myself. Would [time options] work? If you'd rather talk to Station directly, email main@station.solutions.
 
-Book it in the Calendar tab. **Don't** give out a phone number for Station, because there isn't one.
+Book your call with **Book a call** on their card in Calls (until your booking calendar is set up, set a call-back time). A prospect can also book Station's free 15-minute intro call at station.solutions/book/; for a client, pass it on with **Message Station**. **Don't** give out a phone number for Station, because there isn't one.
 
 ### "I was charged" / billing question
 
@@ -577,16 +578,16 @@ Tell Station straight away. **Don't** pressure them or promise a refund or credi
 - **Billing:** main@station.solutions. Station aims to reply within one business day.
 - **A Station-built site the client now runs:** station.solutions/site-help/.
 - **Cancelling website hosting:** station.solutions/cancel-hosting/. The site stays live to the end of the paid period and comes down within 72 hours after that. Station then sends the client their domain and site files.
-- **Adding a product:** from My Services in their account (it previews the charge first), or from the product page. Record the upsell in your book and tell Station.
+- **Adding a product:** from My Services in their account (it previews the charge first), or from the product page. Tell Station about the upsell with **Message Station**.
 
 ### What you do after the sale
 
-1. Add the client with **Add client**, including their collection or plan and every product, and email Station so they can be accepted into your book.
-2. Email Station what you learned: hours, services, concerns, the decision maker, and anything they expect you promised.
+1. Mark them **Won** in Calls and send them your link, so the sale is credited to you. Tell Station what they're buying with **Message Station**, so the order can be accepted into your book.
+2. Tell Station what you learned (Message Station or email): hours, services, concerns, the decision maker, and anything they expect you promised.
 3. Make sure they book their onboarding call and know what to have ready.
-4. Stay their first contact for questions and upsells, and reply within two business days.
-5. Pass technical problems, billing, cancellations, complaints and refund requests to Station quickly.
-6. Keep notes in the portal, and check in after the first few weeks.
+4. Once they're paying, talk with them on the Clients tab, including about adding products at published prices.
+5. If they bring you a question or a problem (technical, their account, billing or a change), tell them Station will handle it and pass it to Station the same business day; don't try to fix it yourself. Tell Station promptly if they want to cancel, complain, or raise a refund, dispute or legal issue.
+6. Keep your notes and lead status current in Partner World, and check in after the first few weeks.
 
 Never log into a client's account. Never ask for or handle their passwords, bank details, card numbers or ID.
 
@@ -625,15 +626,16 @@ Whenever you recommend Station publicly (a post, review, comment or video), say 
 - **No spam:** no unsolicited bulk email, texts or calls.
 - **Email** must follow CAN-SPAM: an honest subject and sender, and an easy opt-out. Write one-to-one, and never send a mass email.
 - **Texts** go only to people who've agreed to hear from you, one person at a time. Never mass-text. Honor STOP, and any request to stop, immediately.
-- **Calls** must follow the TCPA and state telemarketing rules: dial by hand (no autodialers or recordings), and respect do-not-call requests, do-not-call lists and calling hours. Call only between **9 am and 8 pm, Monday to Saturday, in the business's own time zone**. The portal's call panel shows their local time and switches the call button off outside those hours. When someone asks not to be called again, mark them **Do not call**. Your plain-English summary says no calls or texts to people who haven't agreed to them, so if you're unsure whether a call is allowed, ask Station first.
+- **Calls** must follow the TCPA and state telemarketing rules: dial by hand (no autodialers or recordings), and respect do-not-call requests, do-not-call lists and calling hours. Call only between **9 am and 8 pm, Monday to Saturday, in the business's own time zone**. Each card in Calls shows their local time and switches the call button off outside those hours, and a call-back can only be set inside them. When someone asks not to be called again, mark them **Do not call**. Your plain-English summary says no calls or texts to people who haven't agreed to them, so if you're unsure whether a call is allowed, check with Station first.
 - **Client texting** through Station's products starts only after carrier registration (A2P 10DLC) is approved. It goes only to the client's own customers who gave that business their number. A past purchase alone isn't consent to text, which is why Revive is email-first.
+- **Email to a lead:** once Partner World's email is switched on for you, send every email to a lead about Station with **Write them an email** on their card, so it goes from your Station sending address and replies reach Station. Until then you may email from your own address, as long as you say you're a Station partner and follow these rules.
 - Station doesn't currently have its own texting number.
 
 ### Privacy and client data
 
 - Use client and lead details only for your Station work.
 - Never sell, share or bulk-export them, never copy them into a personal CRM, spreadsheet or mailing list, and never use them for another business.
-- Keep your portal login private, and use reasonable security on your devices.
+- Keep your Partner World login private, and use reasonable security on your devices.
 - If you think client or lead data has leaked, tell Station within 72 hours.
 - When the agreement ends, stop using the data, delete any copies, and confirm in writing if asked.
 - Don't collect a client's customer list yourself. The client gives it to Station.
@@ -663,9 +665,9 @@ Station can suspend or remove a partner, and forfeit unpaid commission for cause
 
 ### How to hand off
 
-Email **main@station.solutions**. It's Station's only contact, and there's no phone number. You can also book a support call in the Calendar tab.
+Use **Message Station** on the Help tab, or email **main@station.solutions**. Those are Station's only contacts, and there's no phone number.
 
-Use the subject line **Partner [yourcode] — [business name] — [topic]**. In the email, include:
+If you email, use the subject line **Partner [yourcode] — [business name] — [topic]**. In your message, include:
 
 - Your name and partner code.
 - The business name, and the contact person's name and email.
@@ -674,13 +676,13 @@ Use the subject line **Partner [yourcode] — [business name] — [topic]**. In 
 - How urgent it is: broken today, this week, or whenever.
 - What you need back from Station: an answer, a quote, a fix or a call.
 
-Tell the client you've passed it on, and log it in their notes in the portal.
+Tell the client Station will handle it and that you've passed it on.
 
 ## FAQ
 
 ### Q: How much do I earn?
 
-40% of the recurring subscription fees each client in your book actually pays and that clear. You earn it every month they stay a paying client, while your agreement is in effect.
+40% of what each client in your book pays Station: for a website, 40% of the setup fee, once; for everything else, 40% of every payment while they stay. Paid once the client's payment clears, while your agreement is in effect. Hosting & care earns nothing.
 
 ### Q: Do I earn on setup fees or website builds?
 
@@ -700,11 +702,11 @@ Commission starts only after any free trial ends and the first payment clears, a
 
 ### Q: Do I need a W-9?
 
-Yes, if you're a U.S. person. Non-U.S. individuals need a W-8BEN. Nothing is paid until it's on file. Upload it in How you get paid, under Get set up, and don't email it.
+Yes, if you're a U.S. person. Non-U.S. individuals need a W-8BEN. Nothing is paid until it's on file. Upload it on the Money tab with **Upload my tax form**, and don't email it.
 
 ### Q: How do I receive the money?
 
-Through Stripe. In How you get paid, press **Set up payouts with Stripe** to open your own Stripe Express setup, where you type your bank details on Stripe's site. The link stays yours: **Open my Stripe setup link** takes you back any time.
+Through Stripe. On the Money tab, press **Set up payouts with Stripe** to open your own Stripe setup, where you type your bank details on Stripe's site. If you stop partway, **Finish setting up payouts** takes you back.
 
 ### Q: What if a client gets a refund?
 
@@ -720,7 +722,7 @@ No. It's paid in equal monthly installments across the prepaid months.
 
 ### Q: How do I get a client into my book?
 
-Close them and have Station accept the order, or be assigned them by Station. Use **Add client** and email Station.
+Close them and have Station accept the order, or be assigned them by Station. When you close one, mark them **Won** in Calls, send them your link, and tell Station with **Message Station**.
 
 ### Q: Can I refer my own business or a relative's?
 
@@ -728,7 +730,7 @@ No. Businesses you, your family or your company's owners control aren't eligible
 
 ### Q: How long does my link remember someone?
 
-30 days, in the browser they used. Add ?ref=yourcode to any station.solutions page, and log your leads in the portal as backup.
+30 days, in the browser they used. Add ?ref=yourcode to any station.solutions page, and log your calls in Partner World as backup.
 
 ### Q: Is there a free trial?
 
@@ -763,7 +765,7 @@ About 2 business days for carrier registration, controlled by the carriers. Call
 
 ### Q: Can a client keep their phone number?
 
-Yes. The product pages say their line forwards to Station and isn't ported. For anything more complicated, ask Station.
+Yes. The product pages say their line forwards to Station and isn't ported. For anything more complicated, check with Station.
 
 ### Q: Can I text leads?
 
@@ -771,27 +773,27 @@ Only people who've agreed to hear from you, one at a time. Stop if they ask, and
 
 ### Q: Can I call the businesses Station sends me?
 
-Dial by hand, call only 9 am to 8 pm, Monday to Saturday, in their time zone, follow do-not-call rules, and stop if they ask. Don't text or email them unless they agree. If you're unsure, ask Station first.
+Dial by hand, call only 9 am to 8 pm, Monday to Saturday, in their time zone, follow do-not-call rules, and stop if they ask. Don't text or email them unless they agree. If you're unsure, check with Station first.
 
 ### Q: Can I email a demo to a business?
 
 Only to someone who asked to see it or agreed to receive it.
 
-### Q: Should I use Text when replying to a client in the portal?
+### Q: Can I text a client from Partner World?
 
-Use Email. Station doesn't currently have its own texting number.
+No. Replies on the Clients tab go by email from Station. Station doesn't currently have its own texting number.
 
-### Q: I forgot my portal password.
+### Q: I forgot my Partner World password.
 
-Email main@station.solutions.
+Email main@station.solutions. Once Station has reset it, use **First time here? Activate your invite** on the sign-in page to set a new one.
 
 ### Q: Can I export my leads or clients?
 
-Ask Station first. Your agreement bars copying lead or client data into personal spreadsheets or lists.
+No. Partner World has no export, and your agreement bars copying lead or client data into personal spreadsheets or lists.
 
-### Q: What do "Inside 60d" and "Established" mean?
+### Q: What does "Yours till" on a card mean?
 
-They're the portal's label for how new a client is. The label doesn't change your 40%.
+Every business Station sends you is yours for 14 days, and each call you log on it gives you another 14 days from that call. If 14 days go by without a call logged, it goes back to Station's shared list so another partner can call it. Businesses you added yourself say **Your lead** and stay until you remove them.
 
 ### Q: A client wants a change. Do I make it?
 
@@ -811,15 +813,15 @@ There isn't one. The only contact is main@station.solutions.
 
 ### Q: Why is the Call button grey?
 
-It's outside calling hours where the business is: before 9 am, after 8 pm, or on a Sunday in their time zone. The panel tells you when you can call.
+It's outside calling hours where the business is: before 9 am, after 8 pm, or on a Sunday in their time zone. The button says when calls open. It's also off once you've tried them today (**✓ Tried today**: they're back tomorrow), when there's no phone number, and when Partner World doesn't know their state.
 
 ### Q: How do I get more leads from Station?
 
-Call every lead Station sent you, then press **Ask Station for more leads** on the Leads tab. Station decides how many it sends at a time and from which area.
+When every business Station sent you has an outcome, press **Ask for my next batch** at the end of Calls or on Home (before your first batch, it reads **Ask for my first businesses**). Businesses you added yourself never hold this up. Station reviews each request and decides how many it sends at a time and from which area.
 
 ### Q: How do I talk to a person at Station?
 
-Use **Message Station** on your Dashboard. Ask Station on the Support tab answers from this guide; Message Station goes to the team.
+Use **Message Station** on the Help tab. It goes to the Station team, and their replies show in the same thread. You can also email main@station.solutions.
 
 ### Q: Is there a quota?
 
@@ -827,4 +829,4 @@ No. There's no minimum, and Station doesn't promise any number of leads.
 
 ### Q: How do I leave the program?
 
-Email Station. You're paid on payments that cleared up to your end date, and nothing after it. The full agreement is linked from the How you get paid tab.
+Email Station. You're paid on payments that cleared up to your end date, and nothing after it. **How you get paid** on the Money tab lists the main points of your agreement; your signed agreement has the full terms.
