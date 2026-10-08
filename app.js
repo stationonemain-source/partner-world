@@ -2155,8 +2155,11 @@
   var CONV = null, CONV_ERR = '';
   function convWhen(at) { var t = Date.parse(at || ''); return t ? dayLabel(ymd(new Date(t))) + ' at ' + clock(t) : ''; }
   function clientRules() {
-    return '<p class="small fine">You can answer your clients’ questions and talk to them about adding Station products, at published prices only. ' +
-      'Billing, refunds, cancellations, anything technical and anything legal: tell the client Station will handle it, and pass it to Station the same day with <a href="#help">Message Station</a>. Station sees every message here.</p>';
+    // matches the Partner Agreement s4.2 (2026-10-07): talk with your clients, including about adding products at published prices;
+    // any support question or problem goes to Station the same business day and the partner does not try to fix it
+    return '<p class="small fine">Talk with your clients here, including about adding Station products at published prices. ' +
+      'If a client brings you a question or a problem (technical, their account, billing or a change), tell them Station will handle it and pass it to Station the same business day with <a href="#help">Message Station</a>; don’t try to fix it yourself. ' +
+      'Tell Station promptly if a client wants to cancel, complains, or raises a refund, dispute or legal issue. Station sees every message here.</p>';
   }
   VIEWS.clients = function (id) {
     chrome(true, 'clients');
