@@ -325,7 +325,7 @@
   function send(action, body) {
     var payload = Object.assign({ action: action }, body || {});
     if (!PUBLIC_ACTIONS[action]) { if (!TOKEN) return Promise.resolve({ ok: false, signedOut: true }); payload.token = TOKEN; } // signed out while it waited in the lane: keep it
-    var ctl = window.AbortController ? new AbortController() : null, lim = action === 'taxform_submit' ? 90000 : /^(cc_call|cc_more|note_add|note_del|payout_link)$/.test(action) ? 30000 : 20000;
+    var ctl = window.AbortController ? new AbortController() : null, lim = action === 'taxform_submit' || action === 'ask' ? 90000 : /^(cc_call|cc_more|note_add|note_del|payout_link)$/.test(action) ? 30000 : 20000;
     var tm = ctl ? setTimeout(function () { ctl.abort(); }, lim) : 0;
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), cache: 'no-store', signal: ctl ? ctl.signal : undefined })
       .then(function (r) { clearTimeout(tm); if (!r.ok) { var er = new Error('HTTP ' + r.status); er.http = r.status; throw er; } return r.json(); }, function (e) { clearTimeout(tm); throw e; })
@@ -578,7 +578,7 @@
     save();
     SIGNIN_MSG = msg || ''; signMode = 'login';
     if (!sheet.hidden) hideSheet();
-    hideUndo(); TEAM = null; applyTeamNav(); route();
+    hideUndo(); TEAM = null; resetMissing(); applyTeamNav(); route();
   }
   function showLoading() {
     chrome(false);
@@ -603,6 +603,7 @@
     }).then(function () {
       BOOTING = false; BOOTED = true; LOADED_AT = Date.now(); save(); applyTeamNav(); pump();
       var tz = myTz(); if (tz && ME && ME.tz !== tz) api('tz_set', { tz: tz }).then(function (d) { if (d && d.ok && ME) ME.tz = d.tz; }, function () {}); // Station keeps the partner's time zone (reminders, the booking calendar)
+      loadNews(true).then(function () { redrawNews(); var cl = document.getElementById('claimList'); if (cl) cl.innerHTML = claimsHtml(); }); // What's new (engine v4.65): drawn in place, never over a partner mid-task
     },
       function (e) { BOOTING = false; if (e === 'out') return; BOOT_ERR = typeof e === 'string' ? e : e && e.http ? 'Station’s system had a problem (error ' + e.http + '). It’s not your connection. Try again in a minute.' : 'No connection to Station. Check your internet and try again.'; });
   }
@@ -644,7 +645,7 @@
       (mode === 'request' ? '' : '<div class="gate-ctas"><button class="btn btn-dark btn-big" type="button" data-join>Become a partner</button><a class="gate-peek" href="?preview">See the app first</a></div>') +
       gateEarn('ge-pitch') +
       '<ol class="gate-steps">' +
-      '<li><b>1</b><span><strong>Request an account.</strong> It takes about a minute.</span></li>' +
+      '<li><b>1</b><span><strong>Ask for an account here.</strong> There’s no application form: your name, email and a password, about a minute.</span></li>' +
       '<li><b>2</b><span><strong>Station approves you</strong> and sends businesses to your list.</span></li>' +
       '<li><b>3</b><span><strong>Call from the app.</strong> The script is on screen for every call.</span></li>' +
       '<li><b>4</b><span><strong>Get paid</strong> once your client’s payment clears.</span></li></ol>' +
@@ -676,7 +677,7 @@
     gateMount('request',
       '<p class="lbl gate-eyebrow">New partners</p>' +
       '<h1>Request a partner account</h1>' +
-      '<p class="intro">About a minute. Station reviews every request by hand and emails you when you’re approved.</p>' +
+      '<p class="intro">There’s no application form: you ask for an account here, and Station approves it. Station looks at every request by hand and emails you when you’re approved.</p>' +
       gateEarn('ge-card') +
       '<form id="reqForm" novalidate>' +
       '<label class="field" for="r-name">Your full name<input class="text" id="r-name" autocomplete="name" maxlength="80"></label>' +
@@ -989,13 +990,14 @@
       '<span class="row">' + moneyLine(t) + '</span>' +
       setupLine() +
       '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
-    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml + myLeadCard() +
-      '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' +
+    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml + newsSection() + myLeadCard() +
+      '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' + refCard() +
       '<div class="home-more">' +
       '<a class="hm all-products" href="#products"><b>See all ' + PW.boxes.length + ' products</b><span>Prices, cheat sheets and what you earn on each.</span></a>' +
       '<button class="hm add-own" type="button" data-addlead><b>Found a business yourself?</b><span>Add it to your list and call it from here.</span></button>' +
       '<a class="hm buyers-link" href="#buyers"><b>Who buys? Ten real buyers</b><span>What each is feeling, and the words that work.</span></a></div></div>', 'Home');
     var ah = document.getElementById('askHome'); if (ah) ah.addEventListener('click', function () { askForMore(ah); });
+    if (!DEMO && BOOTED && !NEWS_LOADING) loadNews().then(redrawNews); // fresh within a minute: no call
     tick = setInterval(function () {
       if (!/^#?(home)?$/.test(location.hash)) return;
       var n2 = localTime(where), el = document.getElementById('callNote'); if (!el) return;
@@ -1936,19 +1938,28 @@
       var b = e.target.closest && e.target.closest('[data-slot]'); if (!b) return;
       box.querySelectorAll('[data-slot]').forEach(function (x) { x.classList.toggle('sel', x === b); x.setAttribute('aria-pressed', String(x === b)); });
       var at = b.getAttribute('data-slot');
-      conf.innerHTML = '<div class="bk-ok"><p>Book <b>' + esc(l.name) + '</b> for <b>' + esc(whenLong(Date.parse(at), tz)) + '</b>?</p><button class="btn btn-dark btn-big btn-block" type="button" data-bk-go>Book it</button></div>';
+      var known = l.email || (S.log[l.id] && S.log[l.id].email) || ''; // Station's copy first: it is the address the engine confirms to // engine v4.65 confirms the booking to the business from Station's cold lane
+      conf.innerHTML = '<div class="bk-ok"><p>Book <b>' + esc(l.name) + '</b> for <b>' + esc(whenLong(Date.parse(at), tz)) + '</b>?</p>' +
+        (known ? '<p class="small">Station emails ' + esc(known) + ' a confirmation with the time, in their time zone.</p>'
+          : '<label class="field slim" for="bk-email">Their email (optional)<span class="hint">Station emails them a confirmation with the time. Only an address they gave you.</span><input class="text" type="email" id="bk-email" maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false"></label>') +
+        '<button class="btn btn-dark btn-big btn-block" type="button" data-bk-go>Book it</button></div>';
       var go = conf.querySelector('[data-bk-go]'); go.focus({ preventScroll: true }); feedShowSheet(conf);
+      var bkIn0 = document.getElementById('bk-email'); if (bkIn0) bkIn0.addEventListener('input', function () { err.textContent = ''; bkIn0.removeAttribute('aria-invalid'); });
       go.addEventListener('click', function () {
         err.textContent = '';
+        var bkIn = document.getElementById('bk-email'), bkEmail = known || (bkIn ? bkIn.value.trim().toLowerCase() : '');
+        if (bkIn && bkEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bkEmail)) { err.textContent = 'That email doesn’t look right. Fix it, or leave it empty.'; bkIn.setAttribute('aria-invalid', 'true'); bkIn.focus(); return; }
         if (DEMO) { l.booked = { start: at }; afterSheet(function () { toast('Preview: nothing was booked.', 3000); if (then) then(); else { var c0 = cardEl(l.id); if (c0) renderCard(c0); } }); return; }
         go.disabled = true; go.textContent = 'Booking…';
-        api('lead_book', { id: l.id, start: at }).then(function (d) {
+        api('lead_book', { id: l.id, start: at, email: bkEmail || undefined }).then(function (d) {
           go.disabled = false; go.textContent = 'Book it';
           if (d.signedOut) return;
           if (!d.ok) { err.textContent = sentence(d.error, 'That time couldn’t be booked. Pick another.'); return; }
           var r = rowOf(l.id); if (r) { r.booked = d.booked; applyLeads(LL); }
           afterSheet(function () {
-            toast('Booked: ' + whenLong(Date.parse(at), tz) + '. Station emailed you the details.', 4500);
+            var lm = d.lead_mail, why = { no_email: 'There’s no email for them, so tell them the time yourself.', opted_out: 'They opted out of Station’s email, so no confirmation went: tell them the time yourself.',
+              dnc: 'They asked not to be contacted, so no confirmation went.', capped: 'Station’s limit for confirmation emails was reached: tell them the time yourself.' };
+            toast('Booked: ' + whenLong(Date.parse(at), tz) + '. Station emails you the details.' + (!lm ? '' : lm.sent ? ' Station emailed ' + lm.to + ' a confirmation.' : ' ' + (why[lm.why] || 'The confirmation to them didn’t go: tell them the time yourself.')), 6500);
             if (then) then(); else { var c = cardEl(l.id); if (c && !c.contains(document.activeElement)) renderCard(c); }
           });
         }, function () { go.disabled = false; go.textContent = 'Book it'; err.textContent = 'No answer from Station, so it’s not known whether that booked. Close this and check the card before you try again.'; resync(true); });
@@ -2114,16 +2125,23 @@
     return out;
   }
   function setupLive() {
-    if (!MONEY) return '';
-    var tf = (ME && ME.taxform) || {}, tax = !!MONEY.tax_received, taxWait = !tax && !!(tf.pending_review || tf.uploaded_at || tf.uploadedAt);
-    var st = MONEY.account_state || 'none', steps = (tax ? 0 : 1) + (st === 'ready' ? 0 : 1);
-    var taxRow = tax ? '<span class="done-mark">✓ Received</span>'
-      : '<span class="tax-pick"><button class="btn" type="button" data-act="tax">' + (taxWait ? 'Upload a different one' : 'Upload my tax form') + '</button><input type="file" id="taxFile" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" hidden></span>';
-    var needs = Array.isArray(MONEY.account_needs) && MONEY.account_needs.length && st !== 'ready' ? ' Stripe still needs: ' + MONEY.account_needs.map(function (x) { return esc(String(x).replace(/[._]/g, ' ')); }).join(', ') + '.' : '';
+    // the tax step reads your account (me) when Stripe can't be checked, so the upload is never hidden behind a Stripe outage
+    var tf = (ME && ME.taxform) || {}, tax = MONEY ? !!MONEY.tax_received : !!tf.received, taxWait = !tax && !!(tf.pending_review || tf.uploaded_at || tf.uploadedAt);
+    var st = MONEY ? MONEY.account_state || 'none' : 'unknown', steps = (tax ? 0 : 1) + (st === 'ready' ? 0 : 1);
+    var tfType = /8BEN/i.test(String(tf.type || '')) ? 'W-8BEN' : /W-?9/i.test(String(tf.type || '')) ? 'W-9' : '';
+    var taxRow = tax ? '<span class="done-mark">✓ Received' + (tfType ? ' (' + tfType + ')' : '') + '</span>'
+      : '<span class="tax-pick"><fieldset class="tax-forms"><legend>Which form are you uploading?</legend>' +
+        '<label class="check"><input type="radio" name="taxType" value="W-9"' + (tfType !== 'W-8BEN' ? ' checked' : '') + '><span>W-9 <span class="small">(U.S. person)</span></span></label>' +
+        '<label class="check"><input type="radio" name="taxType" value="W-8BEN"' + (tfType === 'W-8BEN' ? ' checked' : '') + '><span>W-8BEN <span class="small">(outside the U.S.)</span></span></label></fieldset>' +
+        '<button class="btn" type="button" data-act="tax">' + (taxWait ? 'Upload a different one' : 'Upload my tax form') + '</button><input type="file" id="taxFile" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" hidden></span>';
+    var needs = MONEY && Array.isArray(MONEY.account_needs) && MONEY.account_needs.length && st !== 'ready' ? ' Stripe still needs: ' + MONEY.account_needs.map(function (x) { return esc(String(x).replace(/[._]/g, ' ')); }).join(', ') + '.' : '';
     var payRow = st === 'ready' ? '<span class="done-mark">✓ Ready</span>' : st === 'review' ? '<span class="small">Stripe is checking your details.</span>'
+      : st === 'unknown' ? '<span class="small">Stripe couldn’t be checked just now, so this step’s state isn’t known.</span>'
       : '<button class="btn" type="button" data-act="stripe">' + (st === 'setup' ? 'Finish setting up payouts' : 'Set up payouts with Stripe') + '</button>';
-    return '<div class="setup"><h2 class="setup-h">' + (steps ? steps + (steps === 1 ? ' step' : ' steps') + ' before Station can pay you' : 'You’re set up to be paid') + '</h2>' +
-      '<div class="setup-row"><span><b>1. Your tax form.</b> ' + (tax ? 'Station has your tax form.' : taxWait ? 'Uploaded. Station is checking it.' : 'IRS Form W-9. Upload it here instead of emailing it: it carries your Social Security number. PDF, JPG or PNG, under 5 MB. Outside the U.S.? Email Station before you start.') +
+    return '<div class="setup"><h2 class="setup-h">' + (st === 'unknown' ? 'Before Station can pay you' : steps ? steps + (steps === 1 ? ' step' : ' steps') + ' before Station can pay you' : 'You’re set up to be paid') + '</h2>' +
+      '<div class="setup-row"><span><b>1. Your tax form.</b> ' + (tax ? 'Station has your tax form.' : (taxWait ? 'Uploaded' + (tfType ? ' (' + tfType + ')' : '') + '. Station is checking it. ' : '') +
+        'U.S. persons: IRS Form W-9. Outside the U.S.: Form W-8BEN. Get the blank form from the IRS: <a href="' + IRS_W9 + '" target="_blank" rel="noopener">W-9 (PDF)</a> · <a href="' + IRS_W8 + '" target="_blank" rel="noopener">W-8BEN (PDF)</a>. ' +
+        'Fill it in, then upload it here as a PDF, JPG or PNG under 5 MB, never by email: it carries your Social Security or tax number. Outside the U.S.? After you upload, Message Station: payouts are set up for U.S. bank accounts.') +
       ' Station issues a 1099 where the law requires; your taxes are your own.</span>' + taxRow + '</div>' +
       '<div class="setup-row"><span><b>2. Your payout account.</b> Station pays you through Stripe. You type your bank details on Stripe’s own site; Station never sees them.' + needs + '</span>' + payRow + '</div></div>';
   }
@@ -2163,8 +2181,9 @@
       var rd = new FileReader();
       rd.onload = function () {
         var data = String(rd.result || ''), comma = data.indexOf(',');
-        oneWrite('taxform_submit', { type: 'W-9', filename: f.name, mimetype: type, filedata: comma >= 0 ? data.slice(comma + 1) : data }, tb, 'Uploading…', function () {
-          if (ME) { ME.taxform = Object.assign({}, ME.taxform || {}, { pending_review: true }); }
+        var pickT = main.querySelector('input[name="taxType"]:checked'), formType = pickT && pickT.value === 'W-8BEN' ? 'W-8BEN' : 'W-9'; // engine v4.65 keeps which form it is
+        oneWrite('taxform_submit', { type: formType, filename: f.name, mimetype: type, filedata: comma >= 0 ? data.slice(comma + 1) : data }, tb, 'Uploading…', function () {
+          if (ME) { ME.taxform = Object.assign({}, ME.taxform || {}, { pending_review: true, type: formType }); }
           VIEWS.money(); toast('Uploaded. Station will check it.', 4000);
         });
       };
@@ -2191,12 +2210,15 @@
   VIEWS.clients = function (id) {
     chrome(true, 'clients');
     if (DEMO) {
-      mount('<div class="wrap clients"><h1>Your clients</h1><p class="sub">Once you’re live, every client in your book shows here. Open one to read the conversation and reply by email from Station.</p>' +
-        '<div class="client-list"><div class="client-row"><b>Example: Lone Star Roofing</b><span class="small">“Thanks! Can we add the review requests too?” · yesterday</span></div></div>' + clientRules() + '</div>', 'Clients');
+      mount('<div class="wrap clients"><h1>Your clients</h1><p class="sub">Once you’re live, every client in your book shows here. Open one to read the conversation, reply by email from Station, keep notes and book Station support for them.</p>' +
+        '<div class="cl-actions"><button class="btn btn-dark" type="button" data-addclient>Add a client</button><span class="small">Closed a business yourself? It joins your book once Station accepts it.</span></div>' +
+        '<div class="client-list"><div class="client-row"><b>Example: Lone Star Roofing</b><span class="small">“Thanks! Can we add the review requests too?” · yesterday</span></div></div>' + claimsHtml() + clientRules() + '</div>', 'Clients');
       return;
     }
     if (id) { clientThread(decodeURIComponent(id)); return; }
-    mount('<div class="wrap clients"><h1>Your clients</h1><p class="sub">Conversations with the clients in your book. Open one to read it and reply.</p><div id="convList"><p class="small">Loading your clients…</p></div>' + clientRules() + '</div>', 'Clients');
+    mount('<div class="wrap clients"><h1>Your clients</h1><p class="sub">Conversations with the clients in your book. Open one to read it, reply, keep notes or book Station support for them.</p>' + '<div class="cl-actions"><button class="btn btn-dark" type="button" data-addclient>Add a client</button><span class="small">Closed a business yourself? It joins your book once Station accepts it.</span></div>' +
+      '<div id="convList"><p class="small">Loading your clients…</p></div><div id="claimList">' + claimsHtml() + '</div>' + clientRules() + '</div>', 'Clients');
+    loadNews().then(function () { var cl = document.getElementById('claimList'); if (cl) cl.innerHTML = claimsHtml(); }); // Station's answers to Add a client
     api('conv_list').then(function (d) {
       if (d.signedOut) return; var box = document.getElementById('convList'); if (!box) return;
       if (d.ok === false) { box.innerHTML = '<p class="empty">' + esc(sentence(d.error, 'Your clients couldn’t load just now.')) + '</p>'; return; }
@@ -2213,7 +2235,7 @@
     mount('<div class="wrap clients"><p><a href="#clients">← All clients</a></p><h1 id="clientH">' + esc(known.name || 'Your client') + '</h1>' +
       '<div class="msg-thread" id="convThread" aria-live="polite"><p class="small">Loading the conversation…</p></div>' +
       '<label class="sr" for="convText">Your reply</label><textarea class="text msg-text" id="convText" rows="4" maxlength="2000" placeholder="Write to your client"></textarea>' +
-      '<div class="msg-go"><button class="btn btn-dark" type="button" id="convSend">Send email</button><span class="small" id="convNote" role="status"></span></div>' + clientRules() + '</div>', known.name || 'Client');
+      '<div class="msg-go"><button class="btn btn-dark" type="button" id="convSend">Send email</button><span class="small" id="convNote" role="status"></span></div><div id="clientExtra"></div>' + clientRules() + '</div>', known.name || 'Client');
     var list = [], cl = null, box = document.getElementById('convThread'), ta = document.getElementById('convText'), btn = document.getElementById('convSend'), note = document.getElementById('convNote');
     function draw() {
       if (!list.length) { box.innerHTML = '<p class="small">No messages yet. Your email goes to ' + esc((cl && cl.email) || 'the client') + ' from Station.</p>'; return; }
@@ -2227,6 +2249,7 @@
       if (d.signedOut) return;
       if (d.ok === false) { box.innerHTML = '<p class="small">' + esc(sentence(d.error, 'This conversation couldn’t load just now.')) + '</p>'; btn.disabled = true; return; }
       cl = d.client || null; if (cl && cl.name) { var h = document.getElementById('clientH'); if (h) h.textContent = cl.name; }
+      if (cl) wireClientExtras(Object.assign({ contactId: contactId, email: known.email || '' }, cl)); // notes, interested in more, Station support (v4.65)
       list = (d.messages || []).slice().sort(function (a, b) { return (Date.parse(a.at || '') || 0) - (Date.parse(b.at || '') || 0); }); draw();
       if (cl && !cl.email) { btn.disabled = true; note.textContent = 'Station has no email for this client yet. Message Station to add one.'; }
     }, function () { box.innerHTML = '<p class="small">No connection to Station. Try again in a moment.</p>'; });
@@ -2257,10 +2280,12 @@
       '<div class="tiles3"><div class="tile hero"><span class="lbl">Earned</span><div class="v num">' + (t.unknown ? '—' : money(t.ready)) + '</div><p>' + earnedNote(t) + '</p></div>' +
       '<div class="tile"><span class="lbl">On hold</span><div class="v num">' + (t.unknown ? '—' : money(t.hold)) + '</div><p>Station may hold a new client’s first payment up to 30 days after it clears (the refund window).</p></div>' +
       '<div class="tile"><span class="lbl">Paid to date</span><div class="v num">' + (t.unknown ? '—' : money(t.paid)) + '</div><p>Paid once $50 or more is ready.</p></div></div>' +
+      stripeNoteHtml() + nextPayoutHtml() +
       (DEMO ? '<div class="setup"><h2 class="setup-h">2 steps before Station can pay you</h2>' +
-      '<div class="setup-row"><span><b>1. Your tax form.</b> U.S. partners: IRS Form W-9 (outside the U.S.: W-8BEN). Upload it here, never by email: it carries your Social Security number. Station issues a 1099 where the law requires; your taxes are your own.</span><button class="btn" type="button" data-demo="tax">Upload my tax form</button></div>' +
+      '<div class="setup-row"><span><b>1. Your tax form.</b> U.S. partners: IRS Form W-9 (outside the U.S.: W-8BEN). Get the blank form from the IRS: <a href="' + IRS_W9 + '" target="_blank" rel="noopener">W-9 (PDF)</a> · <a href="' + IRS_W8 + '" target="_blank" rel="noopener">W-8BEN (PDF)</a>. Upload it here, never by email: it carries your Social Security number. Station issues a 1099 where the law requires; your taxes are your own.</span><button class="btn" type="button" data-demo="tax">Upload my tax form</button></div>' +
       '<div class="setup-row"><span><b>2. Your payout account.</b> Station pays you through Stripe. You type your bank details on Stripe’s own site; Station never sees them.</span><button class="btn" type="button" data-demo="stripe">Set up payouts with Stripe</button></div></div>' : setupLive()) +
       '<h2>Your clients</h2>' + mine +
+      '<h2 id="payH">Payouts sent</h2><div id="payoutsBox">' + payoutsHtml() + '</div>' +
       '<section class="example" aria-labelledby="exH"><h2 id="exH">Example: this page with two paying clients</h2><p class="small">Sample figures to show how it works. Not your money, and not a forecast.</p>' +
       '<div class="ex-sum"><span>Earned <b class="num">' + money(ex.ready) + '</b></span><span>On hold <b class="num">' + money(ex.hold) + '</b></span></div>' +
       '<div class="table-wrap"><table><thead><tr><th scope="col">Client</th><th scope="col">On</th><th scope="col" class="r">They pay</th><th scope="col" class="r">You earn</th><th scope="col">Where it stands</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>' +
@@ -2278,7 +2303,7 @@
       '<div><b>Something looks wrong?</b>Tell Station in writing within 60 days. Station’s payment records decide.</div></div>' +
       '<p class="small fine">The main points of the <a href="https://station.solutions/partners/agreement.html" target="_blank" rel="noopener">Station Partner Agreement</a>. The agreement you signed wins over this page.</p></div>', 'Money');
     main.querySelectorAll('[data-demo]').forEach(function (x) { x.addEventListener('click', function () { toast(x.getAttribute('data-demo') === 'tax' ? 'Signed in, this opens a secure upload.' : 'Signed in, this opens your own Stripe setup.'); }); });
-    if (!DEMO) wireMoneyLive();
+    if (!DEMO) { wireMoneyLive(); loadPayouts(); }
   };
 
   /* ---------- founder view (preview): loaded on demand from admin.js ---------- */
@@ -2466,11 +2491,14 @@
   VIEWS.help = function () {
     chrome(true, 'help');
     mount('<div class="wrap help"><h1>Help</h1>' +
+      '<nav class="jump" aria-label="On this page">' + (DEMO ? '' : '<button class="chip" type="button" data-jump="msgH">Message Station</button>') +
+      '<button class="chip" type="button" data-jump="askH">Ask Station</button><button class="chip" type="button" data-jump="callStH">Talk with Station</button><button class="chip" type="button" data-jump="guideH">The partner guide</button></nav>' +
       (DEMO ? '<h2>Stuck on something?</h2><p>Email Station at <a href="mailto:main@station.solutions">main@station.solutions</a>. Station works by email and replies by email. Station doesn’t have a phone line, so never give out a number for Station.</p>'
         : '<h2 id="msgH">Message Station</h2><p>Write to the Station team here. Your message reaches the team by email, and replies show up here. You can also email <a href="mailto:main@station.solutions">main@station.solutions</a>. Station doesn’t have a phone line, so never give out a number for Station.</p>' +
           '<div class="msg-thread" id="msgThread" aria-live="polite"><p class="small">Loading your messages…</p></div>' +
           '<label class="sr" for="msgText">Your message to Station</label><textarea class="text msg-text" id="msgText" rows="3" maxlength="2000" placeholder="A question about a business, a client or your money"></textarea>' +
           '<div class="msg-go"><button class="btn btn-dark" type="button" id="msgSend">Send to Station</button><span class="small" id="msgNote" role="status"></span></div>') +
+      helpExtrasHtml() +
       '<h2>Who Station is</h2><p>Station Automations Group LLC, based in Houston, Texas. Every product and price is published at station.solutions. You’re an independent partner: you choose when and how you work, there’s no quota, and you earn a flat 40% with no tiers or bonuses. The Station Partner Agreement wins over anything in this app.</p>' +
       '<h2>Easier to read</h2><p>Make all the text bigger on this device.</p><button class="btn" type="button" data-size aria-pressed="' + !!S.big + '">Bigger text on or off</button>' +
       '<h2>The rules, in one breath</h2><ul class="ticks">' +
@@ -2492,6 +2520,7 @@
       (DEMO ? '<h2>Start over</h2><p>Clears your name and the calls you logged in this preview, on this device only.</p><button class="btn" type="button" id="reset">Reset the preview</button>'
         : '<h2>Your account</h2><p>Signed in as <b>' + esc((ME && ME.name) || S.name) + '</b>, partner code <b>' + esc(S.code) + '</b>. Partner World is where Station partners work now; the old partner portal is retired. Read the <a href="https://station.solutions/partners/agreement.html" target="_blank" rel="noopener">Station Partner Agreement</a>.</p><button class="btn" type="button" id="signOut">Sign out</button>') + '</div>', 'Help');
     if (!DEMO) wireMessages();
+    wireHelpExtras(); // Ask Station, Talk with Station, the partner guide (v4.65)
     document.getElementById('glossBtn').addEventListener('click', openGlossary);
     document.getElementById('tourBtn').addEventListener('click', function () { S.toured = false; save(); location.hash = '#calls'; });
     var pb = document.getElementById('prepBtn'); if (pb) pb.addEventListener('click', function () { S.skipPrep = false; save(); pb.remove(); toast('You’ll see the card before each call.'); });
@@ -2539,6 +2568,488 @@
       }, function () { btn.disabled = false; note.textContent = 'No connection. Your message wasn’t sent; try again.'; });
     });
   }
+
+  /* ======================================================================================================================
+     MISSING PIECES (2026-10-07, engine v4.65; Circle: "build the Partner World missing pieces")
+     - Referral numbers (Partner Agreement 3.1(a), 10.3): your link + Copy, visits recorded to your code (me.ref), people tied
+       to your code and paying clients (me.leads / me.clients). Visits read "not counted yet" until Station's website reports them.
+     - What's new on Home (3.1(d)): engine events (pw_news: purchases, Station's notes), bookings, Add-a-client answers, wins
+       Station accepted (leads), first payments that cleared and payouts sent (money_lines), and when Station last wrote.
+     - Add a client (6.2): client_claim -> Station accepts or declines in Circle; the answer shows on Clients and in What's new.
+     - Notes and "interested in more" on your own clients: note_add / note_del with subject client:<email> (only you and Station).
+     - Calls with Station (4.2): st_slots / st_book on Station's own calendar, for you or for a client in your book.
+     - Help: Ask Station (engine `ask`, the same assistant the old portal had) and the whole partner guide with search.
+     - Money: Next payout, Payouts sent (payout_status), a plain note when Stripe couldn't be checked; W-9 or W-8BEN.
+     Every number comes from the engine. Anything that can't be read says so; nothing is shown as zero instead.
+     ====================================================================================================================== */
+  var NEWS = null, NEWS_ERR = '', NEWS_AT = 0, NEWS_LOADING = false, NEWS_SHOWN = 10;
+  var PAYOUTS = null, PAYOUTS_ERR = '', PAYOUTS_LOADING = false;
+  var GUIDE = null, GUIDE_ERR = '', GUIDE_LOADING = false;
+  var ASK_HIST = [], ASK_LOG = [], ASK_BUSY = false, ASK_LEFT = null;
+  var GUIDE_URL = 'https://station.solutions/partners/guide.md';
+  var IRS_W9 = 'https://www.irs.gov/pub/irs-pdf/fw9.pdf', IRS_W8 = 'https://www.irs.gov/pub/irs-pdf/fw8ben.pdf';
+  function resetMissing() { NEWS = null; NEWS_ERR = ''; NEWS_AT = 0; NEWS_SHOWN = 10; PAYOUTS = null; PAYOUTS_ERR = ''; ASK_HIST = []; ASK_LOG = []; ASK_LEFT = null; }
+  /* an engine that doesn't have the action yet answers "unknown action": say it plainly */
+  function engineSays(err, fallback) { return /unknown action/i.test(String(err || '')) ? 'This part isn’t switched on at Station yet.' : sentence(err, fallback); }
+  function fmtDay(isoTs) { var t = Date.parse(isoTs || ''); return t ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''; }
+  function agoWords(t) {
+    var d = Date.now() - t, m = Math.round(d / 60e3);
+    if (d < 0) return whenLong(t);
+    if (m < 2) return 'just now'; if (m < 60) return m + ' min ago';
+    var day = ymd(new Date(t)); return (day === today() ? 'today' : dayLabel(day)) + ' at ' + clock(t);
+  }
+
+  /* ---------- What's new: one bounded list, newest first ---------- */
+  function loadNews(force) {
+    if (DEMO || !TOKEN) return Promise.resolve(null);
+    if (NEWS_LOADING || (NEWS && !force && Date.now() - NEWS_AT < 60000)) return Promise.resolve(NEWS);
+    NEWS_LOADING = true;
+    return api('pw_news').then(function (d) {
+      NEWS_LOADING = false; if (d.signedOut) return null;
+      if (d.ok === false) { NEWS_ERR = engineSays(d.error, 'What’s new couldn’t load just now.'); return NEWS; }
+      NEWS = d; NEWS_ERR = ''; NEWS_AT = Date.now(); return NEWS;
+    }, function () { NEWS_LOADING = false; NEWS_ERR = 'What’s new couldn’t load just now. Check your connection.'; return NEWS; });
+  }
+  function newsItems() {
+    var out = [], n = NEWS || {};
+    function add(at, kind, title, text, href) { var t = typeof at === 'number' ? at : Date.parse(at || ''); if (!t || t > Date.now() + 60e3) return; out.push({ t: t, kind: kind, title: title, text: text || '', href: href || '' }); }
+    (n.events || []).forEach(function (e) {
+      if (e.kind === 'claim') return; // Station's answers come from the request itself (below)
+      add(e.at, e.kind, e.title, e.text, e.kind === 'reply' ? '#help' : /^(purchase|setup|payout)$/.test(e.kind) ? '#money' : e.kind === 'client' || e.kind === 'change' ? '#clients' : '');
+    });
+    (n.bookings || []).forEach(function (b) {
+      var when = whenLong(Date.parse(b.start)), at = b.booked || b.start;
+      if (b.who === 'station-self') add(at, 'booking', 'Your call with Station is booked', when + ' (your time)' + (b.topic ? ' · ' + b.topic : ''), '#help');
+      else if (b.who === 'station-client') add(at, 'booking', 'Station support call booked for ' + (b.label || 'your client'), when + ' (your time)', '#clients');
+      else add(at, 'booking', 'Call booked with ' + (b.label || 'a business'), when + ' (your time)', '#calls');
+    });
+    (n.claims || []).forEach(function (c) {
+      if (c.status === 'accepted') add(c.decided_at, 'accepted', 'Station added ' + c.business + ' to your book', 'You earn 40% of what they pay Station, once each payment clears.', '#clients');
+      else if (c.status === 'declined') add(c.decided_at, 'declined', 'Station didn’t add ' + c.business + ' to your book', c.reason ? 'Station: ' + c.reason : '', '#clients');
+      else add(c.at, 'pending', 'You asked Station to add ' + c.business, 'Waiting for Station to accept it.', '#clients');
+    });
+    ((LL && LL.leads) || []).forEach(function (r) { if (r && r.won && r.won.accepted_at) add(r.won.accepted_at, 'accepted', 'Station accepted your win: ' + (r.name || 'a business'), 'It joins your book as a client when they pay.', '#money'); });
+    var firsts = {}, paid = {};
+    ((MONEY && MONEY.lines) || []).forEach(function (l) {
+      var net = (+l.amount_cents || 0) - (+l.reversed_cents || 0);
+      if (l.first_payment && l.settled && l.status !== 'reversed' && net > 0) {
+        var k = l.invoice || l.id, f = firsts[k] || (firsts[k] = { at: l.available_on || l.paid_at, client: l.client, cents: 0 }); f.cents += net;
+      }
+      if (l.status === 'paid' && l.transfer && l.transfer.id && !paid[l.transfer.id]) paid[l.transfer.id] = { at: l.transfer.created, cents: +l.transfer.amount_cents || 0 };
+    });
+    Object.keys(firsts).forEach(function (k) { var f = firsts[k]; add(f.at, 'paid', (f.client || 'A client') + '’s first payment cleared', 'You earn ' + cents(f.cents) + ' on it.', '#money'); });
+    Object.keys(paid).forEach(function (k) { add(paid[k].at, 'payout', 'Payout sent: ' + cents(paid[k].cents), 'To your Stripe account.', '#money'); });
+    if (n.station_wrote && n.station_wrote.at) {
+      var tw = Date.parse(n.station_wrote.at); // an email Station's own notice above already accounts for isn't listed twice
+      if (tw && !out.some(function (x) { return Math.abs(x.t - tw) < 5 * 60e3; })) add(tw, 'reply', 'Station wrote to you', 'Read it under Message Station on Help.', '#help');
+    }
+    return out.sort(function (a, b) { return b.t - a.t; });
+  }
+  var NEWS_TAG = { booking: 'Booked', purchase: 'Client', setup: 'Client', change: 'Client', client: 'Client', accepted: 'Accepted', declined: 'Not added',
+    pending: 'Asked', paid: 'Money', payout: 'Payout', reply: 'Station', note: 'Station' };
+  function newsLi(x) {
+    var inner = '<span class="news-tag t-' + esc(x.kind) + '">' + esc(NEWS_TAG[x.kind] || 'Update') + '</span><span class="news-main"><b>' + esc(x.title) + '</b>' +
+      (x.text ? '<span class="news-text">' + esc(x.text) + '</span>' : '') + '<time datetime="' + new Date(x.t).toISOString() + '">' + esc(agoWords(x.t)) + '</time></span>';
+    return '<li>' + (x.href ? '<a class="news-item" href="' + x.href + '">' + inner + '</a>' : '<div class="news-item">' + inner + '</div>') + '</li>';
+  }
+  function newsSection() {
+    var head = '<section class="news" id="newsBox" aria-labelledby="newsH"><div class="news-head"><h2 id="newsH" class="sub-h">What’s new</h2><span class="small">Newest first</span></div>';
+    if (DEMO) {
+      var now = Date.now();
+      return head + '<p class="small fine">Example: once you’re live, this lists what really happened on your account.</p><ol class="news-list ex">' +
+        [{ t: now - 40 * 60e3, kind: 'booking', title: 'Call booked with Red River Roofing', text: whenLong(now + 864e5) + ' (your time)', href: '' },
+         { t: now - 26 * 3600e3, kind: 'paid', title: 'Juniper Lane Plumbing’s first payment cleared', text: 'You earn $78.80 on it.', href: '' },
+         { t: now - 50 * 3600e3, kind: 'accepted', title: 'Station added Two Creeks Roofing to your book', text: 'You earn 40% of what they pay Station, once each payment clears.', href: '' }].map(newsLi).join('') + '</ol></section>';
+    }
+    var items = newsItems(), body;
+    if (!NEWS && !NEWS_ERR) body = '<p class="small">Loading what’s new…</p>';
+    else if (!items.length) body = NEWS_ERR ? '<p class="empty">' + esc(NEWS_ERR) + ' <button class="link-btn" type="button" data-news-retry>Try again</button></p>'
+      : '<p class="empty">Nothing yet. Calls you book, your clients’ purchases, first payments that clear, payouts and Station’s answers show up here.</p>';
+    else body = '<ol class="news-list">' + items.slice(0, NEWS_SHOWN).map(newsLi).join('') + '</ol>' +
+      (items.length > NEWS_SHOWN ? '<button class="btn news-more" type="button" data-news-more>Show ' + Math.min(10, items.length - NEWS_SHOWN) + ' more</button>' : '') +
+      (NEWS_ERR ? '<p class="small">' + esc(NEWS_ERR) + ' <button class="link-btn" type="button" data-news-retry>Try again</button></p>' : '');
+    var miss = !MONEY && (NEWS || NEWS_ERR) ? '<p class="small fine">Payments and payouts aren’t listed here right now because your money couldn’t load.</p>' : '';
+    return head + body + miss + '</section>';
+  }
+  function redrawNews() { var box = document.getElementById('newsBox'); if (!box) return; var had = box.contains(document.activeElement); box.outerHTML = newsSection(); if (had) { var h = document.getElementById('newsH'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } } }
+  document.addEventListener('click', function (e) {
+    var m = e.target.closest && e.target.closest('[data-news-more]');
+    if (m) { var keep = m.previousElementSibling && m.previousElementSibling.children.length; NEWS_SHOWN += 10; redrawNews(); var li = document.querySelectorAll('#newsBox .news-list > li')[keep || 0]; var a = li && li.querySelector('a, .news-item'); if (a) { if (!a.hasAttribute('href')) a.setAttribute('tabindex', '-1'); a.focus({ preventScroll: false }); } return; }
+    var rt = e.target.closest && e.target.closest('[data-news-retry]');
+    if (rt) { rt.disabled = true; NEWS_ERR = ''; loadNews(true).then(redrawNews); }
+  });
+
+  /* ---------- your referral link and what it has done ---------- */
+  function refCard() {
+    var link = (ME && ME.link) || (code() ? 'https://www.station.solutions/?ref=' + code() : '');
+    if (!link) return '';
+    var r = (ME && ME.ref) || (NEWS && NEWS.ref) || null, counting = !!(r && r.counting);
+    function cell(v, label, sub) { return '<div><b class="num">' + v + '</b><span>' + label + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>'; }
+    var stats = DEMO ? cell('—', 'Visits through your link', 'Live numbers once you sign in') + cell('—', 'People tied to your code') + cell('—', 'Paying clients')
+      : (counting ? cell(String(+r.visits || 0), 'Visits through your link', (+r.visits_30d || 0) + ' in the last 30 days') : cell('Not counted yet', 'Visits through your link', 'Station’s website isn’t reporting visits yet')) +
+        cell(ME && typeof ME.leads === 'number' ? String(ME.leads) : '—', 'People tied to your code', 'Form fills through your link, wins Station accepted, clients') +
+        cell(ME && typeof ME.clients === 'number' ? String(ME.clients) : '—', 'Paying clients', 'In your book');
+    return '<section class="ref-box" aria-labelledby="refH"><span class="lbl">Your referral link</span><h2 id="refH" class="sub-h">Send it every time</h2>' +
+      '<div class="copyrow ref-link"><code>' + esc(link) + '</code><button class="btn" type="button" data-copyref="' + esc(link) + '">Copy</button></div>' +
+      '<div class="ref-stats">' + stats + '</div>' +
+      '<p class="small fine">Any station.solutions page works with <span class="nowrap">?ref=' + esc(code() || 'yourcode') + '</span> on the end; each product’s cheat sheet has its own link. The site remembers your code for 30 days in that visitor’s browser, not on their other devices. Station’s records decide who gets credit.' +
+      (DEMO || counting ? '' : ' Visits will show here once Station’s website reports them; people and clients are counted now.') + '</p></section>';
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-copyref]'); if (b) copy(b.getAttribute('data-copyref'), b); });
+
+  /* ---------- Add a client (Partner Agreement 6.2: they join your book when Station accepts them) ---------- */
+  function engineSku(id) { return /^bundle-/.test(id) ? id.slice(7) : ({ echo: 'map' }[id] || id); }
+  function productName(key) {
+    if (key === 'unsure') return 'Not sure yet'; if (key === 'website') return 'Custom website';
+    var b = PW.boxes.filter(function (x) { return engineSku(x.id) === key; })[0]; return b ? b.name : key;
+  }
+  function productOptions(sel) {
+    var groups = [['Collections', PW.boxes.filter(function (b) { return b.bundle && b.kind === 'collection'; })], ['Plans', PW.boxes.filter(function (b) { return b.bundle && b.kind === 'plan'; })],
+      ['Single products', PW.boxes.filter(function (b) { return !b.bundle; })]];
+    return '<option value="">Pick one</option>' + groups.map(function (g) {
+      return '<optgroup label="' + g[0] + '">' + g[1].map(function (b) { var k = engineSku(b.id); return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</optgroup>';
+    }).join('');
+  }
+  function openClaimForm() {
+    openSheet('Add a client', '<p>Closed a business yourself? Tell Station here. They join your book once Station accepts them; Station checks their sign-up and payment first.</p>' +
+      '<form id="claimForm" novalidate>' +
+      '<label class="field slim" for="cf-biz">Business name<input class="text" id="cf-biz" maxlength="120" autocomplete="off"></label>' +
+      '<label class="field slim" for="cf-name">Owner or contact (optional)<input class="text" id="cf-name" maxlength="80" autocomplete="off"></label>' +
+      '<label class="field slim" for="cf-email">Their email<span class="hint">The one they pay Station with. Station matches their payments to you by it.</span><input class="text" type="email" id="cf-email" maxlength="160" autocomplete="off" autocapitalize="none" spellcheck="false"></label>' +
+      '<label class="field slim" for="cf-phone">Their phone (optional)<input class="text" type="tel" id="cf-phone" maxlength="24" inputmode="tel" autocomplete="off"></label>' +
+      '<label class="field slim" for="cf-prod">What they bought<select class="text" id="cf-prod">' + productOptions('') + '<option value="unsure">Not sure yet: Station will check</option></select></label>' +
+      '<label class="field slim" for="cf-note">How you closed it (optional)<textarea class="text" id="cf-note" rows="3" maxlength="600" placeholder="For example: signed up on the Answer page with my link on Tuesday"></textarea></label>' +
+      '<p class="field-err" id="cf-err" role="alert"></p><button class="btn btn-dark btn-big btn-block" type="submit" id="cf-go">Send to Station</button>' +
+      '<p class="small">You’ll see Station’s answer on Clients and in What’s new on Home. A business Station hasn’t accepted isn’t in your book yet.</p></form>');
+    var form = document.getElementById('claimForm'), err = document.getElementById('cf-err'), go = document.getElementById('cf-go');
+    form.addEventListener('input', function (e) { if (e.target.getAttribute('aria-invalid')) { e.target.removeAttribute('aria-invalid'); err.textContent = ''; } });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); if (go.disabled) return;
+      function v(id) { return document.getElementById(id).value.trim(); }
+      function bad(id, msg) { err.textContent = msg; var el = document.getElementById(id); if (el) { var lab = el.closest('label'); if (lab) lab.insertAdjacentElement('afterend', err); el.setAttribute('aria-invalid', 'true'); el.focus(); } }
+      form.querySelectorAll('[aria-invalid]').forEach(function (x) { x.removeAttribute('aria-invalid'); });
+      var body = { business: v('cf-biz'), name: v('cf-name'), email: v('cf-email').toLowerCase(), phone: v('cf-phone'), product: v('cf-prod'), note: v('cf-note') };
+      if (!body.business) { bad('cf-biz', 'Add the business name.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) { bad('cf-email', 'Add the email they pay Station with.'); return; }
+      if (body.phone && body.phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '').length !== 10) { bad('cf-phone', 'Use a 10-digit phone number, or leave it empty.'); return; }
+      if (!body.product) { bad('cf-prod', 'Pick what they bought, or “Not sure yet”.'); return; }
+      if (DEMO) { afterSheet(function () { toast('Preview: nothing was sent to Station.', 3000); }); return; }
+      go.disabled = true; go.textContent = 'Sending…'; err.textContent = '';
+      api('client_claim', body).then(function (d) {
+        go.disabled = false; go.textContent = 'Send to Station'; if (d.signedOut) return;
+        if (!d.ok) { err.textContent = engineSays(d.error, 'Station couldn’t take that just now.'); return; }
+        if (NEWS) { NEWS.claims = [d.claim].concat(NEWS.claims || []); }
+        afterSheet(function () { toast('Sent. Station will accept or decline it, and you’ll see the answer here.', 4500); var cl = document.getElementById('claimList'); if (cl) cl.innerHTML = claimsHtml(); });
+      }, function () { go.disabled = false; go.textContent = 'Send to Station'; err.textContent = 'No answer from Station, so it’s not known whether it arrived. Close this and check Clients before you send it again.'; });
+    });
+  }
+  function claimsHtml() {
+    if (DEMO) return '<h2 class="sub-h">Clients you asked Station to add</h2><div class="client-list"><div class="client-row"><b>Example: Juniper Lane Plumbing <span class="pill st-wait">Waiting for Station</span></b><span class="small">Answer collection · asked yesterday</span></div></div>';
+    if (!NEWS) return NEWS_ERR ? '<p class="small">' + esc(NEWS_ERR) + '</p>' : '<p class="small">Loading your requests…</p>';
+    var cs = NEWS.claims || []; if (!cs.length) return '';
+    return '<h2 class="sub-h">Clients you asked Station to add</h2><div class="client-list">' + cs.slice(0, 20).map(function (c) {
+      var st = c.status === 'accepted' ? '<span class="pill st-ok">Accepted ' + esc(fmtDay(c.decided_at)) + '</span>' : c.status === 'declined' ? '<span class="pill st-no">Not added</span>' : '<span class="pill st-wait">Waiting for Station</span>';
+      return '<div class="client-row"><b>' + esc(c.business) + ' ' + st + '</b><span class="small">' + esc(productName(c.product)) + ' · ' + esc(c.email) + ' · asked ' + esc(fmtDay(c.at)) + '</span>' +
+        (c.status === 'declined' && c.reason ? '<span class="small">Station: ' + esc(c.reason) + '</span>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-addclient]')) openClaimForm(); });
+
+  /* ---------- your notes and "interested in more" on a client (note_add / note_del, subject client:<email>) ---------- */
+  var UP_PREFIX = 'Interested in: ';
+  function clientNotes(email) { return ((LL && LL.notes && LL.notes['client:' + String(email || '').toLowerCase()]) || []).slice(); }
+  function noteListHtml(list) {
+    if (!list.length) return '<p class="small">No notes yet.</p>';
+    return '<ul class="cnote-list">' + list.slice(0, 20).map(function (n) {
+      var up = String(n.text || '').indexOf(UP_PREFIX) === 0;
+      return '<li' + (up ? ' class="up"' : '') + '><p>' + esc(n.text) + '</p><span class="small">' + esc(agoWords(Date.parse(n.at) || 0)) + ' · <button class="link-btn" type="button" data-cnote-del="' + esc(n.id) + '">Remove</button></span></li>';
+    }).join('') + '</ul>';
+  }
+  function clientExtrasHtml(cl) {
+    var nm = esc(cl.name || 'this client');
+    if (!cl.email) return '<section class="card-box"><h2 class="sub-h">Your notes</h2><p class="small">Notes are kept by the client’s email, and Station has none for them yet. Message Station to add one.</p></section>';
+    var notes = clientNotes(cl.email), up = notes.filter(function (n) { return String(n.text || '').indexOf(UP_PREFIX) === 0; })[0];
+    return '<div class="grid2c cl-extra">' +
+      '<section class="card-box" aria-labelledby="cnH2"><h2 id="cnH2" class="sub-h">Your notes on ' + nm + '</h2><p class="small">Only you and Station see these.</p>' +
+      '<label class="sr" for="cnNew">New note</label><textarea class="text" id="cnNew" rows="3" maxlength="1500" placeholder="For example: owner is Maria; ask about reviews in November"></textarea>' +
+      '<div class="msg-go"><button class="btn btn-dark" type="button" id="cnSave">Save note</button><span class="small" id="cnMsg" role="status"></span></div>' +
+      '<div id="cnHist">' + noteListHtml(notes) + '</div></section>' +
+      '<section class="card-box" aria-labelledby="upH"><h2 id="upH" class="sub-h">Interested in more?</h2>' +
+      '<p class="small">Write down what they asked about. Talk about it at published prices and send your link; Station sets it up once they buy.</p>' +
+      (up ? '<p class="up-now">Last noted: <b>' + esc(up.text.slice(UP_PREFIX.length)) + '</b> · ' + esc(agoWords(Date.parse(up.at) || 0)) + '</p>' : '') +
+      '<label class="field slim" for="upPick">What they’re interested in<select class="text" id="upPick">' + productOptions('') + '</select></label>' +
+      '<label class="field slim" for="upNote">What they said (optional)<input class="text" id="upNote" maxlength="200" autocomplete="off"></label>' +
+      '<div class="msg-go"><button class="btn btn-dark" type="button" id="upSave">Save</button><button class="btn" type="button" id="upLink" disabled>Copy my link for it</button><span class="small" id="upMsg" role="status"></span></div></section>' +
+      '<section class="card-box" aria-labelledby="supH"><h2 id="supH" class="sub-h">Need Station to help them?</h2>' +
+      '<p class="small">Support is Station’s: a question about their account, billing, a change or something not working. Book a time and Station handles the call with ' + nm + '.</p>' +
+      '<button class="btn" type="button" id="supBook">Book a Station support call</button></section></div>';
+  }
+  function wireClientExtras(cl) {
+    var box = document.getElementById('clientExtra'); if (!box || !cl) return;
+    box.innerHTML = clientExtrasHtml(cl);
+    var sb = document.getElementById('supBook'); if (sb) sb.addEventListener('click', function () { openStationBooking('client', cl); });
+    if (!cl.email) return;
+    var subj = 'client:' + String(cl.email).toLowerCase();
+    function saveNote(text, btn, msg, done) {
+      if (DEMO) { msg.textContent = 'Preview: nothing is saved.'; return; }
+      btn.disabled = true; msg.textContent = 'Saving…';
+      api('note_add', { subject: subj, text: text }).then(function (d) {
+        btn.disabled = false; if (d.signedOut) return;
+        if (!d.ok) { msg.textContent = engineSays(d.error, 'That didn’t save. Try again.'); return; }
+        if (LL) { if (!LL.notes) LL.notes = {}; LL.notes[subj] = d.notes || [d.note].concat(LL.notes[subj] || []); }
+        msg.textContent = 'Saved.'; document.getElementById('cnHist').innerHTML = noteListHtml(clientNotes(cl.email)); done();
+      }, function () { btn.disabled = false; msg.textContent = 'No connection. It wasn’t saved; try again.'; });
+    }
+    var cs = document.getElementById('cnSave'), ta = document.getElementById('cnNew'), cm = document.getElementById('cnMsg');
+    cs.addEventListener('click', function () { var t = ta.value.trim(); if (!t) { cm.textContent = 'Write the note first.'; ta.focus(); return; } saveNote(t, cs, cm, function () { ta.value = ''; }); });
+    var pick = document.getElementById('upPick'), un = document.getElementById('upNote'), us = document.getElementById('upSave'), ul = document.getElementById('upLink'), um = document.getElementById('upMsg');
+    function boxFor(k) { return PW.boxes.filter(function (b) { return engineSku(b.id) === k; })[0] || null; }
+    pick.addEventListener('change', function () { ul.disabled = !boxFor(pick.value); });
+    ul.addEventListener('click', function () { var b = boxFor(pick.value); if (b) copy(linkFor(b), ul); });
+    us.addEventListener('click', function () {
+      if (!pick.value) { um.textContent = 'Pick what they’re interested in.'; pick.focus(); return; }
+      var t = UP_PREFIX + productName(pick.value) + (un.value.trim() ? ' (' + un.value.trim() + ')' : '');
+      saveNote(t.slice(0, 1500), us, um, function () { un.value = ''; wireClientExtras(cl); var m2 = document.getElementById('upMsg'), p2 = document.getElementById('upPick'); if (m2) m2.textContent = 'Saved.'; if (p2) p2.focus({ preventScroll: true }); });
+    });
+    if (box.getAttribute('data-wired') === '1') return; // the box outlives its contents: one Remove handler, ever
+    box.setAttribute('data-wired', '1');
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-cnote-del]'); if (!b) return;
+      if (b.getAttribute('data-armed') !== '1') { b.setAttribute('data-armed', '1'); b.textContent = 'Tap again to remove'; setTimeout(function () { if (document.contains(b)) { b.removeAttribute('data-armed'); b.textContent = 'Remove'; } }, 4000); return; }
+      if (DEMO) return;
+      b.disabled = true;
+      api('note_del', { id: b.getAttribute('data-cnote-del') }).then(function (d) {
+        if (d.signedOut) return;
+        if (!d.ok) { b.disabled = false; toast(engineSays(d.error, 'That note couldn’t be removed just now.'), 4000); return; }
+        if (LL && LL.notes) LL.notes[subj] = d.notes || [];
+        document.getElementById('cnHist').innerHTML = noteListHtml(clientNotes(cl.email)); toast('Note removed.');
+      }, function () { b.disabled = false; toast('No connection. Try again.', 4000); });
+    });
+  }
+
+  /* ---------- a call with Station: for you, or for a client in your book (engine st_slots / st_book) ---------- */
+  function openStationBooking(forWho, cl) {
+    var forClient = forWho === 'client';
+    var title = forClient ? 'Station support for ' + (cl.name || 'your client') : 'Book a call with Station';
+    var tz = DEMO ? '' : (ME && ME.tz) || myTz();
+    openSheet(title, '<p class="small">' + (forClient
+      ? 'Pick a time for a Station support call with ' + esc(cl.name || 'your client') + '. Station handles the call; tell them the time. Times are yours' + (tz ? ' (' + esc(tz.replace(/_/g, ' ')) + ')' : '') + '.'
+      : 'Talk with a Station founder about a question: a business you’re working, a product, your account or your money. Times are yours' + (tz ? ' (' + esc(tz.replace(/_/g, ' ')) + ')' : '') + '. Station emails you the details.') + '</p>' +
+      '<label class="field slim" for="sb-topic">What it’s about<textarea class="text" id="sb-topic" rows="2" maxlength="300" placeholder="' + (forClient ? 'For example: their review requests stopped going out' : 'For example: how to pitch Core to a dental office') + '"></textarea></label>' +
+      '<div id="sb-up"></div><div id="sb-days"><p class="small">Loading Station’s open times…</p></div><div id="sb-confirm"></div><p class="field-err" id="sb-err" role="alert"></p>');
+    var box = document.getElementById('sb-days'), conf = document.getElementById('sb-confirm'), err = document.getElementById('sb-err'), upEl = document.getElementById('sb-up');
+    document.getElementById('sb-topic').addEventListener('input', function () { err.textContent = ''; });
+    function draw(days) {
+      if (!days.length) { box.innerHTML = '<p class="empty">No open times in the next two weeks. Use Message Station on Help instead.</p>'; return; }
+      box.innerHTML = days.slice(0, 7).map(function (d) {
+        return '<div class="bk-day"><p class="bk-date">' + esc(dayLabel(d.date)) + '</p><div class="slot-grid">' + d.slots.slice(0, 16).map(function (x) {
+          return '<button type="button" class="slot" data-slot="' + esc(x) + '" aria-pressed="false">' + esc(clockIn(x, tz)) + '</button>'; }).join('') + '</div></div>';
+      }).join('');
+    }
+    if (DEMO) draw(demoSlots());
+    else api('st_slots', { for: forWho }).then(function (d) {
+      if (d.signedOut || !document.getElementById('sb-days')) return;
+      if (!d.ok) { box.innerHTML = '<p class="empty">' + esc(engineSays(d.error, 'Station’s calendar couldn’t load just now.')) + ' You can always use Message Station on Help.</p>'; return; }
+      tz = d.tz || tz;
+      if ((d.upcoming || []).length) upEl.innerHTML = '<div class="explain wait"><b>Coming up with Station:</b> ' + d.upcoming.map(function (u) { return esc(whenLong(Date.parse(u.start), tz)) + (u.topic ? ' (' + esc(u.topic) + ')' : ''); }).join('; ') + '</div>';
+      draw(d.days || []);
+    }, function () { if (document.getElementById('sb-days')) box.innerHTML = '<p class="empty">No connection to Station. Try again in a moment.</p>'; });
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-slot]'); if (!b) return;
+      box.querySelectorAll('[data-slot]').forEach(function (x) { x.classList.toggle('sel', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      var at = b.getAttribute('data-slot');
+      conf.innerHTML = '<div class="bk-ok"><p>Book Station for <b>' + esc(whenLong(Date.parse(at), tz)) + '</b>?</p><button class="btn btn-dark btn-big btn-block" type="button" data-sb-go>Book it</button></div>';
+      var go = conf.querySelector('[data-sb-go]'); go.focus({ preventScroll: true }); feedShowSheet(conf);
+      go.addEventListener('click', function () {
+        var topic = document.getElementById('sb-topic').value.trim(); err.textContent = '';
+        if (topic.length < 5) { err.textContent = 'Say in a few words what the call is about.'; document.getElementById('sb-topic').focus(); return; }
+        if (DEMO) { afterSheet(function () { toast('Preview: nothing was booked.', 3000); }); return; }
+        go.disabled = true; go.textContent = 'Booking…';
+        api('st_book', { for: forWho, contactId: forClient ? cl.contactId || cl.id : undefined, start: at, topic: topic }).then(function (d) {
+          go.disabled = false; go.textContent = 'Book it'; if (d.signedOut) return;
+          if (!d.ok) { err.textContent = engineSays(d.error, 'That time couldn’t be booked. Pick another.'); return; }
+          if (NEWS) NEWS.bookings = [{ id: 'new', start: at, who: forClient ? 'station-client' : 'station-self', label: forClient ? cl.name : 'Station', booked: new Date().toISOString(), topic: topic }].concat(NEWS.bookings || []);
+          afterSheet(function () { toast('Booked with Station: ' + whenLong(Date.parse(at), tz) + '.' + (d.mail === 'sent' ? ' Station emailed you the details.' : ' It’s in What’s new on Home.'), 5000); });
+        }, function () { go.disabled = false; go.textContent = 'Book it'; err.textContent = 'No answer from Station, so it’s not known whether that booked. Close this and check What’s new on Home before you try again.'; });
+      });
+    });
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-stbook]')) openStationBooking('me', null); });
+
+  /* ---------- the partner guide, readable and searchable here (station.solutions/partners/guide.md, rendered as text) ---------- */
+  function mdInline(s) {
+    return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, function (u) { return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>'; });
+  }
+  function mdBlocks(lines) {
+    var out = [], i = 0, l, buf;
+    while (i < lines.length) {
+      l = lines[i];
+      if (!l.trim()) { i++; continue; }
+      if (/^### /.test(l)) { out.push('<h4>' + mdInline(l.slice(4)) + '</h4>'); i++; continue; }
+      if (/^>/.test(l)) { buf = []; while (i < lines.length && /^>/.test(lines[i])) { buf.push(lines[i].replace(/^> ?/, '')); i++; }
+        var t = buf.join(' ').trim(); out.push('<div class="g-quote"><p>' + mdInline(t) + '</p><button class="btn g-copy" type="button" data-gcopy="' + esc(t) + '">Copy</button></div>'); continue; }
+      if (/^[-*] /.test(l)) { buf = []; while (i < lines.length && /^[-*] /.test(lines[i])) { buf.push('<li>' + mdInline(lines[i].slice(2)) + '</li>'); i++; } out.push('<ul>' + buf.join('') + '</ul>'); continue; }
+      if (/^\d+\. /.test(l)) { buf = []; while (i < lines.length && /^\d+\. /.test(lines[i])) { buf.push('<li>' + mdInline(lines[i].replace(/^\d+\. /, '')) + '</li>'); i++; } out.push('<ol>' + buf.join('') + '</ol>'); continue; }
+      buf = []; while (i < lines.length && lines[i].trim() && !/^(### |>|[-*] |\d+\. |## )/.test(lines[i])) { buf.push(lines[i]); i++; }
+      if (buf.length) out.push('<p>' + mdInline(buf.join(' ')) + '</p>'); else i++;
+    }
+    return out.join('');
+  }
+  function parseGuide(md) {
+    md = String(md || '').replace(/\r/g, '');
+    var cut = md.search(/\n## Open questions for Circle/); if (cut >= 0) md = md.slice(0, cut); // Station's internal notes are never shown
+    var secs = [], cur = { title: 'About this guide', lines: [] };
+    md.split('\n').forEach(function (l) {
+      if (/^# /.test(l)) return;
+      if (/^## /.test(l)) { if (cur.lines.join('').trim()) secs.push(cur); cur = { title: l.slice(3).trim(), lines: [] }; return; }
+      cur.lines.push(l);
+    });
+    if (cur.lines.join('').trim()) secs.push(cur);
+    secs.forEach(function (s) { // each section splits again at ### so a search can show just the matching part
+      var parts = [], p = { lines: [] };
+      s.lines.forEach(function (l) { if (/^### /.test(l)) { parts.push(p); p = { lines: [l] }; } else p.lines.push(l); });
+      parts.push(p);
+      s.parts = parts.filter(function (x) { return x.lines.join('').trim(); }).map(function (x) { return { lines: x.lines, text: x.lines.join(' ').toLowerCase() }; });
+    });
+    return secs;
+  }
+  /* the guide's own fill-ins that this app knows: your partner code and your first name */
+  function fillGuide(l) { return String(l).replace(/\[yourcode\]/g, code() || 'yourcode').replace(/\[your name\]/g, S.name || 'your name'); }
+  function loadGuide() {
+    if (GUIDE || GUIDE_LOADING) return;
+    GUIDE_LOADING = true;
+    fetch(GUIDE_URL, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function (md) { GUIDE_LOADING = false; GUIDE = parseGuide(md); GUIDE_ERR = GUIDE.length ? '' : 'The guide came back empty.'; renderGuide(); },
+        function () { GUIDE_LOADING = false; GUIDE_ERR = 'The guide didn’t load. Check your connection, or read it at station.solutions/partners/guide.md.'; renderGuide(); });
+  }
+  function markHits(root, words) {
+    if (!words.length) return;
+    var re = new RegExp('(' + words.map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')', 'gi');
+    var walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), nodes = [], n;
+    while ((n = walk.nextNode())) { if (n.parentNode && !/^(MARK|BUTTON|SUMMARY)$/.test(n.parentNode.nodeName) && re.test(n.nodeValue)) nodes.push(n); re.lastIndex = 0; }
+    nodes.forEach(function (t) { var s = document.createElement('span'); s.innerHTML = esc(t.nodeValue).replace(re, '<mark>$1</mark>'); t.parentNode.replaceChild(s, t); });
+  }
+  function renderGuide() {
+    var host = document.getElementById('guideBody'), cnt = document.getElementById('guideCount'); if (!host) return;
+    if (!GUIDE) { host.innerHTML = '<p class="' + (GUIDE_ERR ? 'empty' : 'small') + '">' + esc(GUIDE_ERR || 'Loading the guide…') + '</p>'; return; }
+    var q = String((document.getElementById('guideQ') || {}).value || '').trim().toLowerCase();
+    var words = q.split(/\s+/).filter(function (w) { return w.length > 1; });
+    var hit = function (t) { return words.every(function (w) { return t.indexOf(w) >= 0; }); };
+    var html = [], shown = 0;
+    GUIDE.forEach(function (s, i) {
+      var body;
+      if (!words.length) body = mdBlocks(s.lines.map(fillGuide));
+      else {
+        var ps = s.parts.filter(function (p) { return hit(p.text) || hit(s.title.toLowerCase() + ' ' + p.text); });
+        if (!ps.length) return;
+        body = mdBlocks([].concat.apply([], ps.map(function (p) { return p.lines.concat(['']); })).map(fillGuide)); shown += ps.length;
+      }
+      html.push('<details class="acc g-sec" id="g' + i + '"' + (words.length ? ' open' : '') + '><summary>' + esc(s.title) + '</summary><div class="g-body">' + body + '</div></details>');
+    });
+    host.innerHTML = html.join('') || '<p class="empty">Nothing in the guide matches that. Try another word, ask Station above, or use Message Station.</p>';
+    if (cnt) cnt.textContent = words.length ? (shown + (shown === 1 ? ' part matches' : ' parts match')) : GUIDE.length + ' sections';
+    markHits(host, words);
+  }
+
+  /* ---------- Ask Station: the engine's assistant (the same one the old portal had); answers come from the guide ---------- */
+  function askHtml() {
+    return '<div class="ask-log" id="askLog" aria-live="polite">' + ASK_LOG.map(function (x) {
+      return x.q ? '<div class="ask-q"><p>' + esc(x.q) + '</p></div>' : '<div class="ask-a' + (x.wait ? ' wait' : '') + '">' + (x.wait ? '<p>' + esc(x.a) + '</p>' : mdBlocks(String(x.a).split('\n')) + '<button class="btn g-copy" type="button" data-gcopy="' + esc(x.a) + '">Copy answer</button>') + '</div>';
+    }).join('') + '</div>';
+  }
+  function wireAsk() {
+    var go = document.getElementById('askGo'), qa = document.getElementById('askQ'), msg = document.getElementById('askMsg'); if (!go) return;
+    function send() {
+      var q = qa.value.trim(); if (!q) { msg.textContent = 'Type a question first.'; qa.focus(); return; }
+      if (ASK_BUSY) return;
+      if (DEMO) { msg.textContent = 'Preview: Ask Station answers once you sign in.'; return; }
+      ASK_BUSY = true; go.disabled = true; msg.textContent = '';
+      ASK_LOG.push({ q: q }, { a: 'Looking that up in the partner guide… this can take up to a minute.', wait: true });
+      document.getElementById('askLog').outerHTML = askHtml(); qa.value = '';
+      api('ask', { q: q, history: ASK_HIST.slice(-6) }).then(function (d) {
+        ASK_BUSY = false; ASK_LOG = ASK_LOG.filter(function (x) { return !x.wait; }); if (d.signedOut) return;
+        var g = document.getElementById('askGo'); if (g) g.disabled = false;
+        if (!d.ok) { var m = document.getElementById('askMsg'); if (m) m.textContent = engineSays(d.error, 'Ask Station didn’t answer. Try again, or use Message Station.'); }
+        else { ASK_LOG.push({ a: d.answer }); ASK_HIST.push({ role: 'user', content: q }, { role: 'assistant', content: d.answer }); if (typeof d.left === 'number') ASK_LEFT = d.left; }
+        var lg = document.getElementById('askLog'); if (lg) { lg.outerHTML = askHtml(); var l2 = document.getElementById('askLog'); l2.scrollTop = l2.scrollHeight; }
+        var lf = document.getElementById('askLeft'); if (lf && ASK_LEFT !== null) lf.textContent = ASK_LEFT + ' questions left today.';
+      }, function () {
+        ASK_BUSY = false; ASK_LOG = ASK_LOG.filter(function (x) { return !x.wait; });
+        var g = document.getElementById('askGo'); if (g) g.disabled = false; var lg = document.getElementById('askLog'); if (lg) lg.outerHTML = askHtml();
+        var m = document.getElementById('askMsg'); if (m) m.textContent = 'No connection to Station. Your question wasn’t answered; try again.';
+      });
+    }
+    go.addEventListener('click', send);
+    qa.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-gcopy]'); if (b) copy(b.getAttribute('data-gcopy'), b); });
+  /* Help's "on this page" chips scroll to a heading (a #hash would be read as a page by the router) */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-jump]'); if (!b) return;
+    var h = document.getElementById(b.getAttribute('data-jump')); if (!h) return;
+    h.setAttribute('tabindex', '-1'); h.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' }); h.focus({ preventScroll: true });
+  });
+  function helpExtrasHtml() {
+    return '<h2 id="askH">Ask Station</h2><p>Ask about selling, a product, your money or the rules. An automated assistant answers from the partner guide and Station’s price list; when the guide doesn’t settle it, it says so, and you can use Message Station. Don’t type a client’s private details here.</p>' +
+      askHtml() + '<label class="sr" for="askQ">Your question for Ask Station</label><textarea class="text msg-text ask-text" id="askQ" rows="2" maxlength="1500" placeholder="For example: does a free trial count toward my 40%?"></textarea>' +
+      '<div class="msg-go"><button class="btn btn-dark" type="button" id="askGo">Ask</button><span class="small" id="askMsg" role="status"></span><span class="small" id="askLeft">' + (ASK_LEFT !== null ? ASK_LEFT + ' questions left today.' : '') + '</span></div>' +
+      '<h2 id="callStH">Talk with Station</h2><p>Book a call with a Station founder about a strategy or support question. For a client’s problem, open the client on Clients and book Station support for them.</p>' +
+      '<button class="btn" type="button" data-stbook>Book a call with Station</button>' +
+      '<h2 id="guideH">The partner guide</h2><p>Everything Station has written for partners: how you earn, every product, what to say, the rules. Search it, or open a section.</p>' +
+      '<div class="guide-tools"><label class="sr" for="guideQ">Search the partner guide</label><input class="text" type="search" id="guideQ" placeholder="Search the guide, for example: trial" autocomplete="off"><span class="small" id="guideCount" role="status"></span></div>' +
+      '<div id="guideBody" class="guide-body"><p class="small">Loading the guide…</p></div>';
+  }
+  function wireHelpExtras() {
+    wireAsk(); loadGuide(); renderGuide();
+    var gq = document.getElementById('guideQ'), gt = 0;
+    if (gq) gq.addEventListener('input', function () { clearTimeout(gt); gt = setTimeout(renderGuide, 150); });
+  }
+
+  /* ---------- Money: next payout, payouts sent, and the Stripe note ---------- */
+  function nextPayoutHtml() {
+    if (DEMO) return '<div class="np card-box"><span class="lbl">Next payout</span><p>Once you’re live: the day money is next paid, or when money on hold is released. Paid once the client’s payment clears and at least $50 is ready.</p></div>';
+    if (!MONEY) return '<div class="np card-box"><span class="lbl">Next payout</span><p><b>Not known right now.</b> Stripe or Station’s payment records couldn’t be checked just now, so the next payout can’t be worked out. Nothing is lost: Station’s records are unchanged.</p></div>';
+    var t = MONEY.totals || {}, min = +MONEY.min_cents || 5000, ready = +t.ready_cents || 0, hold = +t.on_hold_cents || 0, bl = t.blockers || [], nr = t.next_release;
+    var steps = (bl.indexOf('tax') >= 0 ? 1 : 0) + (bl.indexOf('stripe') >= 0 ? 1 : 0), head, more = '';
+    var rel = nr ? new Date(nr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
+    if (ready >= min && !steps) head = '<b>' + cents(ready) + ' is ready.</b> It goes out in Station’s next payout to your Stripe account.';
+    else if (ready >= min) head = '<b>' + cents(ready) + ' is ready,</b> and it’s paid once your ' + (steps === 1 ? 'last setup step is' : steps + ' setup steps are') + ' done (below).';
+    else if (ready > 0) head = '<b>' + cents(ready) + ' is ready,</b> under the $50 minimum. It’s paid once at least $50 is ready; smaller amounts roll forward.';
+    else if (hold > 0) head = '<b>Nothing is ready yet.</b>';
+    else head = '<b>Nothing to pay yet.</b> You’re paid once a client’s payment clears and at least $50 is ready.';
+    if (hold > 0) more = ' ' + cents(hold) + ' is on hold' + (rel ? '; the first of it is released on <b>' + esc(rel) + '</b>' : '') + ', then it counts as ready.';
+    return '<div class="np card-box"><span class="lbl">Next payout</span><p>' + head + more + '</p><p class="small">Paid once the client’s payment clears and at least $50 is ready. Station may hold a new client’s first payment up to 30 days after it clears.</p></div>';
+  }
+  function loadPayouts(force) {
+    if (DEMO || !TOKEN || PAYOUTS_LOADING || (PAYOUTS && !force)) return;
+    if (MONEY && MONEY.account_state === 'none') { PAYOUTS = { ok: true, transfers: [], none: true }; return; }
+    PAYOUTS_LOADING = true;
+    api('payout_status').then(function (d) {
+      PAYOUTS_LOADING = false; if (d.signedOut) return;
+      if (d.ok === false) { PAYOUTS = null; PAYOUTS_ERR = engineSays(d.error, 'Payouts couldn’t load just now.'); } else { PAYOUTS = d; PAYOUTS_ERR = ''; }
+      var box = document.getElementById('payoutsBox'); if (box) box.innerHTML = payoutsHtml();
+    }, function () { PAYOUTS_LOADING = false; PAYOUTS_ERR = 'No connection to Station.'; var box = document.getElementById('payoutsBox'); if (box) box.innerHTML = payoutsHtml(); });
+  }
+  function payoutsHtml() {
+    if (DEMO) return '<p class="empty">No payouts yet. Every payout Station sends you is listed here, with where the money is now.</p>';
+    if (PAYOUTS_ERR) return '<p class="empty">' + esc(PAYOUTS_ERR) + ' Stripe couldn’t be checked, so the payouts sent can’t be listed right now. Your Stripe dashboard shows every payout. <button class="link-btn" type="button" id="payoutsRetry">Try again</button></p>';
+    if (!PAYOUTS) return '<p class="small">Loading your payouts…</p>';
+    var ts = PAYOUTS.transfers || [];
+    if (!ts.length) return '<p class="empty">No payouts yet.' + (PAYOUTS.none ? ' Station pays into your Stripe account once it’s set up (below).' : '') + '</p>';
+    return '<div class="table-wrap"><table><thead><tr><th scope="col">Sent</th><th scope="col" class="r">Amount</th><th scope="col">Where it is now</th></tr></thead><tbody>' + ts.map(function (x) {
+      return '<tr><td data-l="Sent">' + esc(fmtDay(x.created)) + '</td><td data-l="Amount" class="r num">' + cents(x.amount_cents) + '</td><td data-l="Where it is now">' + (x.reversed ? 'Reversed' : esc(x.bank_text || 'Sent to your Stripe account')) + '</td></tr>';
+    }).join('') + '</tbody></table></div>' + (PAYOUTS.bank_read && PAYOUTS.bank_read !== 'ok' ? '<p class="small fine">Stripe didn’t say where every payout is in your bank just now; your Stripe dashboard has them all.</p>' : '') +
+      '<p class="small fine">Station’s last 10 payouts to you. Stripe pays your Stripe balance to your bank on your account’s schedule.</p>';
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#payoutsRetry')) { PAYOUTS_ERR = ''; PAYOUTS = null; var box = document.getElementById('payoutsBox'); if (box) box.innerHTML = payoutsHtml(); loadPayouts(true); } });
+  function stripeNoteHtml() {
+    if (DEMO) return '';
+    if (!MONEY) return '<div class="explain wait stripe-note" role="status">Stripe couldn’t be checked just now, so your money isn’t shown. Nothing is lost: Station’s payment records are unchanged. <button class="link-btn" type="button" id="moneyRetry2">Try again</button></div>';
+    if (MONEY.bank_read === 'failed' || MONEY.bank_read === 'partial') return '<div class="explain wait stripe-note" role="status">Stripe didn’t say where every paid line is in your bank just now, so some say “Sent to your Stripe account”. Your Stripe dashboard has the rest.</div>';
+    return '';
+  }
+  document.addEventListener('click', function (e) { var m = document.getElementById('moneyRetry'); if (e.target.closest && e.target.closest('#moneyRetry2') && m) m.click(); });
 
   window.addEventListener('hashchange', route);
   if (!DEMO && TOKEN) startLive(); else route();

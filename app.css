@@ -1120,3 +1120,87 @@ a.client-row:hover,a.client-row:focus-visible{border-color:var(--edge)}
 /* six tabs since Clients (2026-10-07): the bar sizes to the visible tabs (Team stays hidden for most partners) */
 .tabbar{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
 .tabbar a[hidden]{display:none}
+
+/* ===== MISSING PIECES (10-07, engine v4.65): What's new, your referral link, Add a client, client notes, calls with Station,
+   Ask Station + the partner guide, Next payout + Payouts sent, W-9 / W-8BEN. Same scale (12.5 / 14 / 16 / 18 / 22 / 28) and radii
+   (6 / 10 / 999). Green only for money; red only for a "not added"; nothing new is amber. */
+.news,.ref-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0}
+.news-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.news-head .sub-h{margin:0}
+.news-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column}
+.news-list > li{border-top:1px solid var(--line)}
+.news-list > li:first-child{border-top:0}
+.news-item{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;color:var(--ink);text-decoration:none;min-height:48px;border-radius:6px}
+a.news-item:hover,a.news-item:focus-visible{background:var(--hover)}
+.news-tag{flex:none;min-width:84px;text-align:center;font:500 12.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:var(--panel2);border:1px solid var(--line-2);border-radius:6px;padding:6px 8px;margin-top:2px}
+.news-tag.t-paid,.news-tag.t-payout{color:var(--green);background:var(--green-bg);border-color:transparent}
+.news-tag.t-declined{color:var(--red);background:var(--red-bg);border-color:transparent}
+.news-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.news-main b{font-size:16px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.news-text{font-size:16px;color:var(--ink-2);line-height:1.4;overflow-wrap:anywhere}
+.news-main time{font-size:14px;color:var(--ink-3)}
+.news-more{margin-top:10px}
+.news-list.ex{opacity:.85}
+@media (max-width:560px){.news-item{flex-direction:column;gap:6px}.news-tag{min-width:0}}
+.ref-box .lbl{color:var(--ink-3)}
+.ref-box .sub-h{margin:4px 0 12px}
+.ref-link code{font-size:16px}
+.ref-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:12px 0 4px}
+.ref-stats div{background:var(--panel2);padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.ref-stats b{font-size:22px;line-height:1.2;color:var(--ink);font-weight:700;overflow-wrap:anywhere}
+.ref-stats span{font-size:16px;color:var(--ink)}
+.ref-stats small{font-size:14px;color:var(--ink-3);line-height:1.35}
+@media (max-width:640px){.ref-stats{grid-template-columns:1fr}}
+.cl-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:12px 0 4px}
+.client-row .pill.st-ok{background:var(--green-bg);color:var(--green)}
+.client-row .pill.st-no{background:var(--red-bg);color:var(--red)}
+.client-row .pill.st-wait{background:var(--panel2);color:var(--ink);border:1px solid var(--line-2)}
+.cl-extra{margin-top:18px}
+.cl-extra .card-box .msg-go{margin-top:0}
+.cnote-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cnote-list li{border-top:1px solid var(--line);padding-top:8px}
+.cnote-list li.up{border-left:3px solid var(--acc);padding-left:10px}
+.cnote-list p{margin:0 0 2px;font-size:16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.cnote-list .link-btn{min-height:0;padding:6px 0;font-size:14px}
+.up-now{margin:0;font-size:16px}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
+.jump .chip{min-height:44px;font-size:16px;font-weight:500}
+.ask-log{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.ask-log:empty{display:none}
+.ask-q,.ask-a{border-radius:6px;padding:10px 12px;max-width:100%;overflow-wrap:anywhere}
+.ask-q{align-self:flex-end;background:var(--blue-bg);max-width:85%}
+.ask-q p{margin:0;font-size:16px;white-space:pre-wrap}
+.ask-a{align-self:flex-start;background:var(--bg-2);border:1px solid var(--line)}
+.ask-a.wait p{margin:0;color:var(--ink-2)}
+.ask-a p,.ask-a li{font-size:16px;line-height:1.5}
+.ask-a .g-copy{margin-top:6px}
+.guide-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:8px 0 6px}
+.guide-tools input.text{flex:1 1 280px;min-height:48px}
+.guide-body .g-sec summary{font-size:18px}
+.g-body{font-size:16px;line-height:1.55}
+.g-body h4{font-size:18px;margin:18px 0 6px}
+.g-body p{margin:0 0 10px}
+.g-body ul,.g-body ol{margin:0 0 10px;padding-left:22px}
+.g-body code{font:500 14px var(--mono);background:var(--panel2);border-radius:6px;padding:1px 5px}
+.g-quote{border-left:3px solid var(--acc);background:var(--panel2);border-radius:0 6px 6px 0;padding:10px 12px;margin:0 0 10px}
+.g-quote p{margin:0 0 6px}
+.g-copy{min-height:40px;padding:0 14px;font-size:14px}
+mark{background:rgba(255,255,255,.22);color:var(--ink);border-radius:6px;padding:0 2px}
+.np{margin:0 0 22px}
+.np .lbl{color:var(--ink-3)}
+.np p{margin:0;font-size:16px;line-height:1.5}
+.np p.small{color:var(--ink-3)}
+.stripe-note{margin:0 0 14px}
+fieldset.tax-forms{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0 16px;align-items:center}
+fieldset.tax-forms legend{font-size:14px;color:var(--ink-3);padding:0;margin-bottom:2px;width:100%}
+fieldset.tax-forms .check{margin-top:0}
+.setup-row .tax-pick{flex-direction:column;align-items:flex-end}
+@media (max-width:760px){.setup-row .tax-pick{align-items:flex-start}}
+.news-tag{flex:0 0 104px;min-width:0}
+@media (max-width:560px){.news-tag{flex:none}}
+.copyrow.ref-link{flex-wrap:wrap}
+.copyrow.ref-link code{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;flex:1 1 220px}
+.nowrap{white-space:nowrap}
+.cnote-list .link-btn{min-height:44px;display:inline-flex;align-items:center;padding:0 4px}
+fieldset.tax-forms .check{gap:8px}
+fieldset.tax-forms .check > span{white-space:nowrap}
