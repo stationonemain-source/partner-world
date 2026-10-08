@@ -1204,3 +1204,105 @@ fieldset.tax-forms .check{margin-top:0}
 .cnote-list .link-btn{min-height:44px;display:inline-flex;align-items:center;padding:0 4px}
 fieldset.tax-forms .check{gap:8px}
 fieldset.tax-forms .check > span{white-space:nowrap}
+
+/* ===== LEADS + CALENDAR (2026-10-08): the whole list in one place, and every booked call. Same scale (12.5 / 14 / 16 / 18 / 22 / 28)
+   and radii (6 / 10 / 999). Nothing here is money, so nothing is green; a call-back due now uses the white accent like Calls. */
+.lb-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding-top:18px}
+.lb-top h1{margin:0}
+.lb-top .sub{margin:6px 0 0;color:var(--ink-2);max-width:640px;font-size:16px}
+.lb-top .btn{min-height:48px;font-size:16px}
+.lb-tools{display:flex;flex-wrap:wrap;gap:10px 12px;margin:18px 0 0;align-items:flex-end}
+.lb-q{flex:1 1 280px;min-width:0}
+.lb-q input.text{min-height:48px;font-size:16px}
+.lb-sort{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--ink-3);flex:0 1 220px;min-width:0}
+.lb-sort select.text{min-height:48px;font-size:16px;padding:8px 10px}
+.leads-v .filters-wrap{margin:12px 0 4px}
+.lf-n{font-weight:400;opacity:.8}
+.lb-count{margin:6px 0 8px;font-size:14px}
+.lb-list{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
+.lb-row + .lb-row{border-top:1px solid var(--line)}
+.lb-head{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,1.7fr) 52px;gap:12px;align-items:center;width:100%;min-height:56px;padding:10px 16px;background:none;border:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lb-head:hover,.lb-row.open > .lb-head{background:var(--hover)}
+.lb-name{font-size:16px;font-weight:600;line-height:1.35;min-width:0;overflow-wrap:anywhere}
+.lb-name .pill{font-size:12.5px;padding:2px 8px;margin-left:4px;vertical-align:1px}
+.lb-trade,.lb-place{font-size:16px;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.lb-st{min-width:0}
+.lb-pill{font-size:14px;font-weight:500;padding:4px 10px;border-radius:6px;background:var(--panel2);color:var(--ink);border:1px solid var(--line-2);white-space:normal;line-height:1.3}
+.lb-pill.k-fresh{background:none}
+.lb-pill.k-closed{color:var(--ink-3);border-style:dashed}
+.lb-pill.k-won{border-color:var(--acc-line)}
+.lb-pill.due{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.lb-icons{display:flex;gap:8px;justify-content:flex-end;color:var(--ink-3)}
+.lb-ic svg{width:18px;height:18px;fill:currentColor;display:block}
+.lb-row.shut .lb-name{color:var(--ink-2)}
+.lb-body{padding:2px 16px 16px;background:var(--panel2);border-top:1px solid var(--line)}
+.lb-contact{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 16px;margin:14px 0 0;font-size:16px;line-height:1.45}
+.lb-contact dt{color:var(--ink-3)}
+.lb-contact dd{margin:0;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.lb-none{color:var(--ink-3)}
+.lb-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lb-acts .btn{min-height:48px;font-size:16px;padding:0 16px}
+.lb-dnc{flex-basis:100%;margin:0 0 4px}
+.lb-more{margin:10px 0 0;min-height:48px;font-size:16px}
+.lb-shut{margin:16px 0 0;background:var(--card)}
+.lb-shut > div{padding:0 12px 12px}
+.lb-shut .small{margin:0 0 10px;font-size:16px}
+@media (max-width:760px){
+  .lb-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:12px 14px}
+  .lb-name{flex:1 1 calc(100% - 72px)}
+  .lb-icons{flex:none;order:2}
+  .lb-trade{order:3;font-size:14px}
+  .lb-place{order:4;font-size:14px}
+  .lb-place::before{content:"\00B7\00A0";color:var(--ink-3)}
+  .lb-st{order:5;flex-basis:100%;margin-top:4px}
+  .lb-top .btn{width:100%}
+  .lb-sort{flex:1 1 100%}
+  .lb-body{padding:2px 14px 14px}
+  .lb-contact{grid-template-columns:1fr;gap:2px}
+  .lb-contact dd{margin-bottom:8px}
+  .lb-acts .btn{flex:1 1 auto;white-space:nowrap}
+}
+/* Calendar */
+.cal-note{margin:14px 0 0;max-width:none}
+#calBody > .explain:first-child{margin:14px 0 0}
+.cal-v .sub-h{margin:26px 0 8px}
+.cal-day{margin:12px 0 0}
+.cal-h{font-size:18px;font-weight:600;margin:0 0 8px;color:var(--ink-2)}
+.cal-list{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
+.cal-item{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;min-height:56px}
+.cal-item + .cal-item{border-top:1px solid var(--line)}
+.cal-time{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.4;white-space:nowrap}
+.cal-main{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.cal-main b{font-size:16px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.cal-main span{font-size:16px;color:var(--ink-2);line-height:1.4;overflow-wrap:anywhere}
+.cal-main .link-btn{font-size:16px;min-height:44px}
+.cal-tag{font:500 12.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:var(--panel2);border:1px solid var(--line-2);border-radius:6px;padding:6px 8px;margin-top:2px}
+.cal-past{margin:22px 0 0;background:var(--card)}
+.cal-past > div{padding:0 12px 12px}
+@media (max-width:560px){
+  .cal-item{grid-template-columns:76px minmax(0,1fr);padding:12px 14px}
+  .cal-tag{grid-column:2;justify-self:start;margin-top:0}
+}
+.cp-q{min-height:48px;font-size:16px;margin:6px 0 10px}
+.cp-list{max-height:min(46vh,420px);overflow-y:auto}
+.cp-list .pick[disabled]{opacity:.55;cursor:not-allowed}
+.cp-list .pick-name{font-size:16px}
+/* eight tabs on a phone (Leads + Calendar): each column is at least as wide as its label (Products and Calendar take a little more),
+   the rest share what's left; the current tab's pill is narrower so it fits its column. Bigger text plus Team can still run out of
+   room: then the bar scrolls sideways rather than cutting a label. */
+@media (max-width:760px){
+  .tabbar{grid-auto-columns:minmax(min-content,1fr);overflow-x:auto;scrollbar-width:none}
+  .tabbar::-webkit-scrollbar{display:none}
+  .tabbar a{padding:0 2px;font-size:12.5px;white-space:nowrap}
+  .tabbar svg{width:24px;height:24px}
+  .tabbar a.on svg{padding:3px 10px}
+}
+/* tablets (761-1099px): eight places no longer fit beside the logo, so the menu takes its own row under it (and scrolls sideways
+   rather than pushing the balance off the screen with bigger text). Calls' sticky strip sits under both rows. */
+@media (min-width:761px) and (max-width:1099px){
+  .bar{flex-wrap:wrap;row-gap:4px;padding-bottom:6px}
+  .bar .topnav{order:5;flex:1 1 100%;min-width:0;overflow-x:auto;scrollbar-width:none;gap:2px}
+  .bar .topnav::-webkit-scrollbar{display:none}
+  .bar .topnav a{flex:none;padding:0 12px}
+  .calls-top{top:var(--barh,122px)}
+}
