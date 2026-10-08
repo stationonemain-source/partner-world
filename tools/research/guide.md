@@ -134,6 +134,8 @@ Once you're signed in, you'll see six tabs: **Home, Products, Calls, Clients, Mo
 - **Your Partner Lead** appears if Station has given you one: their name, your training level and what comes next, and their latest notes to you.
 - **Earned so far** is what's ready plus what's on hold, and it says how many setup steps are left before Station can pay you. It opens Money.
 - **Today** counts the calls you've logged, your conversations, and the businesses that were interested or won. Before your first call, this spot points you to the Answer collection to learn first.
+- **Your referral link**, with **Copy**, and three numbers: visits through your link, people tied to your code (form fills through your link, wins Station accepted, clients), and paying clients in your book. Visits read **Not counted yet** until Station's website is reporting them.
+- **What's new** lists what happened on your account, newest first: a client's purchase or setup, a call you booked, Station's answer to **Add a client**, a win Station accepted, a first payment that cleared, a payout sent, and when Station last wrote to you. Ten at a time, with **Show more**. A client's purchase and a booking also reach you by email.
 - Below that: **See all products**, **Found a business yourself?** (add one to your list) and **Who buys? Ten real buyers**.
 
 ### Products
@@ -176,7 +178,11 @@ Never tell an owner they're losing a specific amount.
 
 ### Clients
 
-Your conversations with the clients in your book. A client shows up here once a business you brought in is paying Station. Clients aren't added here: a business you close joins your book when Station accepts it (see What counts as your client).
+Your conversations with the clients in your book. A client shows up here once a business you brought in is paying Station, or once Station has accepted one you added.
+
+- **Add a client:** closed a business yourself? Press **Add a client** and give the business name, the email they pay Station with, what they bought, and a note if you like. It goes to Station as a request and shows as **Waiting for Station** until Station accepts or declines it; either way the answer lands under **What's new** on Home and in your email. A business already in another partner's book can't be added, and Station asks before it adds a business that asked not to be contacted. Up to five requests a day.
+- **Add a note** on any client, with business facts only (for example, "ask for Maria after 2"). Saving **Interested in** a product keeps that beside the client so you remember to raise it. Only you and Station see your notes.
+- **Book Station support** for a client (a call on Station's own calendar). Pick a time; Station handles the call, and you tell the client when it is. See Talk with Station under Help.
 
 - Each client shows their latest message and how many are new. Open one to read the whole conversation.
 - **Send email** replies by email from Station, with your name in the subject. Station keeps the thread and sees every message. There's no texting, because Station doesn't currently have its own texting number.
@@ -190,9 +196,10 @@ Your money, from Station's payment records, which decide what you're paid.
 
 - **Earned** is what's ready for your next payout. Its note says where it stands: ready, waiting on your setup steps, or under the $50 minimum (smaller amounts roll forward). **On hold** is money Station is holding: a new client's first payment can be held up to 30 days after it clears. **Paid to date** is what Station has paid you. **Earned so far**, on Home and at the top of every screen, is Earned and On hold added together.
 - **Two setup steps** come before Station can pay you, and Money shows how many are left.
-- **1. Your tax form:** **Upload my tax form** takes an IRS Form W-9 as a PDF, JPG or PNG under 5 MB. It then reads "Uploaded. Station is checking it," and **✓ Received** once Station has it. Outside the U.S.? Email Station before you start.
+- **1. Your tax form:** pick **W-9** (U.S. person) or **W-8BEN** (outside the U.S.), each with a link to the IRS form, then **Upload my tax form** takes it as a PDF, JPG or PNG under 5 MB. It then reads "Uploaded. Station is checking it," and **✓ Received** once Station has it.
 - **2. Your payout account:** **Set up payouts with Stripe** opens your own Stripe setup, where you type your bank details on Stripe's site; Station never sees them. If you stop partway, the button reads **Finish setting up payouts**. While Stripe checks your details it says so, and anything Stripe still needs is listed. Once it's done, the step shows **✓ Ready**.
 - **Your clients** lists your commission lines: the client, what they're on, what they paid, what you earn, and **Where it stands**. **Wins Station is checking** lists the businesses Station sent you that you marked Won and Station hasn't confirmed yet.
+- **Next payout** says when your next payout is due and what it will hold. **Payouts sent** lists every payout Station has made to you, with the date and amount. If Stripe can't be checked just now, Money says so in plain words instead of showing a zero.
 - Below that: an example with two sample clients (not your money), the steps from a yes to your first payout, what one paying client is worth, and **How you get paid**, the main points of your agreement.
 
 What the statuses under **Where it stands** mean:
@@ -210,6 +217,9 @@ What the statuses under **Where it stands** mean:
 ### Help
 
 - **Message Station** is at the top (see below).
+- **Ask Station** answers questions about the products, the prices and the rules, from this guide and the product catalogue. Forty questions a day. If it can't answer, your question goes to the Station team.
+- **Talk with Station** books a call with Station on Station's own calendar: pick a time and say in a few words what it's about. You can have three calls with Station booked ahead. Station emails you the details with add-to-calendar links.
+- **The partner guide** is this whole guide, with a search box.
 - Then: who Station is, a **Bigger text** switch, **The rules, in one breath**, **How a call works** (with **Show me the tour again** and **What the buttons mean**), your 30-second pitch, **See who buys**, and **Retake the check**.
 - **Your account** shows the name and partner code you're signed in with, and **Sign out**. If some of your saves haven't reached Station yet, Sign out warns you first, because signing out deletes them from that browser.
 
