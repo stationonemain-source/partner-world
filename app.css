@@ -1306,3 +1306,7 @@ fieldset.tax-forms .check > span{white-space:nowrap}
   .bar .topnav a{flex:none;padding:0 12px}
   .calls-top{top:var(--barh,122px)}
 }
+
+/* 2026-10-13: Station's read-only view of a partner's Partner World */
+.viewbar{position:sticky;top:0;z-index:200;background:#1D4ED8;color:#fff;padding:8px 16px;font-size:14px;line-height:1.4;text-align:center}
+.viewbar b{font-weight:700}

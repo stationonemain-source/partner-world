@@ -28,8 +28,22 @@
   var DEMO = Q0.has('demo') || Q0.has('preview') || (function () { try { return sessionStorage.getItem('pw-demo') === '1'; } catch (e) { return false; } })();
   if (DEMO) { try { sessionStorage.setItem('pw-demo', '1'); } catch (e) {} }
   if (!DEMO) KEY = 'pw-live-v1';
+  /* 2026-10-13: STATION'S VIEW of a partner's Partner World (Circle > Partners > Partner World). The link carries #view=<token>,
+     a one-hour engine session that can only read (engine v4.71 refuses every write). It is kept for this tab only, never as a
+     sign-in, with its own throwaway state, so it can't mix with anyone's real Partner World in this browser. */
+  var VIEW = false, VIEW_TOKEN = '';
+  (function () {
+    var m = /^#view=([^&#\s]{8,})/.exec(location.hash || '');
+    var t = m ? decodeURIComponent(m[1]) : (function () { try { return sessionStorage.getItem('pw-view') || ''; } catch (e) { return ''; } })();
+    if (!t || DEMO) return;
+    VIEW = true; VIEW_TOKEN = t; KEY = 'pw-view-v1';
+    try { sessionStorage.setItem('pw-view', t); if (m) localStorage.removeItem(KEY); } catch (e) {}
+    if (m) { try { history.replaceState(null, '', location.pathname + location.search + '#home'); } catch (e) {} }
+  })();
+  var VIEW_READS = { me: 1, leads_list: 1, money_lines: 1, payout_status: 1, pw_news: 1, cal_mine: 1, conv_list: 1, conv_thread: 1, msg_thread: 1,
+    team_view: 1, team_partner: 1, book_slots: 1, st_slots: 1, lead_thread: 1, logout: 1 };
   /* a shared computer keeps the sign-in for this tab only (sessionStorage); otherwise 30 days on this device */
-  var TOKEN = ''; if (!DEMO) { try { TOKEN = localStorage.getItem(TKEY) || sessionStorage.getItem(TKEY) || ''; } catch (e) {} }
+  var TOKEN = ''; if (VIEW) TOKEN = VIEW_TOKEN; else if (!DEMO) { try { TOKEN = localStorage.getItem(TKEY) || sessionStorage.getItem(TKEY) || ''; } catch (e) {} }
   var main = document.getElementById('main');
   var BOX = {}; PW.boxes.forEach(function (b) { BOX[b.id] = b; });
   function fresh() { return { name: '', code: '', entered: false, log: {}, notes: {}, pitch: {}, focus: '', focusDay: '', filter: 'all', asked: false, big: false, toured: false, skipPrep: false, calls: [], since: '', askedAt: 0, demo: DEMO, outbox: [] }; }
@@ -38,6 +52,7 @@
   var S = fresh();
   try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
   if (DEMO) S.demo = true;
+  if (VIEW) { S.entered = true; S.toured = true; S.outbox = []; } // Station's view skips the rules check and the tour, and queues nothing
   if (!Array.isArray(S.outbox)) S.outbox = [];
   ['notes', 'pitch', 'log'].forEach(function (k) { if (!S[k] || typeof S[k] !== 'object') S[k] = {}; });
   if (!Array.isArray(S.calls)) S.calls = [];
@@ -323,6 +338,7 @@
   /* a call that never answers would block the one lane, so every call has a time limit; an HTTP error carries its status */
   var PUBLIC_ACTIONS = { login: 1, claim: 1, partner_request: 1 }; // the only calls made without a sign-in (never carry a token)
   function send(action, body) {
+    if (VIEW && !VIEW_READS[action]) return Promise.resolve({ ok: false, view_only: true, error: 'View only: this is Station looking at the partner’s Partner World, so nothing is changed from here.' });
     var payload = Object.assign({ action: action }, body || {});
     if (!PUBLIC_ACTIONS[action]) { if (!TOKEN) return Promise.resolve({ ok: false, signedOut: true }); payload.token = TOKEN; } // signed out while it waited in the lane: keep it
     var ctl = window.AbortController ? new AbortController() : null, lim = action === 'taxform_submit' || action === 'ask' ? 90000 : /^(cc_call|cc_more|note_add|note_del|payout_link)$/.test(action) ? 30000 : 20000;
@@ -463,6 +479,7 @@
   }
   function flushNotes() { Object.keys(noteT).forEach(function (id) { delete noteT[id]; queueNote(id); }); }
   function pump() {
+    if (VIEW) { S.outbox = []; return; } // nothing a founder taps in a view is ever sent
     if (DEMO || !TOKEN || pumping || BOOTING) { syncLine(); return; }
     var it = S.outbox.filter(function (x) { return !x.hold; })[0];
     if (!it) { syncLine(); return; }
@@ -571,6 +588,12 @@
   var resumeCall = null, lastEmail = '';
   function forgetPartner() { S.outbox = []; S.entered = false; S.toured = false; S.pitch = {}; S.mine = {}; S.focus = ''; S.log = {}; S.notes = {}; S.calls = []; noteT = {}; noteAgain = {}; }
   function signedOut(msg, wipe) {
+    if (VIEW) { // the hour is up (or Sign out): the view ends; it never falls through to a sign-in form
+      try { sessionStorage.removeItem('pw-view'); localStorage.removeItem(KEY); } catch (e) {}
+      TOKEN = ''; VIEW = false;
+      main.innerHTML = '<div class="wrap"><h1>This view has ended</h1><p>Station’s view of a partner’s Partner World lasts an hour. Open it again from Circle › Partners › Partner World.</p></div>';
+      return;
+    }
     TOKEN = ''; try { localStorage.removeItem(TKEY); sessionStorage.removeItem(TKEY); } catch (e) {}
     resumeCall = pending && !wipe ? pending : null; // a call in progress comes back after the partner signs in again
     BOOTED = false; ME = null; LL = null; MONEY = null; LEADS = []; indexLeads();
@@ -592,6 +615,8 @@
       if (m.ok === false) throw sentence(m.error, 'Station couldn’t load your account.');
       if (m.code && S.code && m.code !== S.code) forgetPartner(); // someone else used this browser before: their check, picks and notes aren't this partner's
       ME = m; S.code = m.code || S.code; S.name = firstName(m.name) || S.name || 'there';
+      if (VIEW) { var vb = document.getElementById('viewBar'); if (!vb) { vb = document.createElement('div'); vb.id = 'viewBar'; vb.className = 'viewbar'; vb.setAttribute('role', 'status'); document.body.insertBefore(vb, document.body.firstChild); }
+        vb.innerHTML = '<b>Station view</b> of ' + esc(m.name || m.code || 'this partner') + '’s Partner World · read-only: nothing here is changed or sent'; }
       S.outbox = S.outbox.filter(function (x) { return !x.code || x.code === S.code; });
       S.outbox.forEach(function (x) { x.hold = false; x.sending = false; delete x.prev; });
       return api('leads_list');
