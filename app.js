@@ -1038,6 +1038,7 @@
   function moneyLine(t) {
     if (t.unknown) return 'Your money couldn’t load just now. It’s safe at Station.';
     if (!t.ready && t.hold) { var nr = MONEY && MONEY.totals && MONEY.totals.next_release; return money(t.hold) + ' on hold' + (nr ? ' until ' + new Date(nr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '') + ', then it’s ready to pay.'; }
+    if (!t.ready && t.paid) return money(t.paid) + ' paid to you so far. New commission shows here as your clients pay.';
     if (!t.ready) return 'No commission yet. It shows here once a client’s first payment clears. Calls on their own pay nothing.';
     var b = (MONEY && MONEY.totals && MONEY.totals.blockers) || [], min = ((MONEY && MONEY.min_cents) || 5000) / 100;
     if (b.length) return 'Ready, and paid once the setup steps are done.';
@@ -2190,6 +2191,8 @@
     if (t.ready && b.length) return 'Ready, and paid in the first payout after the setup steps below are done.';
     if (t.ready && t.ready < min) return 'Paid once ' + money(min) + ' or more is ready. Smaller amounts roll forward.';
     if (t.ready) return 'Ready for your next payout.';
+    if (t.paid && !t.hold) return 'Everything you’ve earned so far has been paid to you. New commission shows here as your clients pay.';
+    if (t.paid) return 'Nothing ready right now; the rest is on hold until it clears.';
     return 'No commission ready yet. It shows here once a client’s payment clears and any hold ends.';
   }
   /* uploads and payout setup write to Station too, so they never run while the queue is sending */
