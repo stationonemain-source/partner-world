@@ -4,7 +4,7 @@
    Two modes:
    - LIVE (the default): the partner signs in with the email and password of their Station partner account, and works
      the businesses Station dealt them. Leads, call results, notes, "ask for more" and money all come from and go to
-     Station's partner engine (the same one the old station.solutions/partners portal uses), so both portals agree.
+     Station's partner engine, the same record Station works from.
      The engine is the only record; this browser keeps view preferences, the sign-in token and a queue of results
      that haven't reached the engine yet.
    - PREVIEW (?demo or ?preview): SAMPLE data, fictional businesses with reserved 555-01xx numbers, labelled on screen;
@@ -458,7 +458,7 @@
     if (text === String((top && top.text) || '').trim()) { save(); syncLine(); return; } // the newest note is the one shown; unchanged isn't sent again
     if (text) S.outbox.push({ q: newQ(), k: 'note', id: id, body: { subject: 'lead:' + id, text: text }, replaces: ours ? top.id : '', at: Date.now(), tries: 0, code: S.code });
     else if (ours) S.outbox.push({ q: newQ(), k: 'notedel', id: id, body: { id: top.id }, at: Date.now(), tries: 0, code: S.code });
-    else if (top) { S.notes[id] = String(top.text || '').slice(0, NOTE_MAX); toast('That note was written in the old portal, so it stays. Type a new one to replace it here.', 5000); var c = cardEl(id); if (c && !c.contains(document.activeElement)) renderCard(c); }
+    else if (top) { S.notes[id] = String(top.text || '').slice(0, NOTE_MAX); toast('That note was written before Partner World, so it stays. Type a new one to replace it here.', 5000); var c = cardEl(id); if (c && !c.contains(document.activeElement)) renderCard(c); }
     save(); pump();
   }
   function flushNotes() { Object.keys(noteT).forEach(function (id) { delete noteT[id]; queueNote(id); }); }
@@ -743,7 +743,7 @@
       '<p class="field-err" id="e-form" role="alert"></p>' +
       '<button class="btn btn-dark btn-big btn-block" type="submit" id="s-go">' + (claim ? 'Set my password' : 'Sign in') + '</button></form>' +
       '<p class="gate-links"><button class="link-btn" type="button" id="swapMode">' + (claim ? 'Already set your password? Sign in' : 'First time here? Activate your invite') + '</button></p>' +
-      '<p class="small gate-fine">Forgot your password? Email <a href="mailto:main@station.solutions">main@station.solutions</a>. Once it’s reset, use “First time here?” to set a new one.' + (claim ? '' : ' Used the old partner portal? Same email and password.') + '</p>' +
+      '<p class="small gate-fine">Forgot your password? Email <a href="mailto:main@station.solutions">main@station.solutions</a>. Once it’s reset, use “First time here?” to set a new one.' + (claim ? '' : '') + '</p>' +
       (claim ? '' : '<div class="gate-or"><span>New to Station?</span></div><button class="btn btn-big btn-block swap-btn" type="button" id="toRequest">Request an account</button>') +
       '<p class="small gate-fine">The Station Partner Agreement you sign wins over anything in this app.</p>', claim ? 'Set your password' : 'Sign in');
     var tr = document.getElementById('toRequest'); if (tr) tr.addEventListener('click', function () { signMode = 'request'; SIGNIN_MSG = ''; SIGNIN_GOOD = false; renderSignIn(); });
@@ -850,7 +850,7 @@
     document.body.classList.toggle('admin-mode', tab === 'admin');
     document.documentElement.classList.toggle('calls-lock', tab === 'calls'); // only the feed scrolls on Calls, never the page
     document.querySelectorAll('[data-tab]').forEach(function (a) { var here = a.getAttribute('data-tab') === tab; a.classList.toggle('on', here); if (here) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-    var tt = totals(); document.getElementById('chipBal').textContent = tt.unknown ? '—' : money(tt.ready + tt.hold); // same figure as Home's Earned so far
+    var tt = totals(); document.getElementById('chipBal').textContent = tt.unknown ? '—' : money(tt.ready + tt.hold + tt.paid); // same figure as Home's and Money's Earned (2026-10-13: paid included)
   }
   function mount(html, title) {
     main.innerHTML = html; window.scrollTo(0, 0);
@@ -909,7 +909,7 @@
       var prog = QUIZ.map(function (_, k) { return '<i class="' + (k <= i ? 'on' : '') + '"></i>'; }).join('');
       var ok = picked != null && q.a[picked][1] === 1;
       var intro = !retake && i === 0 && picked == null ? '<div class="explain good">' + (DEMO ? '' : '<strong>You’re in' + (S.name ? ', ' + esc(S.name) : '') + '.</strong> ') +
-        'Before your list: six quick questions on the rules that matter most. Once per device; a wrong pick just means try again.</div>' : '';
+        'Before your list: six quick questions on the rules that matter most. Once per sign-in on this device; a wrong pick just means try again.</div>' : '';
       var body = '<section class="enter"><div class="enter-card">' + intro + '<div class="qprog" aria-hidden="true">' + prog + '</div>' +
         '<p class="small" style="margin:0 0 6px">Question ' + (i + 1) + ' of ' + QUIZ.length + '</p><h1 class="qh">' + esc(q.q) + '</h1><div class="choices" role="group" aria-label="Answers">';
       order.forEach(function (k) {
@@ -984,10 +984,10 @@
     }
     var fresh = !Object.keys(S.log).length && !S.calls.length, lb = BOX['bundle-answer'] || BOX.lineback; // one first product everywhere: the Answer collection
     var side = fresh
-      ? '<a class="start-here" href="#box/' + lb.id + '"><span class="lbl">New here? Learn this one first</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(String(lb.what || '').replace(/\.+$/, '')) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + money(lb.earn) + ' a month per paying client</span><span class="go">Read the ' + esc(lb.short || lb.name) + ' cheat sheet <span aria-hidden="true">&rarr;</span></span></a>'
+      ? '<a class="start-here" href="#box/' + lb.id + '"><span class="lbl">New here? Learn this one first</span><span class="name">' + esc(lb.name) + '</span><span class="what">' + esc(String(lb.what || '').replace(/\.+$/, '')) + '. The easiest to explain on a first call.</span><span class="earn">You earn ' + fromTier(lb) + money(lb.earn) + ' a month per paying client</span><span class="go">Read the ' + esc(lb.short || lb.name) + ' cheat sheet <span aria-hidden="true">&rarr;</span></span></a>'
       : '<div class="start-here today"><span class="lbl">Today</span><div class="stats"><div><b>' + st.calls + '</b><span>' + (st.calls === 1 ? 'call logged' : 'calls logged') + '</span></div><div><b>' + st.talked + '</b><span>' + (st.talked === 1 ? 'conversation' : 'conversations') + '</span></div><div><b>' + st.warm + '</b><span>interested or won</span></div></div>' +
         '<span class="small">Every call you log keeps these businesses yours a little longer.</span></div>';
-    var moneyBox = '<a class="money-box' + (t.ready || t.hold ? '' : ' zero') + '" href="#money"><span class="lbl">Earned so far</span><span class="big num">' + (t.unknown ? '—' : money(t.ready + t.hold)) + '</span>' +
+    var moneyBox = '<a class="money-box' + (t.ready || t.hold || t.paid ? '' : ' zero') + '" href="#money"><span class="lbl">Earned so far</span><span class="big num">' + (t.unknown ? '—' : money(t.ready + t.hold + t.paid)) + '</span>' +
       '<span class="row">' + moneyLine(t) + '</span>' +
       setupLine() +
       '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
@@ -1008,6 +1008,8 @@
   };
 
 
+  /* 2026-10-13: a product with several tiers earns more on the higher ones; its earn figure is the lowest tier's */
+  function fromTier(b) { return b && /·/.test(String(b.price || '')) ? 'from ' : ''; }
   function moneyLine(t) {
     if (t.unknown) return 'Your money couldn’t load just now. It’s safe at Station.';
     if (!t.ready && t.hold) { var nr = MONEY && MONEY.totals && MONEY.totals.next_release; return money(t.hold) + ' on hold' + (nr ? ' until ' + new Date(nr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '') + ', then it’s ready to pay.'; }
@@ -1020,7 +1022,7 @@
   function setupLine() {
     if (!DEMO && !MONEY) return '';
     if (DEMO) return '<span class="row warnline">2 setup steps before Station can pay you</span>';
-    var n = (MONEY.tax_received ? 0 : 1) + (MONEY.account_state === 'ready' ? 0 : 1);
+    var n = (MONEY.tax_received ? 0 : 1) + (MONEY.account_state === 'ready' ? 0 : 1) + (ME && ME.agreement && ME.agreement.status !== 'signed' ? 1 : 0);
     return n ? '<span class="row warnline">' + n + (n === 1 ? ' setup step' : ' setup steps') + ' before Station can pay you</span>' : '';
   }
   /* ---------- what one paying client is worth: arithmetic from published prices, never a forecast ---------- */
@@ -1048,7 +1050,7 @@
     var badges = '';
     if (b.easy) badges += '<span class="badge first">Good first pick</span>';
     
-    var earn = b.earn ? '<span class="earn"><b class="amt num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client</span>'
+    var earn = b.earn ? '<span class="earn">' + fromTier(b) + '<b class="amt num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client</span>'
       : '<span class="earn tbd">You earn 40% of the setup fee, once</span>';
     return '<a class="box" href="#box/' + b.id + '"><div class="badges">' + badges + '</div><span class="name">' + esc(b.name) + '</span><span class="what">' + esc(b.blurb || b.what) + '</span>' + earn + '</a>';
   }
@@ -1174,7 +1176,7 @@
     ].map(function (m) { return '<details class="more"><summary><h3>' + m[0] + '</h3></summary><div>' + m[1] + '</div></details>'; }).join('');
     mount('<div class="wrap prod"><a class="back" href="#products">&larr; All products</a>' +
       '<div class="prod-top"><h1>' + esc(b.name) + '</h1><p class="what">' + esc(b.what) + '</p>' +
-      '<p class="earn-line">' + (b.earn ? 'You earn <b class="num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client' : 'You earn 40% of the setup fee, once') + '</p></div>' + cheat +
+      '<p class="earn-line">' + (b.earn ? 'You earn ' + fromTier(b) + '<b class="num">' + money(b.earn) + '</b> a ' + period(b) + ' per paying client' : 'You earn 40% of the setup fee, once') + '</p></div>' + cheat +
       '<div class="earn-card"><span class="lbl">What you earn per paying client</span>' +
       (b.earn ? '<div class="big num">' + money(b.earn) + '</div><div class="per">every ' + period(b) + ' they keep paying &middot; ' + money(b.earn * 12) + ' over 12 months of payments</div>' : '<div class="big">40% of the setup fee, once</div>') +
       '<p>' + earnNote + ' Nothing is earned during a trial, and it’s arithmetic, not a forecast.</p></div>' +
@@ -1403,7 +1405,7 @@
   function sendBox(l, s) {
     var bx = BOX[s.box] || pitchFor(l), when = new Date(s.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     var head = s.o === 'won' ? '<strong>Won on ' + when + '.</strong> ' + (bx.earn ? '<b class="plus">+' + money(bx.earn) + ' a ' + period(bx) + '</b> to you once they start paying' + (bx.trial ? ' (after their ' + TD + '-day trial)' : '') + '. ' : '') +
-        (s.accepted ? 'Station has confirmed this win.' : l.own ? 'Send them your link: signing up from it is what credits the sale to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; you see the client under Money once they pay.'
+        (s.accepted ? 'Station has confirmed this win.' : l.own ? 'Send them your link: signing up from it is what credits the sale to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '. <b>Because it’s your own lead,</b> also <a href="#clients">add them as a client</a> once they sign up: that is how Station puts them in your book.'
           : 'Send them your link so the sale is credited to you. <b>What happens next:</b> they start from your link' + (bx.trial ? ' with a ' + TD + '-day free trial' : '') + '; Station checks the win and matches it to their signup; you see the client under Money once they pay.')
       : '<strong>Interested in ' + esc(bx.name) + '.</strong> Send them your link so they can look, and so any sale is credited to you. They stay on your list.';
     return '<div class="won-next' + (s.o === 'won' ? '' : ' warm') + '"><p>' + head + '</p>' +
@@ -1515,6 +1517,10 @@
     ni.addEventListener('change', function () { noteDone(id); });
     var em = card.querySelector('[data-email]');
     if (em) em.addEventListener('input', function () { S.log[id].email = em.value.trim().slice(0, 120); save(); }); // the email composer starts from it
+    if (em && !DEMO) em.addEventListener('change', function () { // 2026-10-13: Station gets it too (engine lead_contact_email), so the win can be matched to the signup
+      var v = cleanEmail(em.value.trim()).toLowerCase(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v)) return;
+      api('lead_contact_email', { id: id, email: v }).then(function (d) { if (d && d.ok && !d.kept) toast('Saved. Station has their email.'); }, function () {});
+    });
   }
 
   /* ---------- during a call: "Ready to call", then "How did it go?" when they come back from the phone ---------- */
@@ -2130,6 +2136,9 @@
     // the tax step reads your account (me) when Stripe can't be checked, so the upload is never hidden behind a Stripe outage
     var tf = (ME && ME.taxform) || {}, tax = MONEY ? !!MONEY.tax_received : !!tf.received, taxWait = !tax && !!(tf.pending_review || tf.uploaded_at || tf.uploadedAt);
     var st = MONEY ? MONEY.account_state || 'none' : 'unknown', steps = (tax ? 0 : 1) + (st === 'ready' ? 0 : 1);
+    // 2026-10-13 (engine v4.68): the agreement, as GHL's e-sign record has it (Circle pushes it). Unknown (null) is not counted as a step.
+    var ag = ME && ME.agreement ? String(ME.agreement.status || '') : '';
+    if (ag && ag !== 'signed') steps += 1;
     var tfType = /8BEN/i.test(String(tf.type || '')) ? 'W-8BEN' : /W-?9/i.test(String(tf.type || '')) ? 'W-9' : '';
     var taxRow = tax ? '<span class="done-mark">✓ Received' + (tfType ? ' (' + tfType + ')' : '') + '</span>'
       : '<span class="tax-pick"><fieldset class="tax-forms"><legend>Which form are you uploading?</legend>' +
@@ -2145,7 +2154,9 @@
         'U.S. persons: IRS Form W-9. Outside the U.S.: Form W-8BEN. Get the blank form from the IRS: <a href="' + IRS_W9 + '" target="_blank" rel="noopener">W-9 (PDF)</a> · <a href="' + IRS_W8 + '" target="_blank" rel="noopener">W-8BEN (PDF)</a>. ' +
         'Fill it in, then upload it here as a PDF, JPG or PNG under 5 MB, never by email: it carries your Social Security or tax number. Outside the U.S.? After you upload, Message Station: payouts are set up for U.S. bank accounts.') +
       ' Station issues a 1099 where the law requires; your taxes are your own.</span>' + taxRow + '</div>' +
-      '<div class="setup-row"><span><b>2. Your payout account.</b> Station pays you through Stripe. You type your bank details on Stripe’s own site; Station never sees them.' + needs + '</span>' + payRow + '</div></div>';
+      '<div class="setup-row"><span><b>2. Your payout account.</b> Station pays you through Stripe. You type your bank details on Stripe’s own site; Station never sees them.' + needs + '</span>' + payRow + '</div>' +
+      (ag ? '<div class="setup-row"><span><b>3. Your Partner Agreement.</b> ' + (ag === 'signed' ? 'Signed. Station has it on file.' : ag === 'sent' ? 'Station emailed it to you to sign online. Look for an email from Station with the agreement, and sign it there.' : 'Station sends it to your email to sign online.') +
+        ' Read it any time: <a href="https://station.solutions/partners/agreement.html" target="_blank" rel="noopener">Station Partner Agreement</a>.</span>' + (ag === 'signed' ? '<span class="done-mark">✓ Signed</span>' : '<span class="small">' + (ag === 'sent' ? 'Waiting for your signature' : 'Not sent yet') + '</span>') + '</div>' : '') + '</div>';
   }
   function earnedNote(t) {
     if (DEMO) return 'No commission yet. Paid in the first payout after the 2 steps below are done.';
@@ -2279,7 +2290,7 @@
       : '<p class="empty">No clients yet. When a business you called starts paying Station, it shows up here.</p>';
     var rows = BOOK.map(function (r) { return '<tr><td data-l="Client"><b>' + esc(r.client) + '</b></td><td data-l="On">' + esc(r.on) + '</td><td data-l="They pay" class="r num">' + money(r.pays) + ' a month</td><td data-l="You earn" class="r num">' + money(r.pays * PW.rate) + ' a month</td><td data-l="Where it stands">' + esc(r.state) + '</td></tr>'; }).join('');
     mount('<div class="wrap money"><h1>Your money</h1><p class="sub">' + (DEMO ? 'Once you’re live, these numbers come from Station’s payment records, and those records decide what you’re paid.' : 'From Station’s payment records, which decide what you’re paid.') + '</p>' +
-      '<div class="tiles3"><div class="tile hero"><span class="lbl">Earned</span><div class="v num">' + (t.unknown ? '—' : money(t.ready)) + '</div><p>' + earnedNote(t) + '</p></div>' +
+      '<div class="tiles3"><div class="tile hero"><span class="lbl">Earned so far</span><div class="v num">' + (t.unknown ? '—' : money(t.ready + t.hold + t.paid)) + '</div><p>' + (t.unknown ? '' : money(t.ready) + ' ready to pay. ') + earnedNote(t) + '</p></div>' +
       '<div class="tile"><span class="lbl">On hold</span><div class="v num">' + (t.unknown ? '—' : money(t.hold)) + '</div><p>Station may hold a new client’s first payment up to 30 days after it clears (the refund window).</p></div>' +
       '<div class="tile"><span class="lbl">Paid to date</span><div class="v num">' + (t.unknown ? '—' : money(t.paid)) + '</div><p>Paid once $50 or more is ready.</p></div></div>' +
       stripeNoteHtml() + nextPayoutHtml() +
@@ -2294,11 +2305,11 @@
       '<h2 class="gap-h">From a yes to your first payout</h2>' + yesToPaid() +
       '<h2 class="gap-h">What one paying client is worth</h2>' + worthTable() +
       '<h2 class="gap-h">How you get paid</h2><div class="howpay">' +
-      '<div><b>40% of what each client pays Station</b>For a website, 40% of the setup fee; for everything else, 40% of every payment while they stay, for as long as your agreement is in effect. Paid once the client’s payment clears.</div>' +
+      '<div><b>40% of what each client pays Station</b>For a website, 40% of the setup fee, once. If a client leaves and pays the one-time $1,250 to keep the website that came with their plan, 40% of that ($500), once. For everything else, 40% of every payment while they stay, for as long as your agreement is in effect. Paid once the client’s payment clears.</div>' +
       '<div><b>Websites</b>Station builds every website; you never build one. Hosting & care earns nothing.</div>' +
       '<div><b>After the free trial</b>Every single product and every collection starts with a ' + TD + '-day trial. You earn from their first real payment. Core, Pro, Max and custom websites have no trial.</div>' +
       '<div><b>Paid to your Stripe account</b>Once $50 or more is ready. Smaller amounts roll forward and never expire.</div>' +
-      '<div><b>What earns nothing</b>Hosting & care, the free Station-built website, the one-time $500 to keep a built site, and taxes.</div>' +
+      '<div><b>What earns nothing</b>Hosting & care, the free Station-built website itself, and taxes.</div>' +
       '<div><b>Refunds and chargebacks</b>If a client’s payment is refunded or reversed, that commission comes off your balance or next payout. If there’s no balance left, Station may ask you to pay it back.</div>' +
       '<div><b>If a client cancels</b>Your commission on them stops when they stop paying. What you’ve already earned stays yours.</div>' +
       '<div><b>If the agreement ends</b>Either side can end it any time by email. You’re paid on payments that cleared up to that day, and nothing after.</div>' +
@@ -2336,7 +2347,7 @@
         buyerRow('Probably feeling (for you, not to say out loud)', y.feels) + buyerRow('Ask first', y.ask, 1) + buyerRow('Then say', y.say, 1) +
         buyerRow('The push-back: ' + y.worry, y.reply, 1) + buyerRow('Don’t', y.avoid) +
         '<div class="cheat-row"><span class="cheat-lbl">Best fit</span><p><a href="#box/' + y.fit + '"><b>' + esc(y.fitNote) + '</b></a></p></div>' +
-        (fit && fit.earn ? '<div class="cheat-row"><span class="cheat-lbl">What you earn</span><p>' + esc(fit.short || fit.name) + ' pays you ' + money(fit.earn) + ' a month per paying client: 40% of every payment while they stay.</p></div>' : '') +
+        (fit && fit.earn ? '<div class="cheat-row"><span class="cheat-lbl">What you earn</span><p>' + esc(fit.short || fit.name) + ' pays you ' + fromTier(fit) + money(fit.earn) + ' a month per paying client: 40% of every payment while they stay.</p></div>' : '') +
         '<div class="cheat-row"><span class="cheat-lbl">Sounds like these businesses</span><p>' + esc(y.trades) + '</p></div>' +
         '<p class="small fine">Suggested words. Say it your way, and keep the facts and the rules.</p></section></div>' +
         '<div class="cta-bar"><a class="btn btn-dark btn-big" href="#box/' + y.fit + '">See the ' + esc(fit ? fit.short || fit.name : 'product') + ' cheat sheet</a></div>', y.name);
@@ -2405,7 +2416,7 @@
       if (d.signedOut) return;
       if (!d.ok) { mount('<div class="wrap team"><h1>Your team</h1><div class="explain bad">' + esc(sentence(d.error, 'Your team couldn’t load just now.')) + '</div></div>', 'Team'); return; }
       var team = d.team || [], sum = { today: 0, week: 0, talks: 0, won: 0 };
-      team.forEach(function (p) { sum.today += p.activity.calls_today; sum.week += p.activity.calls_week; sum.talks += p.activity.talks_week; sum.won += p.counts.won; });
+      team.forEach(function (p) { var a = p.activity || {}, c = p.counts || {}; sum.today += +a.calls_today || 0; sum.week += +a.calls_week || 0; sum.talks += +a.talks_week || 0; sum.won += +c.won || 0; });
       var rows = team.slice().sort(function (a, b) { return (isQuiet(b) ? 1 : 0) - (isQuiet(a) ? 1 : 0) || (b.asked_more ? 1 : 0) - (a.asked_more ? 1 : 0) || String(a.name).localeCompare(String(b.name)); });
       mount('<div class="wrap team"><h1>Your team</h1>' +
         '<p class="sub">' + team.length + (team.length === 1 ? ' partner' : ' partners') + ' on your team. Station assigns partners to you; you train them and keep them moving.</p>' +
@@ -2628,7 +2639,7 @@
       else add(at, 'booking', 'Call booked with ' + (b.label || 'a business'), when + ' (your time)', '#calendar');
     });
     (n.claims || []).forEach(function (c) {
-      if (c.status === 'accepted') add(c.decided_at, 'accepted', 'Station added ' + c.business + ' to your book', 'You earn 40% of what they pay Station, once each payment clears.', '#clients');
+      if (c.status === 'accepted') add(c.decided_at, 'accepted', 'Station added ' + c.business + ' to your book', 'You earn 40% of what they pay Station once each payment clears (a website’s setup fee once; nothing on hosting & care).', '#clients');
       else if (c.status === 'declined') add(c.decided_at, 'declined', 'Station didn’t add ' + c.business + ' to your book', c.reason ? 'Station: ' + c.reason : '', '#clients');
       else add(c.at, 'pending', 'You asked Station to add ' + c.business, 'Waiting for Station to accept it.', '#clients');
     });
@@ -2663,7 +2674,7 @@
       return head + '<p class="small fine">Example: once you’re live, this lists what really happened on your account.</p><ol class="news-list ex">' +
         [{ t: now - 40 * 60e3, kind: 'booking', title: 'Call booked with Red River Roofing', text: whenLong(now + 864e5) + ' (your time)', href: '' },
          { t: now - 26 * 3600e3, kind: 'paid', title: 'Juniper Lane Plumbing’s first payment cleared', text: 'You earn $78.80 on it.', href: '' },
-         { t: now - 50 * 3600e3, kind: 'accepted', title: 'Station added Two Creeks Roofing to your book', text: 'You earn 40% of what they pay Station, once each payment clears.', href: '' }].map(newsLi).join('') + '</ol></section>';
+         { t: now - 50 * 3600e3, kind: 'accepted', title: 'Station added Two Creeks Roofing to your book', text: 'You earn 40% of what they pay Station once each payment clears (a website’s setup fee once; nothing on hosting & care).', href: '' }].map(newsLi).join('') + '</ol></section>';
     }
     var items = newsItems(), body;
     if (!NEWS && !NEWS_ERR) body = '<p class="small">Loading what’s new…</p>';
@@ -3046,8 +3057,12 @@
     if (PAYOUTS_ERR) return '<p class="empty">' + esc(PAYOUTS_ERR) + ' Stripe couldn’t be checked, so the payouts sent can’t be listed right now. Your Stripe dashboard shows every payout. <button class="link-btn" type="button" id="payoutsRetry">Try again</button></p>';
     if (!PAYOUTS) return '<p class="small">Loading your payouts…</p>';
     var ts = PAYOUTS.transfers || [];
-    if (!ts.length) return '<p class="empty">No payouts yet.' + (PAYOUTS.none ? ' Station pays into your Stripe account once it’s set up (below).' : '') + '</p>';
-    return '<div class="table-wrap"><table><thead><tr><th scope="col">Sent</th><th scope="col" class="r">Amount</th><th scope="col">Where it is now</th></tr></thead><tbody>' + ts.map(function (x) {
+    // 2026-10-13 (engine v4.68): payments Station made outside Stripe Connect (by hand) are payouts too
+    var hand = (MONEY && MONEY.paid_outside) || [];
+    if (!ts.length && !hand.length) return '<p class="empty">No payouts yet.' + (PAYOUTS.none ? ' Station pays into your Stripe account once it’s set up (below).' : '') + '</p>';
+    return '<div class="table-wrap"><table><thead><tr><th scope="col">Sent</th><th scope="col" class="r">Amount</th><th scope="col">Where it is now</th></tr></thead><tbody>' + hand.map(function (x) {
+      return '<tr><td data-l="Sent">' + esc(x.date ? fmtDay(x.date + 'T12:00:00Z') : '—') + '</td><td data-l="Amount" class="r num">' + cents(x.cents) + '</td><td data-l="Where it is now">Paid by Station directly (outside Stripe)</td></tr>';
+    }).join('') + ts.map(function (x) {
       return '<tr><td data-l="Sent">' + esc(fmtDay(x.created)) + '</td><td data-l="Amount" class="r num">' + cents(x.amount_cents) + '</td><td data-l="Where it is now">' + (x.reversed ? 'Reversed' : esc(x.bank_text || 'Sent to your Stripe account')) + '</td></tr>';
     }).join('') + '</tbody></table></div>' + (PAYOUTS.bank_read && PAYOUTS.bank_read !== 'ok' ? '<p class="small fine">Stripe didn’t say where every payout is in your bank just now; your Stripe dashboard has them all.</p>' : '') +
       '<p class="small fine">Station’s last 10 payouts to you. Stripe pays your Stripe balance to your bank on your account’s schedule.</p>';
@@ -3071,7 +3086,7 @@
      - Calendar (#calendar): engine cal_mine (calls booked with businesses, with Station, and Station support for a client),
        grouped by day in the partner's own time zone. "Book a call" picks a business, then the same booking sheet; or Station.
      ====================================================================================================================== */
-  var LFILT = [['all', 'All'], ['fresh', 'New'], ['callback', 'Call back'], ['interested', 'Interested'], ['booked', 'Booked'], ['won', 'Won'], ['closed', 'Closed']];
+  var LFILT = [['all', 'All'], ['fresh', 'New'], ['tried', 'Tried'], ['callback', 'Call back'], ['interested', 'Interested'], ['booked', 'Booked'], ['won', 'Won'], ['closed', 'Closed']];
   var LV = { q: '', shown: 25, open: '' };
   var ICON_WEB = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.6 8.4 6.8 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.3 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4z"/></svg>';
   var ICON_CAL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M7 2h2v2h6V2h2v2h3v18H4V4h3zM6 10v10h12V10zM8 12h3v3H8z"/></svg>';
