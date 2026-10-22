@@ -24,3 +24,15 @@ a cold-lane booking confirmation to the business in `lead_book`, ceilinged partn
     python3 tools/patch_affiliate_engine_v465_missing.py --export /tmp/live.js
     python3 tools/patch_affiliate_engine_v465_missing.py --offline /tmp/live.js /tmp/v465.js
     node tools/affiliate_engine_v465_sandbox.js /tmp/v465.js        # PASS 57  FAIL 0 (nothing leaves the machine)
+
+# Engine v4.74 (the Station Partner course, 2026-10-21; NOT applied until Circle's go)
+
+`patch_affiliate_engine_v474_course.py`: course progress, server-graded lesson checks and final quiz, the practice-call upload
+(stored by Circle), founder review, the lead gate (OFF by default) and per-partner exemptions. Same dry-run / --apply / --export /
+--offline shape as v4.65; the sandbox `affiliate_engine_v474_sandbox.js` runs 74 checks with nothing leaving the machine.
+v4.73 (the partner-pay session) composes with it in either order.
+
+    python tools/patch_affiliate_engine_v474_course.py --export /tmp/live.js
+    python tools/patch_affiliate_engine_v474_course.py --offline /tmp/live.js /tmp/v474.js
+    node tools/affiliate_engine_v474_sandbox.js /tmp/v474.js         # PASS 74  FAIL 0
+    python tools/course_key_push.py                                   # checks answer_key.json against course.json; --apply loads it

@@ -1,0 +1,310 @@
+{
+ "version": "sample-1",
+ "updated": "2026-10-21",
+ "sample": true,
+ "modules": [
+  {
+   "id": "00-welcome",
+   "n": "0",
+   "title": "Welcome to Station",
+   "outcome": "Say who you are and how Station works, in one breath.",
+   "lessons": [
+    {
+     "id": "0.1",
+     "title": "Who you are on a call",
+     "minutes": 3,
+     "goal": "Introduce yourself honestly as an independent partner.",
+     "video": null,
+     "read_md": "**Sample lesson.** The real course replaces this text.\n\nYou're an **independent partner with Station**. Station builds, sets up and supports everything; you're the business owner's contact.\n\n- Say your name.\n- Say you're an independent partner with Station.\n- Give the reason in a few words, then ask if it's a good time.\n\n> \"Hi, it's Sam, an independent partner with Station, calling about missed calls. Did I catch you at a bad time?\"",
+     "check": [
+      {
+       "q": "A roofer asks, \"So you're with Station?\" You say:",
+       "options": [
+        "\"I'm an independent partner with Station. Station builds and supports everything, and I'm your contact.\"",
+        "\"Yes, I'm on Station's sales team.\"",
+        "\"I'm a Station account manager.\""
+       ],
+       "answer": 0,
+       "why": "You're independent, not an employee, and you never handle accounts."
+      },
+      {
+       "q": "What do you do in the first 15 seconds?",
+       "options": [
+        "Name, independent partner, the reason, and ask if it's a good time.",
+        "Read out every product so they know the options.",
+        "Ask for their email first."
+       ],
+       "answer": 0,
+       "why": "Who you are, why you're calling, and permission. Nothing else yet."
+      }
+     ]
+    },
+    {
+     "id": "0.2",
+     "title": "Support is Station's",
+     "minutes": 2,
+     "goal": "Pass every support question to Station the same day.",
+     "video": null,
+     "read_md": "**Sample lesson.** Support is always Station's. When a client asks you to fix something, tell them Station will handle it and pass it on with **Message Station** the same business day.\n\nYou never log into a client's account, and you never take a password.",
+     "check": [
+      {
+       "q": "A client texts: \"Can you just log in and fix my hours?\" You:",
+       "options": [
+        "Tell her Station will handle it and pass it on with Message Station today.",
+        "Ask for her login.",
+        "Note it for the end of the week."
+       ],
+       "answer": 0,
+       "why": "Support goes to Station the same business day. You never log in for a client."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01-money",
+   "n": "1",
+   "title": "The money",
+   "outcome": "Explain exactly when and how you're paid.",
+   "lessons": [
+    {
+     "id": "1.1",
+     "title": "When you earn",
+     "minutes": 3,
+     "goal": "Know that a free trial earns nothing.",
+     "video": null,
+     "read_md": "**Sample lesson.** You earn when a client's payment **clears**. A free trial earns nothing; commission starts with the first real payment.\n\n| What happens | What you earn |\n|---|---|\n| Free trial | Nothing |\n| First payment clears | Your share of it |\n| Hosting & care | Nothing |",
+     "check": [
+      {
+       "q": "A salon starts a free trial through your link today. What do you earn in the trial?",
+       "options": [
+        "Nothing. Commission starts when the first real payment clears.",
+        "Your full share, on the day they sign up.",
+        "Half, because it's a trial."
+       ],
+       "answer": 0,
+       "why": "Nothing is earned during a free trial."
+      }
+     ]
+    },
+    {
+     "id": "1.2",
+     "title": "No promises",
+     "minutes": 2,
+     "goal": "Never promise a number.",
+     "video": null,
+     "read_md": "**Sample lesson.** Never promise a result: no jobs, calls, reviews, rankings or money. Say what it does, not what it will earn them.\n\n> \"I can't promise a number, because it depends on your business. What I can show you is exactly what it does.\"",
+     "check": [
+      {
+       "q": "The owner asks, \"How many more jobs will I get?\" You say:",
+       "options": [
+        "\"I can't promise a number. I can show you exactly what it does.\"",
+        "\"At least ten a month.\"",
+        "\"It pays for itself in a week.\""
+       ],
+       "answer": 0,
+       "why": "No promises, ever: say what it does."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "02-who-buys",
+   "n": "2",
+   "title": "Who buys",
+   "outcome": "Spot the one problem a business has and name the smallest fix.",
+   "lessons": [
+    {
+     "id": "2.1",
+     "title": "Start with the gap",
+     "minutes": 3,
+     "goal": "Ask about the problem before you name a product.",
+     "video": null,
+     "read_md": "**Sample lesson.** Open with a question about the gap, not the product.\n\n1. Ask what happens when the phone rings and nobody can answer.\n2. Let the owner talk.\n3. Then name **one** product that fixes what they told you.",
+     "check": [
+      {
+       "q": "Your first question to a plumber should be about:",
+       "options": [
+        "What happens to a caller when he's under a house.",
+        "Which plan he wants.",
+        "His website login."
+       ],
+       "answer": 0,
+       "why": "Start with what the gap costs them, not the product."
+      }
+     ]
+    },
+    {
+     "id": "2.2",
+     "title": "When you don't know",
+     "minutes": 2,
+     "goal": "Say Station can confirm it, and don't guess.",
+     "video": null,
+     "read_md": "**Sample lesson.** When an owner asks something you don't know (an integration, a law, a feature), say: \"Station can confirm that. I don't want to guess.\" Then pass it on.",
+     "check": [
+      {
+       "q": "\"Does it work with Housecall Pro?\" You don't know. You say:",
+       "options": [
+        "\"Station can confirm how it fits. I don't want to guess.\"",
+        "\"Yes, it works with everything.\"",
+        "\"No, it doesn't.\""
+       ],
+       "answer": 0,
+       "why": "Never invent a feature or an integration."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "certification": {
+  "pass_pct": 75,
+  "draw": 4,
+  "quiz": [
+   {
+    "id": "q01",
+    "module": "00-welcome",
+    "q": "A client asks you to log in and change her hours. You:",
+    "options": [
+     "Pass it to Station with Message Station the same day.",
+     "Ask for her password.",
+     "Tell her to read the help pages.",
+     "Do it next week."
+    ],
+    "answer": 0
+   },
+   {
+    "id": "q02",
+    "module": "00-welcome",
+    "q": "Which introduction is right?",
+    "options": [
+     "\"I'm on Station's sales team.\"",
+     "\"I'm an independent partner with Station.\"",
+     "\"I'm calling from Station.\"",
+     "\"I'm your account manager.\""
+    ],
+    "answer": 1
+   },
+   {
+    "id": "q03",
+    "module": "01-money",
+    "q": "What does a free trial earn you?",
+    "options": [
+     "Nothing.",
+     "Your full share.",
+     "Half.",
+     "A bonus."
+    ],
+    "answer": 0
+   },
+   {
+    "id": "q04",
+    "module": "01-money",
+    "q": "Which line is allowed?",
+    "options": [
+     "\"It pays for itself.\"",
+     "\"You'll get ten more jobs.\"",
+     "\"I can't promise a number; here's what it does.\"",
+     "\"You'll rank first on Google.\""
+    ],
+    "answer": 2
+   },
+   {
+    "id": "q05",
+    "module": "02-who-buys",
+    "q": "What do you ask first?",
+    "options": [
+     "Which plan they want.",
+     "What happens when the phone rings and nobody answers.",
+     "For their email.",
+     "For their login."
+    ],
+    "answer": 1
+   },
+   {
+    "id": "q06",
+    "module": "02-who-buys",
+    "q": "You don't know if it works with their software. You say:",
+    "options": [
+     "\"Yes.\"",
+     "\"No.\"",
+     "\"Station can confirm that. I don't want to guess.\"",
+     "\"Probably.\""
+    ],
+    "answer": 2
+   }
+  ],
+  "mock_call": {
+   "max_minutes": 6,
+   "brief_md": "**Sample.** A recorded role-play of one full first call: you pitching a business. Ask a friend or family member to play the owner and give them the owner's sheet. **6 minutes at most**, one take, no edits.",
+   "must": [
+    "Say your name and that you're an **independent partner with Station**, give the reason, and ask if it's a good time.",
+    "Ask two or three questions about the gap and let the owner talk.",
+    "Offer **one** product that fixes what they named, at its published price, said once.",
+    "Say you **earn a commission**, before you ask for anything.",
+    "Close: send the page, get an email, and name the **day and time** you'll check back."
+   ],
+   "scenarios": [
+    {
+     "id": "dave",
+     "title": "Dave's Heating & Plumbing",
+     "you_see_md": "HVAC and plumbing, four techs. **Why them:** calls go to voicemail during the day.",
+     "owner_sheet_md": "You're 47 and under a house most of the day. Raise one worry: \"Will it sound like a robot?\" Your wife does the books; if asked who decides, say \"Me, but I'd show her.\""
+    }
+   ],
+   "rubric": [
+    {
+     "id": "intro",
+     "label": "Says who they are, honestly",
+     "what_good_sounds_like": "\"Hi, it's Sam, an independent partner with Station, calling about missed calls. Did I catch you at a bad time?\""
+    },
+    {
+     "id": "disclose",
+     "label": "Discloses the commission",
+     "what_good_sounds_like": "\"I'm paid a commission if you go ahead, so I'll be straight with you.\""
+    },
+    {
+     "id": "discover",
+     "label": "Starts with the gap, lets the owner talk",
+     "what_good_sounds_like": "\"When you're under a house and the phone rings, what happens to that caller?\""
+    },
+    {
+     "id": "fit",
+     "label": "One problem, the smallest fix, said like a name",
+     "what_good_sounds_like": "\"Sounds like the missed calls are the real problem, so let's start there.\""
+    },
+    {
+     "id": "price",
+     "label": "Published price, said once, no deals",
+     "what_good_sounds_like": "The live price from station.solutions, said once."
+    },
+    {
+     "id": "promise",
+     "label": "No promises",
+     "what_good_sounds_like": "\"I can't promise a number, because it depends on your business.\""
+    },
+    {
+     "id": "honest",
+     "label": "Handles the worry truthfully",
+     "what_good_sounds_like": "\"Station can confirm that, I don't want to guess.\""
+    },
+    {
+     "id": "decider",
+     "label": "Finds who decides",
+     "what_good_sounds_like": "\"Who else weighs in on something like this? I can send the page to them too.\""
+    },
+    {
+     "id": "close",
+     "label": "Page, email, a dated next step",
+     "what_good_sounds_like": "\"I'll check back Thursday at 10. Does that work?\""
+    },
+    {
+     "id": "after",
+     "label": "Stays out of the setup and the data",
+     "what_good_sounds_like": "\"Station emails you the checkout link, then you book a short onboarding call.\""
+    }
+   ]
+  }
+ }
+}

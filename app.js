@@ -41,7 +41,7 @@
     if (m) { try { history.replaceState(null, '', location.pathname + location.search + '#home'); } catch (e) {} }
   })();
   var VIEW_READS = { me: 1, leads_list: 1, money_lines: 1, payout_status: 1, pw_news: 1, cal_mine: 1, conv_list: 1, conv_thread: 1, msg_thread: 1,
-    team_view: 1, team_partner: 1, book_slots: 1, st_slots: 1, lead_thread: 1, logout: 1 };
+    team_view: 1, team_partner: 1, book_slots: 1, st_slots: 1, lead_thread: 1, logout: 1, course_progress_get: 1, cert_status: 1 };
   /* a shared computer keeps the sign-in for this tab only (sessionStorage); otherwise 30 days on this device */
   var TOKEN = ''; if (VIEW) TOKEN = VIEW_TOKEN; else if (!DEMO) { try { TOKEN = localStorage.getItem(TKEY) || sessionStorage.getItem(TKEY) || ''; } catch (e) {} }
   var main = document.getElementById('main');
@@ -341,7 +341,7 @@
     if (VIEW && !VIEW_READS[action]) return Promise.resolve({ ok: false, view_only: true, error: 'View only: this is Station looking at the partner’s Partner World, so nothing is changed from here.' });
     var payload = Object.assign({ action: action }, body || {});
     if (!PUBLIC_ACTIONS[action]) { if (!TOKEN) return Promise.resolve({ ok: false, signedOut: true }); payload.token = TOKEN; } // signed out while it waited in the lane: keep it
-    var ctl = window.AbortController ? new AbortController() : null, lim = action === 'taxform_submit' || action === 'ask' ? 90000 : /^(cc_call|cc_more|note_add|note_del|payout_link)$/.test(action) ? 30000 : 20000;
+    var ctl = window.AbortController ? new AbortController() : null, lim = action === 'taxform_submit' || action === 'ask' || action === 'mock_call_upload' ? 90000 : /^(cc_call|cc_more|note_add|note_del|payout_link)$/.test(action) ? 30000 : 20000;
     var tm = ctl ? setTimeout(function () { ctl.abort(); }, lim) : 0;
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), cache: 'no-store', signal: ctl ? ctl.signal : undefined })
       .then(function (r) { clearTimeout(tm); if (!r.ok) { var er = new Error('HTTP ' + r.status); er.http = r.status; throw er; } return r.json(); }, function (e) { clearTimeout(tm); throw e; })
@@ -825,6 +825,7 @@
   /* engine v4.61 (2026-10-07): a partner Station hasn't dealt to yet can ask for a FIRST batch; Station still sends by hand */
   function askLabel() { return dealtTotal() ? 'Ask for my next batch' : 'Ask for my first businesses'; }
   function askForMore(btn) {
+    if (courseLocked()) { toast('Finish the Station Partner course to unlock your leads.', 4000); location.hash = '#learn'; return; } // engine v4.74 refuses it too
     hideUndo(); flushNotes();
     if (S.outbox.length) { // the engine counts what it has: the last results must land first
       btn.disabled = true; btn.textContent = 'Sending your last results…'; pump();
@@ -984,7 +985,13 @@
     var t = totals(), c = counts(), next = sortedLeads().filter(function (l) { return rank(l) < 4; })[0], st = todayStats();
     var where = next ? next.st : LEADS.length ? LEADS[0].st : 'TX', now = localTime(where);
     var nextHtml;
-    if (!DEMO && !LEADS.length && !dealtTotal()) {
+    var lockedHome = courseLocked() && !LEADS.filter(function (l) { return rank(l) < 4; }).length;
+    if (lockedHome) { // engine v4.74: leads go to certified partners; the course is the next step
+      var cs = courseSummary();
+      nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your list</span><h2 id="nextH">Finish the course to unlock your leads.</h2>' +
+        '<p class="pitch-line">Station sends businesses to call once you’re certified: every lesson, the final quiz, and one practice call. ' + (cs.lessons_done || 0) + ' of ' + (cs.lessons_total || 0) + ' lessons done.</p>' +
+        pctBar(cs.lessons_done || 0, cs.lessons_total || 0, 'Lessons done') + '<div class="next-go"><a class="btn btn-dark btn-big" id="callGo" href="#learn">' + (cs.lessons_done ? 'Continue the course' : 'Start the course') + '</a></div></section>';
+    } else if (!DEMO && !LEADS.length && !dealtTotal()) {
       nextHtml = '<section class="next-call" aria-labelledby="nextH"><span class="lbl">Your list</span><h2 id="nextH">Station hasn’t sent you businesses yet.</h2>' +
         '<p class="pitch-line">Station sends businesses in batches; they show up here and in Calls, with the words to say on every card. Until then, learn one product: it takes 2 minutes. Found a business yourself? You can add it below. Questions: main@station.solutions.</p>' +
         '<div class="next-go">' + (S.asked ? '' : '<button class="btn btn-dark btn-big" type="button" id="askHome">Ask for my first businesses</button>') +
@@ -1016,13 +1023,14 @@
       '<span class="row">' + moneyLine(t) + '</span>' +
       setupLine() +
       '<span class="go">See my money <span aria-hidden="true">&rarr;</span></span></a>';
-    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml + newsSection() + myLeadCard() +
+    mount('<div class="wrap home"><div class="hello"><div><h1>Hi ' + esc(S.name) + '.</h1></div></div>' + nextHtml + '<div id="courseSlot">' + (lockedHome ? '' : courseCard()) + '</div>' + newsSection() + myLeadCard() +
       '<div class="top-row">' + (fresh ? side + moneyBox : moneyBox + side) + '</div>' + refCard() +
       '<div class="home-more">' +
       '<a class="hm all-products" href="#products"><b>See all ' + PW.boxes.length + ' products</b><span>Prices, cheat sheets and what you earn on each.</span></a>' +
       '<button class="hm add-own" type="button" data-addlead><b>Found a business yourself?</b><span>Add it to your list and call it from here.</span></button>' +
       '<a class="hm buyers-link" href="#buyers"><b>Who buys? Ten real buyers</b><span>What each is feeling, and the words that work.</span></a></div></div>', 'Home');
     var ah = document.getElementById('askHome'); if (ah) ah.addEventListener('click', function () { askForMore(ah); });
+    if (DEMO && !CIX) loadCourse().then(function () { var sl = document.getElementById('courseSlot'); if (sl && CIX) sl.innerHTML = courseCard(); }); // the preview's sample progress needs the lessons
     if (!DEMO && BOOTED && !NEWS_LOADING) loadNews().then(redrawNews); // fresh within a minute: no call
     tick = setInterval(function () {
       if (!/^#?(home)?$/.test(location.hash)) return;
@@ -1330,6 +1338,10 @@
       h = 'Next batch: waiting for Station’s OK';
       p = '<span class="asked-line">✓ Asked ' + askedText() + '. Station reviews every request, then your new businesses show up here.</span>' + (DEMO ? ' (This preview doesn’t send anything.)' : '') + more;
       btn = todayN ? '<button class="btn" type="button" id="toFirst">Go to the ones still open</button>' : '';
+    }
+    if (courseLocked() && /id="askMore"/.test(btn)) { // engine v4.74: no new leads until the course is done
+      btn = btn.replace(/<button[^>]*id="askMore"[^>]*>[^<]*<\/button>/, '<a class="btn btn-dark btn-big" href="#learn">Finish the course to unlock leads</a>');
+      p += ' Station sends new businesses once you’re certified.';
     }
     end.innerHTML = '<h2>' + h + '</h2><p>' + p + '</p>' + btn + '<p class="add-line"><button class="link-btn" type="button" data-addlead>+ Add a business you found yourself</button></p>';
     var tf = document.getElementById('toFirst');
@@ -3389,6 +3401,562 @@
     draw();
     q.addEventListener('input', draw);
     list.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-cp]'); if (!b || b.disabled) return; var l = LEAD[b.getAttribute('data-cp')]; if (l) openBooking(l, reloadCal); });
+  }
+
+  /* ---------- LEARN (2026-10-21): the Station Partner course and the certification ----------
+     The lessons come from course.json (built by course/build_course.py from the course source; it carries NO answers).
+     LIVE: every step lives in Station's partner engine (engine v4.74): opening a lesson (the resume point), each lesson
+     check (graded by the engine against its own answer key), the final quiz (drawn and graded by the engine), and the
+     practice call (stored by Station, reviewed by a founder). This browser keeps nothing of it but a quiz in progress
+     (sessionStorage, this tab only). PREVIEW: the same screens on sample progress, kept in the preview's own state. */
+  var COURSE = null, COURSE_ERR = '', COURSE_LOADING = null, CIX = null;
+  var CP = null, CP_ERR = '', CP_AT = 0, CP_LOADING = null; // LIVE: the engine's copy of this partner's course
+  /* ?course=sample (tests, and a look at the sample) sticks for this tab, like the preview itself: the preview rewrites the address */
+  var COURSE_SAMPLE = Q0.get('course') === 'sample' || (function () { try { return sessionStorage.getItem('pw-course') === 'sample'; } catch (e) { return false; } })();
+  if (Q0.get('course') === 'sample') { try { sessionStorage.setItem('pw-course', 'sample'); } catch (e) {} }
+  function courseFile() { return COURSE_SAMPLE ? 'course.sample.json' : 'course.json'; }
+  function indexCourse(c) {
+    var ix = { mods: [], les: {}, order: [], mod: {} };
+    (c.modules || []).forEach(function (m) {
+      if (!m || !Array.isArray(m.lessons)) return;
+      ix.mods.push(m); ix.mod[m.id] = m;
+      m.lessons.forEach(function (l, i) { var x = { l: l, m: m, i: i, g: ix.order.length }; ix.les[l.id] = x; ix.order.push(x); });
+    });
+    return ix;
+  }
+  function loadCourse() {
+    if (COURSE) return Promise.resolve(COURSE);
+    if (COURSE_LOADING) return COURSE_LOADING;
+    if (location.protocol === 'file:') { COURSE_ERR = 'none'; return Promise.resolve(null); } // a page opened from disk can't fetch; the site is always served
+    function get(u) { return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r.ok) { var e = new Error('HTTP ' + r.status); e.http = r.status; throw e; } return r.json(); }); }
+    var f = courseFile();
+    COURSE_LOADING = get(f).catch(function (e) { if (DEMO && f === 'course.json' && e && e.http === 404) return get('course.sample.json'); throw e; })
+      .then(function (c) { if (!c || !Array.isArray(c.modules)) throw new Error('bad course'); COURSE = c; CIX = indexCourse(c); COURSE_ERR = ''; return c; },
+        function (e) { COURSE_ERR = e && e.http === 404 ? 'none' : 'The course couldn’t load. Check your connection and try again.'; COURSE_LOADING = null; return null; });
+    return COURSE_LOADING;
+  }
+  /* LIVE: the engine's record. A refusal of "unknown action" means the engine doesn't have the course yet: that's "not open" */
+  function loadCP(force) {
+    if (DEMO) return loadCourse().then(function () { return demoCP(); }); // sample progress needs the lessons first
+    if (!force && CP && Date.now() - CP_AT < 60e3) return Promise.resolve(CP);
+    if (CP_LOADING) return CP_LOADING;
+    CP_LOADING = api('course_progress_get').then(function (d) {
+      CP_LOADING = null;
+      if (d.signedOut) return null;
+      if (d.ok === false) { CP_ERR = /unknown action/i.test(String(d.error || '')) ? '' : sentence(d.error, 'Station couldn’t load your course progress.'); if (!CP_ERR) CP = { open: false, lessons: {}, quiz: {} }; return CP; }
+      setCP(d.course, true); CP_ERR = ''; return CP;
+    }, function () { CP_LOADING = null; CP_ERR = 'No connection to Station. Your progress will show when it answers.'; return CP; });
+    return CP_LOADING;
+  }
+  /* every engine answer about the course carries the new state: keep the lesson map when an answer has none */
+  function setCP(c, full) {
+    if (!c) return;
+    var keep = CP && CP.lessons; CP = c; CP_AT = Date.now();
+    if (!full && !c.lessons) CP.lessons = keep || {};
+    if (!CP.lessons) CP.lessons = {};
+    if (ME) ME.course = Object.assign({}, c); // Home's card and the lead gate read this
+  }
+  /* PREVIEW: sample progress (module 0 done, two lessons into module 1), on this browser only */
+  function demoCP() {
+    var d = S.course;
+    if (d && CIX && COURSE && d.v && d.v !== COURSE.version) d = null; // sample progress from another course file
+    if (!d || typeof d !== 'object') {
+      d = S.course = { v: COURSE ? COURSE.version : '', lessons: {}, last: null, quiz: { attempts: [] }, mock: null, certified_at: null, scenario: '' };
+      if (CIX) {
+        var t0 = Date.now() - 3 * 864e5, k = 0;
+        CIX.order.forEach(function (x) { if (x.m === CIX.mods[0] || (CIX.mods[1] && x.m === CIX.mods[1] && x.i < 2)) { d.lessons[x.l.id] = { done_at: new Date(t0 + (k++) * 36e5).toISOString(), score: (x.l.check || []).length, of: (x.l.check || []).length }; d.last = { lesson: x.l.id, at: d.lessons[x.l.id].done_at }; } });
+      }
+      save();
+    }
+    if (!d.quiz || typeof d.quiz !== 'object') d.quiz = { attempts: [] };
+    var total = CIX ? CIX.order.length : 0, done = CIX ? CIX.order.filter(function (x) { return d.lessons[x.l.id] && d.lessons[x.l.id].done_at; }).length : 0;
+    var cert = COURSE && COURSE.certification, atts = d.quiz.attempts || [];
+    var best = atts.reduce(function (x, y) { return y.pct > x ? y.pct : x; }, -1);
+    var why = !cert ? 'The final quiz isn’t open yet.' : d.quiz.passed_at ? 'You’ve passed the final quiz.' : done < total ? 'Finish every lesson first (' + done + ' of ' + total + ' done).' : '';
+    var locked = Q0.has('locked') && !d.certified_at;
+    return { open: true, demo: true, version: COURSE ? COURSE.version : '', cert_open: !!cert, gate_on: Q0.has('locked'), lessons_total: total, lessons_done: done, lessons: d.lessons, last: d.last,
+      quiz: { passed_at: d.quiz.passed_at || null, best_pct: best < 0 ? null : best, attempts: atts.length, last: atts[atts.length - 1] || null, pass_pct: (cert && cert.pass_pct) || 85, review: d.quiz.review || null, why_not: why, open: null },
+      scenario: d.scenario || '', max_minutes: (cert && cert.mock_call && cert.mock_call.max_minutes) || 6, mock: d.mock || null,
+      certified: !!d.certified_at, certified_at: d.certified_at || null, exempt: false, cleared: !!d.certified_at, leads_locked: locked };
+  }
+  function cpNow() { return DEMO ? demoCP() : CP; }
+  /* what Home and the lead gate need, without waiting for course.json */
+  function courseSummary() {
+    if (DEMO) return CIX ? demoCP() : null;
+    var c = (ME && ME.course) || CP;
+    return c && c.open ? c : null;
+  }
+  function courseLocked() { var c = courseSummary(); return !!(c && c.leads_locked); }
+  function lessonDone(id) { var c = cpNow(); return !!(c && c.lessons && c.lessons[id] && c.lessons[id].done_at); }
+  function modCounts(m) { var d = 0; m.lessons.forEach(function (l) { if (lessonDone(l.id)) d++; }); return { done: d, total: m.lessons.length }; }
+  /* where to pick up: the lesson after the last one opened if that one is done, else that one; else the first not done */
+  function resumeLesson() {
+    if (!CIX || !CIX.order.length) return null;
+    var c = cpNow(), last = c && c.last && CIX.les[c.last.lesson];
+    if (last && !lessonDone(last.l.id)) return last;
+    var from = last ? last.g + 1 : 0;
+    for (var k = 0; k < CIX.order.length; k++) { var x = CIX.order[(from + k) % CIX.order.length]; if (!lessonDone(x.l.id)) return x; }
+    return null;
+  }
+  function modLabel(m) { return 'Module ' + esc(m.n) + ' · ' + esc(m.title); }
+  function totalMinutes() { return CIX ? CIX.order.reduce(function (s, x) { return s + (+x.l.minutes || 0); }, 0) : 0; }
+  function hoursWords(mins) { if (mins < 90) return 'about ' + Math.max(5, Math.round(mins / 5) * 5) + ' minutes'; var h = Math.round(mins / 30) / 2; return 'about ' + (h % 1 ? h : Math.round(h)) + ' hours'; }
+  function pctBar(done, total, label) { var p = total ? Math.round(100 * done / total) : 0; return '<div class="lbar" role="progressbar" aria-label="' + esc(label || 'Progress') + '" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done + '"><i style="width:' + p + '%"></i></div>'; }
+  function shortDate(iso) { var t = Date.parse(iso || ''); return t ? new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''; }
+
+  /* a small, safe markdown: paragraphs, **bold**, *em*, links, lists, > quotes, ### headings and | tables |.
+     Everything is escaped first; only these few tags are ever made. */
+  function mdInline(s) {
+    s = esc(s);
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?!\w)/g, '$1<em>$2</em>');
+    s = s.replace(/\[([^\]]+)\]\(((?:https?:\/\/|mailto:|#)[^\s)]+)\)/g, function (_, t, u) { var ext = /^https?:/.test(u); return '<a href="' + u + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + t + '</a>'; });
+    return s;
+  }
+  function md(src) {
+    var lines = String(src || '').replace(/\r/g, '').split('\n'), out = [], i = 0;
+    function para(buf) { if (!buf.length) return; out.push('<p>' + buf.map(function (ln, k) { return (k && /^\*\*/.test(ln) ? '<br>' : '') + mdInline(ln); }).join(' ').replace(/ <br>/g, '<br>') + '</p>'); }
+    var buf = [];
+    while (i < lines.length) {
+      var ln = lines[i], t = ln.trim();
+      if (!t) { para(buf); buf = []; i++; continue; }
+      var h = /^(#{2,4})\s+(.+)$/.exec(t);
+      if (h) { para(buf); buf = []; out.push('<h3>' + mdInline(h[2]) + '</h3>'); i++; continue; }
+      if (/^>\s?/.test(t)) {
+        para(buf); buf = []; var q = [];
+        while (i < lines.length && /^>\s?/.test(lines[i].trim())) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        out.push('<blockquote>' + q.map(mdInline).join(' ') + '</blockquote>'); continue;
+      }
+      var ul = /^[-*]\s+/.test(t), ol = /^\d+[.)]\s+/.test(t);
+      if (ul || ol) {
+        para(buf); buf = []; var items = [], re = ul ? /^[-*]\s+/ : /^\d+[.)]\s+/;
+        while (i < lines.length) {
+          var x = lines[i].trim();
+          if (!x) break;
+          if (re.test(x)) items.push(x.replace(re, ''));
+          else if (/^[-*]\s+|^\d+[.)]\s+|^\||^>/.test(x)) break;
+          else items[items.length - 1] += ' ' + x;
+          i++;
+        }
+        out.push((ul ? '<ul>' : '<ol>') + items.map(function (it) { return '<li>' + mdInline(it) + '</li>'; }).join('') + (ul ? '</ul>' : '</ol>')); continue;
+      }
+      if (/^\|/.test(t)) {
+        para(buf); buf = []; var rows = [];
+        while (i < lines.length && /^\|/.test(lines[i].trim())) { var r = lines[i].trim(); if (!/^\|[\s:|-]+\|?$/.test(r)) rows.push(r.replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); })); i++; }
+        if (rows.length) out.push('<div class="ltable"><table><thead><tr>' + rows[0].map(function (c) { return '<th scope="col">' + mdInline(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+          rows.slice(1).map(function (rw) { return '<tr>' + rw.map(function (c) { return '<td>' + mdInline(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>');
+        continue;
+      }
+      buf.push(t); i++;
+    }
+    para(buf);
+    return out.join('');
+  }
+  function lessonBody(l) { return l.body_html ? String(l.body_html) : md(l.read_md || ''); } // body_html is built by Station's own build from Station's own files
+
+  function learnShell(inner, title) { chrome(true, 'learn'); mount('<div class="wrap learn">' + inner + '</div>', title); }
+  function learnWait(msg) { learnShell('<h1>Learn</h1><p class="small" role="status">' + esc(msg) + '</p>', 'Learn'); }
+  function learnNone() {
+    learnShell('<h1>Learn</h1><section class="lhero"><span class="lbl">The Station Partner course</span><h2>On its way</h2>' +
+      '<p>Station is finishing the course: 14 short modules on Station, the products, the call and the close. It shows up here when it’s ready.</p></section>', 'Learn');
+  }
+  VIEWS.learn = function () {
+    var parts = (location.hash || '').replace(/^#/, '').split('/'), sub = parts[1] || '', arg = decodeURIComponent(parts.slice(2).join('/'));
+    var want = location.hash;
+    if (!COURSE) learnWait('Loading the course…');
+    Promise.all([loadCourse(), loadCP(false)]).then(function () {
+      if (location.hash !== want) return; // the partner moved on while it loaded
+      if (!COURSE) { if (COURSE_ERR === 'none') learnNone(); else learnShell('<h1>Learn</h1><div class="explain bad" role="alert">' + esc(COURSE_ERR) + '</div><button class="btn btn-big" type="button" data-lretry>Try again</button>', 'Learn'); wireLearnRetry(); return; }
+      if (sub === 'm' && CIX.mod[arg]) drawModule(CIX.mod[arg]);
+      else if (sub === 'l' && CIX.les[arg]) drawLesson(CIX.les[arg]);
+      else if (sub === 'cert') drawCert();
+      else if (sub === 'quiz') drawQuiz();
+      else if (sub === 'call') drawCall();
+      else drawCourse();
+    });
+  };
+  function wireLearnRetry() { var b = main.querySelector('[data-lretry]'); if (b) b.addEventListener('click', function () { COURSE_ERR = ''; CP = null; route(); }); }
+  function cpNotice() {
+    if (DEMO) return '<p class="small lnote">Preview: sample progress, kept on this device only. Nothing is sent to Station.</p>';
+    if (CP_ERR) return '<div class="explain bad" role="status">' + esc(CP_ERR) + '</div>';
+    if (!CP || !CP.open) return '<div class="explain wait" role="status">Read and watch any lesson now. Station opens the checks and the certification soon; your progress counts from then.</div>';
+    if (CP.version && COURSE.version && CP.version !== COURSE.version) return '<div class="explain wait" role="status">The course was just updated. <button class="link-btn" type="button" data-reload>Reload the page</button> to get the newest lessons.</div>';
+    return '';
+  }
+  function wireReload() { main.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { location.reload(); }); }); }
+
+  /* the status card: where you are, and the one next step */
+  function heroHtml(c) {
+    var total = CIX.order.length, done = CIX.order.filter(function (x) { return lessonDone(x.l.id); }).length, nx = resumeLesson();
+    var lbl = 'The Station Partner course', h, p, go = '';
+    if (c && c.certified) { lbl = 'Certified'; h = 'You’re a certified Station partner'; p = 'Station passed your practice call' + (c.certified_at ? ' on ' + shortDate(c.certified_at) : '') + '. Every lesson stays here to come back to.'; }
+    else if (done === total && total) { h = 'Every lesson done'; p = 'Next: the certification. A final quiz, then one practice call a Station founder listens to.'; go = '<a class="btn btn-dark btn-big" href="#learn/cert">Go to the certification</a>'; }
+    else {
+      h = done ? done + ' of ' + total + ' lessons done' : CIX.mods.length + ' modules, ' + total + ' short lessons';
+      p = done ? 'Pick up where you left off.' : 'Station, the products, the call and the close, ' + hoursWords(totalMinutes()) + ' in all. Each lesson is a short video, the same words written out, and a 2-question check.';
+      if (nx) go = '<a class="btn btn-dark btn-big" href="#learn/l/' + encodeURIComponent(nx.l.id) + '">' + (done ? 'Continue: ' + esc(nx.l.title) : 'Start the course') + '</a>';
+    }
+    var lock = c && c.leads_locked ? '<p class="lgate"><strong>Finish the course to unlock your leads.</strong> Station sends businesses to call once you’re certified: every lesson, the final quiz, and one practice call.</p>'
+      : c && c.exempt && !c.certified ? '<p class="small">Station has kept your leads open while you take the course.</p>' : '';
+    return '<section class="lhero" aria-labelledby="lheroH"><span class="lbl">' + esc(lbl) + '</span><h2 id="lheroH">' + h + '</h2>' +
+      (c && c.certified ? '' : pctBar(done, total, 'Lessons done')) + '<p>' + p + '</p>' + lock + (go ? '<div class="lgo">' + go + '</div>' : '') + '</section>';
+  }
+  function drawCourse() {
+    var c = cpNow();
+    var mods = CIX.mods.map(function (m) {
+      var k = modCounts(m), st = k.done === k.total ? 'done' : k.done ? 'part' : '';
+      return '<li><a class="lmod' + (st ? ' ' + st : '') + '" href="#learn/m/' + encodeURIComponent(m.id) + '"><span class="lmn" aria-hidden="true">' + (st === 'done' ? '✓' : esc(m.n)) + '</span>' +
+        '<span class="lmt"><b>' + esc(m.title) + '</b><span>' + esc(m.outcome || '') + '</span>' + pctBar(k.done, k.total, 'Module ' + m.n + ' lessons done') + '</span>' +
+        '<span class="lmc">' + (st === 'done' ? 'Done' : k.done + ' of ' + k.total) + '<span class="sr"> lessons done in module ' + esc(m.n) + '</span></span></a></li>';
+    }).join('');
+    learnShell('<h1>Learn</h1>' + cpNotice() + heroHtml(c) +
+      '<h2 class="lsec">Modules</h2><ol class="lmods" role="list">' + mods + '</ol>' + certSteps(c, true), 'Learn');
+    wireReload();
+  }
+  function drawModule(m) {
+    var k = modCounts(m), idx = CIX.mods.indexOf(m), nx = CIX.mods[idx + 1];
+    var rows = m.lessons.map(function (l) {
+      var d = lessonDone(l.id);
+      return '<li><a class="lles' + (d ? ' done' : '') + '" href="#learn/l/' + encodeURIComponent(l.id) + '"><span class="lln" aria-hidden="true">' + (d ? '✓' : esc(l.id)) + '</span>' +
+        '<span class="llt"><b>' + esc(l.title) + '</b><span>' + (+l.minutes || 1) + ' min' + (l.video && l.video.src ? ' · video' : '') + (d ? ' · done' : '') + '</span></span></a></li>';
+    }).join('');
+    learnShell('<nav class="crumbs" aria-label="Where you are"><a href="#learn">Learn</a><span aria-hidden="true"> › </span><span>Module ' + esc(m.n) + '</span></nav>' +
+      '<h1>' + esc(m.title) + '</h1><p class="lout">' + esc(m.outcome || '') + '</p>' + pctBar(k.done, k.total, 'Lessons done in this module') +
+      '<p class="small">' + k.done + ' of ' + k.total + ' lessons done</p><ol class="lless" role="list">' + rows + '</ol>' +
+      (nx ? '<p class="lnext"><a class="btn btn-big" href="#learn/m/' + encodeURIComponent(nx.id) + '">Next: Module ' + esc(nx.n) + ' · ' + esc(nx.title) + '</a></p>' : '<p class="lnext"><a class="btn btn-big" href="#learn/cert">Next: the certification</a></p>'), 'Module ' + m.n);
+  }
+
+  /* ---------- a lesson: video, the words, and the check ---------- */
+  var CHECK_PICK = {}; // lesson id -> answers picked on this screen (not kept)
+  function drawLesson(x) {
+    var l = x.l, m = x.m, c = cpNow(), rec = c && c.lessons && c.lessons[l.id], prev = CIX.order[x.g - 1], next = CIX.order[x.g + 1];
+    var v = l.video && l.video.src ? '<div class="lvideo"><video controls playsinline preload="metadata"' + (l.video.poster ? ' poster="' + esc(l.video.poster) + '"' : '') + ' src="' + esc(l.video.src) + '">' +
+        (l.video.captions ? '<track kind="captions" srclang="en" label="English" src="' + esc(l.video.captions) + '" default>' : '') + '</video></div>'
+      : '<div class="lvideo none"><p><strong>The video for this lesson is on its way.</strong> Everything it says is written out below.</p></div>';
+    var qs = (l.check || []).map(function (q, qi) {
+      return '<fieldset class="lq" data-q="' + qi + '"><legend><span class="lqn">' + (qi + 1) + '.</span> ' + esc(q.q) + '</legend><div class="lopts">' +
+        (q.options || []).map(function (o, oi) { return '<label class="lopt"><input type="radio" name="q' + qi + '" value="' + oi + '"><span>' + esc(o) + '</span></label>'; }).join('') +
+        '</div><p class="lwhy" hidden></p></fieldset>';
+    }).join('');
+    var doneLine = rec && rec.done_at ? '<p class="ldone" id="lDone">✓ Done on ' + esc(shortDate(rec.done_at)) + '. Take the check again any time; it can’t undo this.</p>' : '<p class="ldone" id="lDone" hidden></p>';
+    var grade = !DEMO && (!CP || !CP.open) ? '<p class="small">The checks open when Station opens the course.</p>' : '';
+    learnShell('<nav class="crumbs" aria-label="Where you are"><a href="#learn">Learn</a><span aria-hidden="true"> › </span><a href="#learn/m/' + encodeURIComponent(m.id) + '">' + modLabel(m) + '</a></nav>' +
+      '<h1>' + esc(l.title) + '</h1><p class="lmeta">Lesson ' + esc(l.id) + ' · ' + (+l.minutes || 1) + ' min' + (l.goal ? ' · ' + esc(l.goal) : '') + '</p>' + cpNotice() + v +
+      '<div class="lbody">' + lessonBody(l) + '</div>' +
+      (qs ? '<section class="lcheck" aria-labelledby="chkH"><h2 id="chkH">Check yourself</h2><p class="small">Get ' + (l.check.length === 1 ? 'it' : 'all ' + l.check.length) + ' right to finish this lesson. A wrong pick just means try again.</p>' + doneLine + grade + qs +
+        '<button class="btn btn-dark btn-big btn-block" type="button" id="chkGo" disabled>Check my answers</button><div id="chkOut" role="status" aria-live="polite"></div></section>' : '') +
+      '<nav class="lnav" aria-label="Lessons">' + (prev ? '<a class="btn" href="#learn/l/' + encodeURIComponent(prev.l.id) + '"><span aria-hidden="true">‹ </span>Back</a>' : '<span></span>') +
+      (next ? '<a class="btn' + (rec && rec.done_at ? ' btn-dark' : '') + '" id="lNext" href="#learn/l/' + encodeURIComponent(next.l.id) + '">Next lesson<span aria-hidden="true"> ›</span></a>' : '<a class="btn" id="lNext" href="#learn/cert">The certification<span aria-hidden="true"> ›</span></a>') + '</nav>',
+      l.title);
+    wireReload();
+    // the resume point: LIVE tells Station which lesson is open (one quiet call); the preview keeps it here
+    if (DEMO) { if (S.course) { S.course.last = { lesson: l.id, at: new Date().toISOString() }; save(); } }
+    else if (CP && CP.open && !VIEW) api('course_progress_set', { version: COURSE.version, lesson: l.id }).then(function (d) { if (d && d.ok && d.course) setCP(d.course, true); }, function () {});
+    var go = document.getElementById('chkGo'); if (!go) return;
+    var picks = CHECK_PICK[l.id] = [];
+    function ready() { go.disabled = (l.check || []).some(function (_, qi) { return picks[qi] == null; }); }
+    main.querySelectorAll('.lq').forEach(function (fs) {
+      var qi = +fs.getAttribute('data-q');
+      fs.addEventListener('change', function (e) {
+        if (!e.target || e.target.name !== 'q' + qi) return;
+        picks[qi] = +e.target.value; fs.classList.remove('right', 'wrong'); var w = fs.querySelector('.lwhy'); w.hidden = true; ready();
+        if (go.getAttribute('data-checked')) go.textContent = 'Check again';
+      });
+    });
+    go.addEventListener('click', function () {
+      if (go.disabled) return;
+      go.disabled = true; var was = go.textContent; go.textContent = 'Checking…';
+      gradeLesson(l, picks.slice()).then(function (r) {
+        go.textContent = was;
+        if (r && !r.err) go.setAttribute('data-checked', '1');
+        var out = document.getElementById('chkOut');
+        if (!r || r.err) { go.disabled = false; out.innerHTML = '<div class="explain bad">' + esc((r && r.err) || 'That didn’t reach Station. Try again.') + '</div>'; return; }
+        r.right.forEach(function (ok, qi) {
+          var fs = main.querySelector('.lq[data-q="' + qi + '"]'); if (!fs) return;
+          fs.classList.toggle('right', ok); fs.classList.toggle('wrong', !ok);
+          var w = fs.querySelector('.lwhy'); w.hidden = false; w.innerHTML = '<strong>' + (ok ? 'Right. ' : 'Not quite. ') + '</strong>' + esc(l.check[qi].why || '');
+          if (!ok) { picks[qi] = null; fs.querySelectorAll('input').forEach(function (i) { i.checked = false; }); }
+        });
+        ready();
+        if (r.passed) {
+          var dl = document.getElementById('lDone'); dl.hidden = false; dl.textContent = '✓ Done. ' + (r.score + ' of ' + r.of) + ' right.';
+          var nb = document.getElementById('lNext'); if (nb) { nb.classList.add('btn-dark'); nb.focus(); }
+          out.innerHTML = '<div class="explain good"><strong>Lesson done.</strong> ' + (r.lenient ? 'Preview: answers aren’t checked here; on the real Learn tab Station checks them. ' : '') + (next ? 'On to the next one.' : 'That was the last lesson: next is the certification.') + '</div>';
+          buzz(20);
+        } else {
+          out.innerHTML = '<div class="explain bad"><strong>' + r.score + ' of ' + r.of + ' right.</strong> Read the note under each one you missed, pick again, then check again.</div>';
+          var first = main.querySelector('.lq.wrong input'); if (first) first.focus();
+        }
+      });
+    });
+  }
+  /* LIVE: the engine grades (it holds the answers); PREVIEW: the sample file's own answers, or every answer counts */
+  function gradeLesson(l, picks) {
+    if (VIEW) return Promise.resolve({ err: 'View only: this is Station looking at the partner’s Learn tab.' });
+    if (DEMO) {
+      var known = (l.check || []).every(function (q) { return typeof q.answer === 'number'; });
+      var right = (l.check || []).map(function (q, qi) { return known ? picks[qi] === q.answer : true; });
+      var score = right.filter(Boolean).length, passed = score === right.length;
+      var d = S.course || (demoCP(), S.course), L = d.lessons[l.id] || {};
+      L.tries = (L.tries || 0) + 1; L.score = score; L.of = right.length; if (passed) { L.passed_at = new Date().toISOString(); if (!L.done_at) L.done_at = L.passed_at; }
+      d.lessons[l.id] = L; save();
+      return Promise.resolve({ right: right, score: score, of: right.length, passed: passed, lenient: !known });
+    }
+    if (!CP || !CP.open) return Promise.resolve({ err: 'Station hasn’t opened the checks yet. Read on; your progress counts once it does.' });
+    return api('course_progress_set', { version: COURSE.version, lesson: l.id, answers: picks }).then(function (d) {
+      if (d.signedOut) return { err: 'Sign in again to save this.' };
+      if (d.ok === false) return { err: sentence(d.error, 'Station couldn’t check that.') + (d.stale ? '' : '') };
+      setCP(d.course, true); return d;
+    }, function () { return { err: 'No connection to Station. Your answers are still picked: try again in a moment.' }; });
+  }
+
+  /* ---------- the certification ---------- */
+  function cert() { return (COURSE && COURSE.certification) || null; }
+  function certSteps(c, compact) {
+    var ce = cert(), total = CIX.order.length, done = CIX.order.filter(function (x) { return lessonDone(x.l.id); }).length;
+    var q = (c && c.quiz) || {}, mk = c && c.mock;
+    function step(n, title, state, cls, body) { return '<li class="cstep ' + cls + '"><span class="csn" aria-hidden="true">' + (cls === 'done' ? '✓' : n) + '</span><div><b>' + title + '</b><span class="cst">' + state + '</span>' + (body || '') + '</div></li>'; }
+    var s1 = step(1, 'Every lesson', done + ' of ' + total + ' done', done === total ? 'done' : 'now');
+    var qs = q.passed_at ? 'Passed' + (q.best_pct != null ? ' · ' + q.best_pct + '%' : '') : !ce ? 'Opens soon' : done < total ? 'Opens when every lesson is done' : q.last && !q.last.pass ? 'Last try ' + q.last.pct + '% · you need ' + (q.pass_pct || 85) + '%' : 'Ready';
+    var s2 = step(2, 'The final quiz', esc(qs), q.passed_at ? 'done' : done === total && ce ? 'now' : 'later');
+    var ms = c && c.certified ? 'Passed' : !q.passed_at ? 'After the quiz' : !mk ? 'Ready to record' : mk.status === 'waiting' ? 'With Station since ' + esc(shortDate(mk.at)) + ': you’ll hear back by email' : mk.status === 'redo' ? 'Station sent notes: record it once more' : 'Ready to record';
+    var s3 = step(3, 'One practice call', ms, c && c.certified ? 'done' : q.passed_at ? 'now' : 'later');
+    var head = compact ? '<h2 class="lsec">Certification</h2><p class="small">Finish it and Station starts sending you businesses to call.</p>' : '';
+    return '<section class="lcert" aria-label="Certification steps">' + head + '<ol class="csteps" role="list">' + s1 + s2 + s3 + '</ol>' +
+      (compact ? '<a class="btn btn-big" href="#learn/cert">' + (c && c.certified ? 'See your certification' : 'About the certification') + '</a>' : '') + '</section>';
+  }
+  function drawCert() {
+    var c = cpNow(), ce = cert(), q = (c && c.quiz) || {}, mk = c && c.mock;
+    var act = '';
+    if (!ce) act = '<div class="explain wait">The certification opens soon. Keep going with the lessons.</div>';
+    else if (c && c.certified) act = '<div class="explain good"><strong>You’re certified' + (c.certified_at ? ' since ' + esc(shortDate(c.certified_at)) : '') + '.</strong> Station can send you businesses to call.</div>';
+    else if (!q.passed_at) act = q.why_not ? '<div class="explain wait">' + esc(q.why_not) + '</div>' : '<a class="btn btn-dark btn-big btn-block" href="#learn/quiz">Start the final quiz</a>' +
+      '<p class="small">' + qCount() + ' questions, one per screen. You need ' + ((c && c.quiz && c.quiz.pass_pct) || ce.pass_pct || 85) + '% to pass. Up to 3 tries a day.</p>';
+    else if (!mk || mk.status === 'redo') act = '<a class="btn btn-dark btn-big btn-block" href="#learn/call">' + (mk ? 'Record your practice call again' : 'Record your practice call') + '</a>';
+    else if (mk.status === 'waiting') act = '<div class="explain wait"><strong>Station has your practice call</strong> (sent ' + esc(shortDate(mk.at)) + '). A founder listens and passes it or sends notes. You’ll hear back by email.</div>' +
+      (DEMO ? '<p class="small">Preview: <button class="link-btn" type="button" id="demoReview">see what Station’s notes look like</button></p>' : '');
+    var intro = ce && ce.mock_call && (ce.mock_call.brief_html || ce.mock_call.brief_md) ? '' : '';
+    learnShell('<nav class="crumbs" aria-label="Where you are"><a href="#learn">Learn</a><span aria-hidden="true"> › </span><span>Certification</span></nav>' +
+      '<h1>Certification</h1><p class="lout">Three steps, then Station starts sending you businesses to call.</p>' + cpNotice() + intro +
+      certSteps(c, false) + '<div class="lact">' + act + '</div>' + reviewHtml(mk), 'Certification');
+    wireReload();
+    var dr = document.getElementById('demoReview'); if (dr) dr.addEventListener('click', function () { demoSampleReview(); route(); });
+  }
+  function qCount() { var ce = cert(); var n = ce && Array.isArray(ce.quiz) ? ce.quiz.length : 0; return Math.min(+(ce && ce.draw) || 20, n || 20); }
+  function rubric() { var ce = cert(); return (ce && ce.mock_call && Array.isArray(ce.mock_call.rubric)) ? ce.mock_call.rubric : []; }
+  function reviewHtml(mk) {
+    if (!mk || !mk.review || mk.status === 'waiting') return '';
+    var items = mk.review.items || {}, rows = rubric().filter(function (r) { return items[r.id] && items[r.id].mark !== 'good'; }).map(function (r) {
+      var it = items[r.id]; return '<li class="rv ' + esc(it.mark) + '"><b>' + esc(r.label) + '</b><span class="rvm">' + (it.mark === 'redo' ? 'Must change' : 'Needs work') + '</span><p>' + esc(it.note) + '</p>' +
+        (r.what_good_sounds_like ? '<p class="small">What good sounds like: ' + esc(r.what_good_sounds_like) + '</p>' : '') + '</li>';
+    }).join('');
+    return '<section class="lrev" aria-labelledby="rvH"><h2 id="rvH">' + (mk.status === 'pass' ? 'Station’s notes on your call' : 'Station’s notes: what to change') + '</h2>' +
+      '<p class="small">From ' + esc(mk.review.by || 'Station') + ', ' + esc(shortDate(mk.review.at)) + ' · ' + (mk.review.good != null ? mk.review.good + ' of ' + rubric().length + ' marked good' : '') + '</p>' +
+      (mk.review.note ? '<p>' + esc(mk.review.note) + '</p>' : '') + (rows ? '<ol class="rvs" role="list">' + rows + '</ol>' : '') + '</section>';
+  }
+  function demoSampleReview() {
+    var d = S.course; if (!d || !d.mock) return; var rb = rubric(), items = {};
+    rb.forEach(function (r) { items[r.id] = { mark: 'good', note: '' }; });
+    if (rb[1]) items[rb[1].id] = { mark: 'redo', note: 'You never said you earn a commission. Say it before you ask for their email.' };
+    if (rb[8]) items[rb[8].id] = { mark: 'work', note: 'You sent the page, then hung up without a day. Name the day and time you’ll check back.' };
+    d.mock.status = 'redo'; d.mock.review = { at: new Date().toISOString(), by: 'Station (sample)', note: 'Close. One more take with these two changes.', items: items, good: rb.length - 2 }; save();
+  }
+
+  /* the final quiz: one question per screen; answers stay in this tab until handed in */
+  var QZ = null; // {id, qs:[qid], at, i, ans:{qid:index}, order:{qid:[...]}}
+  function quizKey() { return 'pw-quiz-' + (S.code || 'x'); }
+  function quizSave() { try { sessionStorage.setItem(quizKey(), JSON.stringify(QZ)); } catch (e) {} }
+  function quizLoad(id) { try { var x = JSON.parse(sessionStorage.getItem(quizKey()) || 'null'); return x && x.id === id ? x : null; } catch (e) { return null; } }
+  function poolMap() { var o = {}; ((cert() || {}).quiz || []).forEach(function (q) { if (q && q.id) o[q.id] = q; }); return o; }
+  function drawQuiz() {
+    var c = cpNow(), ce = cert(), q = (c && c.quiz) || {};
+    if (!ce || q.passed_at || (q.why_not && !(q.open))) { location.replace('#learn/cert'); return; }
+    if (QZ && QZ.result) { drawQuizResult(); return; }
+    learnWait('Getting your quiz from Station…');
+    startQuiz().then(function (r) {
+      if (location.hash !== '#learn/quiz') return;
+      if (!r || r.err) { learnShell('<nav class="crumbs"><a href="#learn/cert">Certification</a></nav><h1>The final quiz</h1><div class="explain bad" role="alert">' + esc((r && r.err) || 'That didn’t work.') + '</div><a class="btn btn-big" href="#learn/cert">Back</a>', 'Final quiz'); return; }
+      drawQuizQ();
+    });
+  }
+  function startQuiz() {
+    var pool = poolMap();
+    function take(att) {
+      var old = quizLoad(att.id);
+      QZ = old || { id: att.id, qs: att.questions.filter(function (id) { return pool[id]; }), at: Date.now(), i: 0, ans: {}, order: {} };
+      QZ.qs.forEach(function (id) { if (!QZ.order[id]) QZ.order[id] = shuffle(pool[id].options.length); }); // answers show in a fresh order; the engine gets the real option number
+      quizSave(); return QZ;
+    }
+    if (DEMO) {
+      var ids = Object.keys(pool), want = Math.min(qCount(), ids.length), byMod = {};
+      ids.forEach(function (id) { var mm = String(pool[id].module || ''); (byMod[mm] = byMod[mm] || []).push(id); });
+      var pick = []; Object.keys(byMod).forEach(function (mm) { if (pick.length < want) pick.push(byMod[mm][Math.floor(Math.random() * byMod[mm].length)]); });
+      ids.forEach(function (id) { if (pick.length < want && pick.indexOf(id) < 0) pick.push(id); });
+      var prev = quizLoad((QZ && QZ.id) || '');
+      return Promise.resolve(take(prev ? { id: prev.id, questions: prev.qs } : { id: 'demo-' + Date.now().toString(36), questions: pick }));
+    }
+    return api('cert_quiz_start', { version: COURSE.version }).then(function (d) {
+      if (d.signedOut) return { err: 'Sign in again first.' };
+      if (d.ok === false) { if (d.course) setCP(d.course); return { err: sentence(d.error, 'Station couldn’t start the quiz.') }; }
+      if (d.course) setCP(d.course); return take(d.attempt);
+    }, function () { return { err: 'No connection to Station. Try again in a moment.' }; });
+  }
+  function drawQuizQ() {
+    var pool = poolMap(), id = QZ.qs[QZ.i], qq = pool[id], last = QZ.i === QZ.qs.length - 1, picked = QZ.ans[id];
+    var dots = QZ.qs.map(function (x, k) { return '<i class="' + (QZ.ans[x] != null ? 'on' : '') + (k === QZ.i ? ' here' : '') + '"></i>'; }).join('');
+    var answered = QZ.qs.filter(function (x) { return QZ.ans[x] != null; }).length;
+    learnShell('<nav class="crumbs" aria-label="Where you are"><a href="#learn/cert">Certification</a><span aria-hidden="true"> › </span><span>Final quiz</span></nav>' +
+      '<div class="qprog lqprog" aria-hidden="true">' + dots + '</div><p class="small">Question ' + (QZ.i + 1) + ' of ' + QZ.qs.length + ' · ' + answered + ' answered</p>' +
+      '<fieldset class="lq lqz"><legend><h1 class="qh">' + esc(qq.q) + '</h1></legend><div class="lopts">' +
+      QZ.order[id].map(function (oi) { return '<label class="lopt"><input type="radio" name="qz" value="' + oi + '"' + (picked === oi ? ' checked' : '') + '><span>' + esc(qq.options[oi]) + '</span></label>'; }).join('') +
+      '</div></fieldset><div class="lnav qznav">' + (QZ.i ? '<button class="btn" type="button" id="qzBack"><span aria-hidden="true">‹ </span>Back</button>' : '<span></span>') +
+      (last ? '<button class="btn btn-dark btn-big" type="button" id="qzDone">Hand it in</button>' : '<button class="btn btn-dark btn-big" type="button" id="qzNext">Next question</button>') + '</div>' +
+      '<p class="small" id="qzMsg" role="status"></p><p class="small">Station marks it when you hand it in. A try that doesn’t pass shows which modules to go back over, not the answers.</p>', 'Final quiz');
+    main.querySelector('.lqz').addEventListener('change', function (e) { if (e.target && e.target.name === 'qz') { QZ.ans[id] = +e.target.value; quizSave(); } });
+    var bk = document.getElementById('qzBack'); if (bk) bk.addEventListener('click', function () { QZ.i--; quizSave(); drawQuizQ(); });
+    var nx = document.getElementById('qzNext'); if (nx) nx.addEventListener('click', function () { QZ.i++; quizSave(); drawQuizQ(); });
+    var dn = document.getElementById('qzDone'); if (dn) dn.addEventListener('click', function () {
+      var miss = QZ.qs.filter(function (x) { return QZ.ans[x] == null; });
+      if (miss.length) { document.getElementById('qzMsg').textContent = miss.length + (miss.length === 1 ? ' question has' : ' questions have') + ' no answer yet. Go back and answer ' + (miss.length === 1 ? 'it' : 'them') + ', or hand it in as it is.';
+        if (!dn.getAttribute('data-sure')) { dn.setAttribute('data-sure', '1'); dn.textContent = 'Hand it in anyway'; return; } }
+      dn.disabled = true; dn.textContent = 'Marking…';
+      submitQuiz().then(function (r) {
+        if (!r || r.err) { dn.disabled = false; dn.textContent = 'Hand it in'; document.getElementById('qzMsg').textContent = (r && r.err) || 'That didn’t reach Station. Try again.'; return; }
+        QZ.result = r; try { sessionStorage.removeItem(quizKey()); } catch (e) {} drawQuizResult();
+      });
+    });
+  }
+  function submitQuiz() {
+    if (DEMO) {
+      var pool = poolMap(), known = QZ.qs.every(function (id) { return typeof pool[id].answer === 'number'; }), score = 0, missed = {};
+      QZ.qs.forEach(function (id) { if (!known || QZ.ans[id] === pool[id].answer) score++; else missed[pool[id].module] = 1; });
+      var of = QZ.qs.length, pct = Math.round(score * 100 / of), need = (cert().pass_pct || 85), pass = pct >= need, at = new Date().toISOString(), d = S.course;
+      d.quiz.attempts.push({ at: at, score: score, of: of, pct: pct, pass: pass, missed: Object.keys(missed) });
+      if (pass) { d.quiz.passed_at = at; var sc = ((cert().mock_call || {}).scenarios || []); if (!d.scenario && sc.length) d.scenario = sc[Math.floor(Math.random() * sc.length)].id; } else d.quiz.review = { at: at, modules: Object.keys(missed) };
+      save(); return Promise.resolve({ score: score, of: of, pct: pct, pass: pass, pass_pct: need, missed_modules: Object.keys(missed), lenient: !known });
+    }
+    return api('cert_quiz_submit', { attempt: QZ.id, answers: QZ.ans }).then(function (d) {
+      if (d.signedOut) return { err: 'Sign in again; your answers are kept in this tab.' };
+      if (d.ok === false) { if (d.course) setCP(d.course); return { err: sentence(d.error, 'Station couldn’t mark it.') }; }
+      setCP(d.course); return d.result;
+    }, function () { return { err: 'No connection to Station. Your answers are kept: try again in a moment.' }; });
+  }
+  function drawQuizResult() {
+    var r = QZ.result, mods = (r.missed_modules || []).map(function (id) { var m = CIX.mod[id] || CIX.mods.filter(function (x) { return String(x.n) === String(parseInt(id, 10)); })[0]; return m; }).filter(Boolean).sort(function (a, b) { return CIX.mods.indexOf(a) - CIX.mods.indexOf(b); });
+    learnShell('<nav class="crumbs" aria-label="Where you are"><a href="#learn/cert">Certification</a><span aria-hidden="true"> › </span><span>Final quiz</span></nav>' +
+      '<h1>' + (r.pass ? 'You passed the final quiz' : 'Not this time') + '</h1>' +
+      '<div class="explain ' + (r.pass ? 'good' : 'bad') + '"><strong>' + r.score + ' of ' + r.of + ' right (' + r.pct + '%).</strong> ' + (r.pass ? 'Next: your practice call.' : 'You need ' + r.pass_pct + '%.') + (r.lenient ? ' Preview: not marked here; Station marks the real one.' : '') + '</div>' +
+      (r.pass ? '<a class="btn btn-dark btn-big btn-block" id="qzOn" href="#learn/call">Record your practice call</a>'
+        : '<h2 class="lsec">Go back over</h2><p>Pass one lesson check in each of these, then take the quiz again.</p><ul class="lmods" role="list">' + mods.map(function (m) {
+          return '<li><a class="lmod" href="#learn/m/' + encodeURIComponent(m.id) + '"><span class="lmn" aria-hidden="true">' + esc(m.n) + '</span><span class="lmt"><b>' + esc(m.title) + '</b></span></a></li>'; }).join('') + '</ul>' +
+          '<a class="btn btn-big" id="qzOn" href="#learn/cert">Back to the certification</a>'), 'Final quiz');
+    QZ = null; var on = document.getElementById('qzOn'); if (on) on.focus();
+  }
+
+  /* the practice call: the brief, the scenario, a recorder (or a recording they made), and Station's notes */
+  var REC = null; // {mr, stream, chunks, t0, tick, blob, url, secs, mime}
+  function stopRec(keep) {
+    if (!REC) return;
+    clearInterval(REC.tick);
+    try { if (REC.mr && REC.mr.state !== 'inactive') REC.mr.stop(); } catch (e) {}
+    if (REC.stream) REC.stream.getTracks().forEach(function (t) { t.stop(); });
+    if (!keep) { if (REC.url) URL.revokeObjectURL(REC.url); REC = null; }
+  }
+  function scenarioOf(c) { var ce = cert(), list = (ce && ce.mock_call && ce.mock_call.scenarios) || []; return list.filter(function (s) { return s.id === (c && c.scenario); })[0] || list[0] || null; }
+  function rich(o, k) { return o ? (o[k + '_html'] ? String(o[k + '_html']) : o[k + '_md'] ? md(o[k + '_md']) : o[k] ? md(o[k]) : '') : ''; }
+  function drawCall() {
+    var c = cpNow(), ce = cert(), q = (c && c.quiz) || {}, mk = c && c.mock;
+    if (!ce || !q.passed_at || (c && c.certified) || (mk && mk.status === 'waiting')) { location.replace('#learn/cert'); return; }
+    stopRec(false);
+    var mc = ce.mock_call || {}, sc = scenarioOf(c), max = (c && c.max_minutes) || mc.max_minutes || 6;
+    var must = (mc.must || []).map(function (t) { return '<li>' + mdInline(t) + '</li>'; }).join('');
+    learnShell('<nav class="crumbs" aria-label="Where you are"><a href="#learn/cert">Certification</a><span aria-hidden="true"> › </span><span>Practice call</span></nav>' +
+      '<h1>Your practice call</h1>' + cpNotice() + (rich(mc, 'brief') ? '<div class="lbody">' + rich(mc, 'brief') + '</div>'
+        : '<p class="lout">Ask a friend or family member to play the owner. Pitch them for real, start to finish. ' + max + ' minutes at most, one take.</p>') +
+      '<div class="explain wait"><strong>Never record a real business.</strong> Make sure the person playing the owner agrees to be recorded.</div>' +
+      reviewHtml(mk) +
+      (sc ? '<section class="lscen" aria-labelledby="scH"><h2 id="scH">Your business: ' + esc(sc.title || '') + '</h2><div class="lbody">' + rich(sc, 'you_see') + '</div>' +
+        (rich(sc, 'owner_sheet') ? '<details class="lowner"><summary>For the person playing the owner (hand them your phone; don’t read it yourself)</summary><div class="lbody">' + rich(sc, 'owner_sheet') + '</div></details>' : '') + '</section>' : '') +
+      (must ? '<section class="lmust" aria-labelledby="muH"><h2 id="muH">On the call, you must</h2><ol>' + must + '</ol></section>' : '') +
+      '<section class="lrec" aria-labelledby="rcH"><h2 id="rcH">Record it</h2>' +
+      '<div class="rec-box" id="recBox"><p class="rec-time" id="recTime" aria-live="off">0:00 <span>/ ' + max + ':00</span></p>' +
+      '<button class="btn btn-dark btn-big btn-block" type="button" id="recGo">Start recording</button></div>' +
+      '<p class="small" id="recMsg" role="status"></p>' +
+      '<details class="lfile"><summary>Recorded it another way? Send that file</summary><label class="field" for="recFile">An audio file (a voice memo works: m4a, mp3, webm, ogg or wav), 8 MB at most' +
+      '<input class="text" type="file" id="recFile" accept="audio/*,.m4a,.mp3,.webm,.ogg,.wav"></label></details></section>', 'Practice call');
+    wireReload();
+    var go = document.getElementById('recGo'), msg = document.getElementById('recMsg'), tm = document.getElementById('recTime');
+    function fmt(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+    function setTime(s) { tm.innerHTML = fmt(s) + ' <span>/ ' + max + ':00</span>'; }
+    function review(blob, secs) {
+      REC = REC || {}; REC.blob = blob; REC.secs = secs; REC.mime = blob.type || 'audio/webm'; REC.url = URL.createObjectURL(blob);
+      document.getElementById('recBox').innerHTML = '<p class="small">Listen back before you send it.</p><audio controls preload="metadata" src="' + REC.url + '"></audio>' +
+        '<p class="small">' + fmt(secs) + ' long · ' + Math.max(1, Math.round(blob.size / 1024)) + ' KB</p>' +
+        '<button class="btn btn-dark btn-big btn-block" type="button" id="recSend">Send it to Station</button><button class="btn btn-block" type="button" id="recAgain">Record again</button>';
+      document.getElementById('recAgain').addEventListener('click', function () { stopRec(false); drawCall(); });
+      document.getElementById('recSend').addEventListener('click', function () { sendRec(this); });
+    }
+    function sendRec(btn) {
+      if (VIEW) { msg.textContent = 'View only: nothing is sent from Station’s view.'; return; }
+      if (REC.blob.size > 8 * 1024 * 1024) { msg.textContent = 'That recording is over 8 MB. Record it again from this page; ' + max + ' minutes fits easily.'; return; }
+      if (REC.secs > max * 60 + 20) { msg.textContent = 'That recording is longer than ' + max + ' minutes. Record it again, ' + max + ' minutes at most.'; return; }
+      btn.disabled = true; btn.textContent = 'Sending…'; msg.textContent = 'Sending your recording to Station. Keep this page open.';
+      var fr = new FileReader();
+      fr.onload = function () {
+        var b64 = String(fr.result || '').split(',')[1] || '';
+        var done = function (r) {
+          if (r && r.ok) { stopRec(false); toast('Sent. Station will listen and tell you by email.', 4000); location.hash = '#learn/cert'; return; }
+          btn.disabled = false; btn.textContent = 'Send it to Station'; msg.textContent = (r && r.error) || 'That didn’t reach Station. Your recording is still here: try again.';
+        };
+        if (DEMO) { var d = S.course; d.mock = { id: 'demo', at: new Date().toISOString(), status: 'waiting', seconds: REC.secs, round: (d.mock ? (d.mock.round || 1) + 1 : 1) }; save(); done({ ok: true }); return; }
+        api('mock_call_upload', { filedata: b64, mimetype: REC.mime, seconds: Math.round(REC.secs) }).then(function (d) {
+          if (d.signedOut) { done({ error: 'Sign in again, then send it. Your recording is still on this page.' }); return; }
+          if (d.ok === false) { if (d.course) setCP(d.course); done({ error: sentence(d.error, 'Station couldn’t take that.') }); return; }
+          setCP(d.course); done({ ok: true });
+        }, function () { done({ error: 'No connection to Station. Your recording is still here: try again in a moment.' }); });
+      };
+      fr.onerror = function () { done({ error: 'That recording couldn’t be read. Record it again.' }); };
+      fr.readAsDataURL(REC.blob);
+    }
+    go.addEventListener('click', function () {
+      if (REC && REC.mr && REC.mr.state === 'recording') { REC.mr.stop(); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { msg.textContent = 'This browser can’t record here. Record a voice memo on your phone, then send the file below.'; return; }
+      go.disabled = true; msg.textContent = 'Allow the microphone when your browser asks.';
+      navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
+        var mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].filter(function (t) { try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; } })[0] || '';
+        var mr; try { mr = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : { audioBitsPerSecond: 32000 }); } catch (e) { mr = new MediaRecorder(stream); }
+        REC = { mr: mr, stream: stream, chunks: [], t0: Date.now() };
+        mr.ondataavailable = function (e) { if (e.data && e.data.size) REC.chunks.push(e.data); };
+        mr.onstop = function () {
+          clearInterval(REC.tick); stream.getTracks().forEach(function (t) { t.stop(); });
+          var secs = (Date.now() - REC.t0) / 1000, blob = new Blob(REC.chunks, { type: (mr.mimeType || mime || 'audio/webm').split(';')[0] });
+          if (blob.size < 2000) { msg.textContent = 'Nothing was recorded. Check your microphone and try again.'; drawCall(); return; }
+          msg.textContent = ''; review(blob, secs);
+        };
+        mr.start(1000); go.disabled = false; go.textContent = 'Stop'; go.classList.add('rec-on'); msg.textContent = 'Recording. Tap Stop when the call ends.';
+        REC.tick = setInterval(function () { var s = (Date.now() - REC.t0) / 1000; setTime(s); if (s >= max * 60) { msg.textContent = 'That’s ' + max + ' minutes: the recording stopped.'; mr.stop(); } }, 250);
+      }, function () { go.disabled = false; msg.textContent = 'The microphone is blocked. Allow it for this page in your browser’s settings, or record a voice memo and send the file below.'; });
+    });
+    document.getElementById('recFile').addEventListener('change', function () {
+      var f = this.files && this.files[0]; if (!f) return;
+      if (!/^(audio|video)\//.test(f.type || '') && !/\.(m4a|mp3|webm|ogg|wav|aac)$/i.test(f.name)) { msg.textContent = 'That isn’t an audio file.'; return; }
+      if (f.size > 8 * 1024 * 1024) { msg.textContent = 'That file is over 8 MB. A ' + max + '-minute voice memo is usually 3 to 6 MB; record a shorter one.'; return; }
+      var type = f.type || ({ m4a: 'audio/mp4', mp3: 'audio/mpeg', webm: 'audio/webm', ogg: 'audio/ogg', wav: 'audio/wav', aac: 'audio/aac' })[(f.name.split('.').pop() || '').toLowerCase()] || 'audio/mp4';
+      var blob = f.type ? f : new Blob([f], { type: type }), a = new Audio(), u = URL.createObjectURL(blob);
+      a.preload = 'metadata'; a.onloadedmetadata = function () { var s = isFinite(a.duration) ? a.duration : 0; URL.revokeObjectURL(u); review(blob, s); };
+      a.onerror = function () { URL.revokeObjectURL(u); review(blob, 0); }; a.src = u;
+    });
+  }
+  /* leaving the practice call stops the microphone */
+  window.addEventListener('hashchange', function () { if (location.hash.indexOf('#learn/call') !== 0) stopRec(false); });
+
+  /* Home: the course card (until certified), and the lead gate's sentence */
+  function courseCard() {
+    var c = courseSummary(); if (!c || (c.certified && !c.leads_locked)) return '';
+    var total = c.lessons_total || 0, done = c.lessons_done || 0;
+    var line = c.leads_locked ? 'Finish it to unlock your leads.' : c.exempt ? 'Your leads stay open while you take it.' : 'Station sends businesses to certified partners.';
+    var step = done < total ? done + ' of ' + total + ' lessons done' : !(c.quiz && c.quiz.passed_at) ? 'Every lesson done · next: the final quiz' : c.mock && c.mock.status === 'waiting' ? 'Practice call with Station' : 'Next: your practice call';
+    return '<a class="course-card' + (c.leads_locked ? ' locked' : '') + '" href="#learn"><span class="lbl">The Station Partner course</span><b>' + esc(step) + '</b>' + pctBar(done, total, 'Lessons done') +
+      '<span class="small">' + esc(line) + '</span><span class="go">' + (done ? 'Continue' : 'Start the course') + ' <span aria-hidden="true">&rarr;</span></span></a>';
   }
 
   window.addEventListener('hashchange', route);

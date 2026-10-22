@@ -1310,3 +1310,110 @@ fieldset.tax-forms .check > span{white-space:nowrap}
 /* 2026-10-13: Station's read-only view of a partner's Partner World */
 .viewbar{position:sticky;top:0;z-index:200;background:#1D4ED8;color:#fff;padding:8px 16px;font-size:14px;line-height:1.4;text-align:center}
 .viewbar b{font-weight:700}
+
+/* ===== LEARN (2026-10-21): the Station Partner course + certification. One column, reading width, 48px+ targets,
+   the seven sizes (12.5/14/16/18/22/28/40), ink and white only (green stays money; .explain keeps its own meaning). ===== */
+.learn{padding-top:20px;padding-bottom:calc(var(--tabh) + 40px)}
+.learn h1{font-size:28px;line-height:1.2;margin:0 0 8px}
+.learn .crumbs{font-size:14px;color:var(--ink-3);margin:0 0 10px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}
+.learn .crumbs a{color:var(--ink-2);min-height:44px;display:inline-flex;align-items:center}
+.learn .lout{font-size:18px;color:var(--ink-2);margin:0 0 14px}
+.learn .lmeta{font-size:14px;color:var(--ink-3);margin:0 0 16px}
+.learn .lsec{font-size:22px;margin:28px 0 10px}
+.learn .lnote{margin:-2px 0 12px}
+.lbar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;margin:8px 0}
+.lbar i{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.lhero{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:6px;margin:6px 0 8px}
+.lhero h2{font-size:22px;margin:0}
+.lhero p{margin:0;font-size:16px;color:var(--ink-2)}
+.lhero .lgate{color:var(--ink);border-left:2px solid var(--acc);padding:2px 0 2px 12px;margin-top:6px}
+.lhero .lgo{margin-top:10px}.lhero .lgo .btn{width:100%;white-space:normal;text-align:center}
+@media (min-width:600px){.lhero .lgo .btn{width:auto}}
+.lmods,.lless,.csteps,.rvs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.lmod,.lles{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:64px;padding:12px 14px;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink)}
+.lmod:hover,.lles:hover{border-color:var(--edge)}
+.lmn,.lln{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#1F242C;font-weight:700;font-size:16px;color:var(--ink)}
+.lmod.done .lmn,.lles.done .lln{background:var(--acc);color:var(--acc-ink)}
+.lmod.part .lmn{box-shadow:inset 0 0 0 2px var(--acc)}
+.lmt,.llt{display:grid;gap:2px;min-width:0}
+.lmt b,.llt b{font-size:18px;line-height:1.3}
+.lmt>span,.llt>span{font-size:14px;color:var(--ink-3);line-height:1.4}
+.lmt .lbar{margin:6px 0 0;height:4px}
+.lmc{font-size:14px;color:var(--ink-2);white-space:nowrap}
+.lles{grid-template-columns:44px minmax(0,1fr)}
+.lln{font-size:14px}
+.lnext{margin:18px 0 0}.lnext .btn{width:100%;white-space:normal;text-align:center}
+.lvideo{margin:4px 0 18px;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.lvideo video{display:block;width:100%;aspect-ratio:16/9;background:#000}
+.lvideo.none{background:var(--card);padding:16px 18px}
+.lvideo.none p{margin:0;font-size:16px;color:var(--ink-2)}
+.lbody{font-size:18px;line-height:1.6}
+.lbody p{margin:0 0 14px}
+.lbody h3{font-size:18px;margin:20px 0 8px}
+.lbody ul,.lbody ol{margin:0 0 14px;padding-left:24px}.lbody li{margin:0 0 6px}
+.lbody blockquote{margin:0 0 14px;padding:10px 14px;border-left:2px solid var(--acc);background:var(--card);border-radius:0 10px 10px 0;color:var(--ink)}
+.ltable{overflow-x:auto;margin:0 0 14px;border:1px solid var(--line);border-radius:10px}
+.ltable table{border-collapse:collapse;width:100%;font-size:16px;line-height:1.4}
+.ltable th,.ltable td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.ltable th{font-size:14px;color:var(--ink-2);font-weight:600}
+.ltable tr:last-child td{border-bottom:0}
+.lcheck{margin:26px 0 0;padding:20px 0 0;border-top:1px solid var(--line)}
+.lcheck h2{font-size:22px;margin:0 0 4px}
+.lq{border:0;margin:18px 0 0;padding:0;min-width:0}
+.lq legend{font-size:18px;font-weight:600;line-height:1.4;margin:0 0 10px;padding:0}
+.lq .lqn{color:var(--ink-3)}
+.lopts{display:grid;gap:8px}
+.lopt{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;align-items:start;min-height:56px;padding:14px;border:1px solid #2A313B;
+  border-radius:10px;background:var(--card);cursor:pointer;font-size:16px;line-height:1.45}
+.lopt:hover{border-color:var(--edge)}
+.lopt input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--acc)}
+.lopt:has(input:checked){border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.lopt:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
+.lwhy{margin:8px 0 0;font-size:16px;padding:10px 12px;border-radius:10px;background:var(--card);border-left:2px solid var(--line)}
+.lq.right .lwhy{border-left-color:#8FE0B4}.lq.wrong .lwhy{border-left-color:var(--red)}
+#chkGo{margin-top:18px}
+.ldone{font-size:16px;margin:8px 0 0;color:var(--ink)}
+.lnav{display:flex;justify-content:space-between;gap:10px;margin:26px 0 0}
+.lnav .btn{min-height:52px}
+.lqprog{margin:6px 0 10px}.lqprog i.on{background:var(--ink-3)}.lqprog i.here{background:var(--acc)}
+.lqz legend{width:100%}.lqz .qh{font-size:22px;line-height:1.35;margin:0 0 6px}
+.qznav{margin-top:18px}
+.lcert{margin:28px 0 0}
+.csteps{margin:10px 0 14px}
+.cstep{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+.cstep .csn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#1F242C;font-weight:700}
+.cstep.done .csn{background:var(--acc);color:var(--acc-ink)}
+.cstep.now .csn{box-shadow:inset 0 0 0 2px var(--acc)}
+.cstep b{display:block;font-size:18px;line-height:1.3}
+.cstep .cst{display:block;font-size:14px;color:var(--ink-3);margin-top:2px}
+.lact{margin:4px 0 0}.lact .btn{white-space:normal}
+.lrev{margin:24px 0 0}.lrev h2{font-size:22px;margin:0 0 4px}
+.rv{padding:12px 14px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ink-3);border-radius:10px}
+.rv.redo{border-left-color:var(--red)}
+.rv b{font-size:16px}.rv .rvm{margin-left:8px;font-size:12.5px;color:var(--ink-3)}
+.rv p{margin:6px 0 0;font-size:16px}
+.lscen,.lmust,.lrec{margin:22px 0 0}
+.lscen h2,.lmust h2,.lrec h2{font-size:22px;margin:0 0 8px}
+.lmust ol{margin:0;padding-left:24px;font-size:16px;line-height:1.5}.lmust li{margin:0 0 6px}
+.lowner,.lfile{margin:10px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.lowner summary,.lfile summary{min-height:52px;padding:14px;cursor:pointer;font-size:16px;font-weight:600}
+.lowner .lbody,.lfile .field{padding:0 14px 14px;font-size:16px}
+.lfile input[type=file]{min-height:52px;background:var(--bg);color:var(--ink)}
+.rec-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px}
+.rec-time{margin:0;font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.rec-time span{font-size:18px;color:var(--ink-3);font-weight:400}
+.rec-box audio{width:100%}
+.rec-on{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
+/* Home: the course card */
+.course-card{display:grid;gap:4px;padding:16px 18px;margin:0 0 16px;background:var(--card);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink)}
+.course-card.locked{box-shadow:inset 3px 0 0 var(--acc)}
+.course-card b{font-size:18px}.course-card .go{font-weight:600;font-size:16px;margin-top:4px}
+.next-call .lbar{margin:2px 0 4px}
+html.big .lmod,html.big .lles{grid-template-columns:44px minmax(0,1fr)}
+html.big .lmc{grid-column:2}
+@media (max-width:420px){.lmod{grid-template-columns:44px minmax(0,1fr)}.lmc{grid-column:2}}
+.learn>*{max-width:760px}
+
+/* nine places with bigger text on a phone: columns as wide as their labels, the bar scrolls sideways (the older html.big rule fixed 5 shrinking columns, so labels overlapped) */
+@media (max-width:760px){html.big .tabbar{grid-template-columns:none;grid-auto-columns:minmax(min-content,1fr)}html.big .tabbar a{padding:0 6px}}
